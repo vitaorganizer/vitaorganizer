@@ -68,6 +68,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
     val VPK_GAME_IDS = hashSetOf<String>()
     val VITA_GAME_IDS = hashSetOf<String>()
 
+    val statusLabel = JLabel("Started")
 
     fun updateEntries() {
         val ALL_GAME_IDS = LinkedHashMap<String, GameEntry>()
@@ -77,7 +78,8 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         for (gameId in VPK_GAME_IDS) getGameEntryById(gameId).inPC = true
         for (gameId in VITA_GAME_IDS) getGameEntryById(gameId).inVita = true
 
-        while (model.rowCount > 0) model.removeRow(model.rowCount - 1)
+        val newRows = arrayListOf<Array<Any>>()
+
         for (entry in ALL_GAME_IDS.values.sortedBy { it.title }) {
             try {
                 val gameId = entry.gameId
@@ -88,7 +90,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
 
                 //println(psf)
                 if (image != null) {
-                    model.addRow(arrayOf(
+                    newRows.add(arrayOf(
                             ImageIcon(getScaledImage(image, 64, 64)),
                             entry,
                             if (entry.inVita && entry.inPC) {
@@ -108,6 +110,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 e.printStackTrace()
             }
         }
+
+        while (model.rowCount > 0) model.removeRow(model.rowCount - 1)
+        for (row in newRows) model.addRow(row)
+
         model.fireTableDataChanged()
     }
 
@@ -223,6 +229,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         //const.setConstraint(SpringLayout.NORTH, Spring.constant(32, 32, 32))
         //const.height = Spring.constant(32, 32, 32)
 
+        val footer = JPanel().apply {
+            add(statusLabel)
+        }
 
         val header = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
             add(JButton("Select folder...").apply {
@@ -256,6 +265,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     button.text = connectText
                     VITA_GAME_IDS.clear()
                     updateEntries()
+                    statusLabel.text = "Disconnected"
                 }
 
                 fun connect(ip: String) {
@@ -264,30 +274,61 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     PsvitaDevice.setIp(ip, 1337)
                     button.text = disconnectText.format(ip)
                     VITA_GAME_IDS.clear()
-                    for (gameId in PsvitaDevice.getGameIds()) {
-                        //println(gameId)
+                    var done = false
+                    var updated = false
+                    Thread {
                         try {
-                            PsvitaDevice.getParamSfoCached(gameId)
-                            PsvitaDevice.getGameIconCached(gameId)
-                            val sizeFile = VitaOrganizerCache.entry(gameId).sizeFile
-                            if (!sizeFile.exists()) {
-                                sizeFile.writeText("" + PsvitaDevice.getGameSize(gameId))
+                            var vitaGameCount = 0
+                            val vitaGameIds = PsvitaDevice.getGameIds()
+                            for (gameId in vitaGameIds) {
+                                statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
+                                //println(gameId)
+                                try {
+                                    PsvitaDevice.getParamSfoCached(gameId)
+                                    PsvitaDevice.getGameIconCached(gameId)
+                                    val sizeFile = VitaOrganizerCache.entry(gameId).sizeFile
+                                    if (!sizeFile.exists()) {
+                                        sizeFile.writeText("" + PsvitaDevice.getGameSize(gameId))
+                                    }
+                                    VITA_GAME_IDS += gameId
+                                    updated = true
+                                    //val entry = getGameEntryById(gameId)
+                                    //entry.inVita = true
+                                } catch (e: Throwable) {
+                                    e.printStackTrace()
+                                }
+                                vitaGameCount++
                             }
-                            VITA_GAME_IDS += gameId
-                            //val entry = getGameEntryById(gameId)
-                            //entry.inVita = true
-                        } catch (e: Throwable) {
-                            e.printStackTrace()
+                        } finally {
+                            done = true
+                            updated = true
                         }
-                    }
-                    updateEntries()
+
+                        statusLabel.text = "Connected"
+                    }.start()
+
+                    Thread {
+                        do {
+                            //println("a")
+                            while (!updated) {
+                                //println("b")
+                                Thread.sleep(100L)
+                            }
+                            updated = false
+                            updateEntries()
+                        } while (!done)
+
+
+                    }.start()
                 }
 
                 this.addMouseListener(object : MouseAdapter() {
                     override fun mouseClicked(e: MouseEvent?) {
                         if (connected) {
+                            statusLabel.text = "Disconnecting..."
                             disconnect()
                         } else {
+                            statusLabel.text = "Connecting..."
                             button.isEnabled = false
                             if (PsvitaDevice.checkAddress(VitaOrganizerSettings.lastDeviceIp)) {
                                 connect(VitaOrganizerSettings.lastDeviceIp)
@@ -312,6 +353,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
 
         add(header, SpringLayout.NORTH)
         add(scrollPane)
+        add(footer, SpringLayout.SOUTH)
 
         table.rowHeight = 64
 
