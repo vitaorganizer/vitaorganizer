@@ -75,8 +75,12 @@ object VitaOrganizer : JPanel(BorderLayout()) {
 
         fun getGameEntryById(gameId: String) = ALL_GAME_IDS.getOrPut(gameId) { GameEntry(gameId) }
 
-        for (gameId in VPK_GAME_IDS) getGameEntryById(gameId).inPC = true
-        for (gameId in VITA_GAME_IDS) getGameEntryById(gameId).inVita = true
+        synchronized(VPK_GAME_IDS) {
+            for (gameId in VPK_GAME_IDS) getGameEntryById(gameId).inPC = true
+        }
+        synchronized(VITA_GAME_IDS) {
+            for (gameId in VITA_GAME_IDS) getGameEntryById(gameId).inVita = true
+        }
 
         val newRows = arrayListOf<Array<Any>>()
 
@@ -274,7 +278,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 fun disconnect() {
                     connected = false
                     button.text = connectText
-                    VITA_GAME_IDS.clear()
+                    synchronized (VITA_GAME_IDS) {
+                        VITA_GAME_IDS.clear()
+                    }
                     updateEntries()
                     statusLabel.text = "Disconnected"
                 }
@@ -284,7 +290,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     VitaOrganizerSettings.lastDeviceIp = ip
                     PsvitaDevice.setIp(ip, 1337)
                     button.text = disconnectText.format(ip)
-                    VITA_GAME_IDS.clear()
+                    synchronized (VITA_GAME_IDS) {
+                        VITA_GAME_IDS.clear()
+                    }
                     var done = false
                     var updated = false
                     Thread {
@@ -301,7 +309,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                     if (!sizeFile.exists()) {
                                         sizeFile.writeText("" + PsvitaDevice.getGameSize(gameId))
                                     }
-                                    VITA_GAME_IDS += gameId
+                                    synchronized (VITA_GAME_IDS) {
+                                        VITA_GAME_IDS += gameId
+                                    }
                                     updated = true
                                     //val entry = getGameEntryById(gameId)
                                     //entry.inVita = true
@@ -454,7 +464,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
     }
 
     fun updateFileList() {
-        VPK_GAME_IDS.clear()
+        synchronized(VPK_GAME_IDS) {
+            VPK_GAME_IDS.clear()
+        }
         for (vpkFile in File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.extension.toLowerCase() == "vpk" }) {
             try {
                 val zip = ZipFile(vpkFile)
@@ -476,7 +488,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     entry.sizeFile.writeText("" + uncompressedSize)
                 }
                 entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
-                VPK_GAME_IDS += gameId
+                synchronized(VPK_GAME_IDS) {
+                    VPK_GAME_IDS += gameId
+                }
                 //getGameEntryById(gameId).inPC = true
             } catch (e: Throwable) {
 

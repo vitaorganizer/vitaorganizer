@@ -9,6 +9,7 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.net.Socket
+import java.util.*
 import java.util.zip.ZipFile
 
 object PsvitaDevice {
@@ -99,16 +100,15 @@ object PsvitaDevice {
         return file.readBytes()
     }
 
-    val folderSizeCache = hashMapOf<String, Long>()
 
-    fun getFolderSize(path: String): Long {
+    fun getFolderSize(path: String, folderSizeCache: HashMap<String, Long> = hashMapOf<String, Long>()): Long {
         return folderSizeCache.getOrPut(path) {
             var out = 0L
             val ftp = connectedFtp()
             try {
                 for (file in ftp.list(path)) {
                     if (file.type == FTPFile.TYPE_DIRECTORY) {
-                        getFolderSize("$path/${file.name}")
+                        getFolderSize("$path/${file.name}", folderSizeCache)
                     } else {
                         out += file.size
                     }
@@ -120,8 +120,8 @@ object PsvitaDevice {
         }
     }
 
-    fun getGameSize(id: String): Long {
-        return getFolderSize(getGameFolder(id))
+    fun getGameSize(id: String, folderSizeCache: HashMap<String, Long> = hashMapOf<String, Long>()): Long {
+        return getFolderSize(getGameFolder(id), folderSizeCache)
     }
 
     class Status() {
@@ -168,7 +168,7 @@ object PsvitaDevice {
         for (entry in entries) {
             val vname = "$base/${entry.name}"
             val directory = File(vname).parent
-            var startSize = status.currentSize
+            val startSize = status.currentSize
             println("Writting $vname...")
             if (!entry.isDirectory) {
                 createDirectories(directory)
