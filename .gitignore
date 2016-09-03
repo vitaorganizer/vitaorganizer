@@ -1,0 +1,10 @@
+/vitaorganizercache
+/vitaorganizer
+/temp.png
+/.gradle
+/out
+/build
+.idea
+*.ipr
+*.iws
+*.iml
