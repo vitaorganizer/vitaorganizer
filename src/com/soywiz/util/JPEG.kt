@@ -1,8 +1,5 @@
-package util
+package com.soywiz.util
 
-import com.soywiz.util.Bitmap
-import com.soywiz.util.Bitmap32
-import com.soywiz.util.JPEGDecoder
 import java.io.ByteArrayInputStream
 import java.nio.ByteBuffer
 

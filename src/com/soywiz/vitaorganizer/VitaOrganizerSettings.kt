@@ -2,37 +2,40 @@ package com.soywiz.vitaorganizer
 
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.*
+import kotlin.reflect.KProperty
 
 object VitaOrganizerSettings {
-    var initialized = false
-    val properties = Properties()
-    val file = File("vitaorganizer/settings.properties")
+    var vpkFolder: String by PropDelegate(".")
+    var lastDeviceIp: String by PropDelegate("192.168.1.100")
 
-    var vpkFolder: String
-        set(v: String) {
-            properties.setProperty("vpkFolder", v)
-            writeProperties()
-        }
-        get() = ensureProperties().properties.getProperty("vpkFolder") ?: "."
+    private var initialized = false
+    private val properties = Properties()
+    private val file = File("vitaorganizer/settings.properties")
 
-    fun ensureProperties(): VitaOrganizerSettings {
-        if (!initialized) {
-            readProperties()
+    class PropDelegate(val default: String) {
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
+            return VitaOrganizerSettings.ensureProperties().getProperty(property.name, default)
         }
-        return this
+
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
+            VitaOrganizerSettings.ensureProperties().setProperty(property.name, value)
+            VitaOrganizerSettings.writeProperties()
+        }
     }
 
-    fun readProperties() {
-        if (file.exists()) {
-            properties.load(ByteArrayInputStream(file.readBytes()))
-        }
+    private fun ensureProperties(): Properties {
+        if (!initialized) readProperties()
+        return properties
+    }
+
+    private fun readProperties() {
+        if (file.exists()) properties.load(ByteArrayInputStream(file.readBytes()))
         initialized = true
     }
 
-    fun writeProperties() {
+    private fun writeProperties() {
         file.parentFile.mkdirs()
         val out = FileOutputStream(file)
         properties.store(out, "")

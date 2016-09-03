@@ -2,11 +2,50 @@ package com.soywiz.vitaorganizer
 
 import it.sauronsoftware.ftp4j.FTPClient
 import it.sauronsoftware.ftp4j.FTPDataTransferListener
+import it.sauronsoftware.ftp4j.FTPException
 import java.io.File
 import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.NetworkInterface
+import java.net.Socket
 import java.util.zip.ZipFile
 
 object PsvitaDevice {
+    fun checkAddress(ip: String, port: Int = 1337): Boolean {
+        try {
+            val sock = Socket()
+            sock.connect(InetSocketAddress(ip, port), 200)
+            sock.close()
+            return true
+        } catch (e: Throwable) {
+            return false
+        }
+    }
+
+    fun discoverIp(port: Int = 1337): List<String> {
+        val ips = NetworkInterface.getNetworkInterfaces().toList().flatMap { it.inetAddresses.toList() }
+        val ips2 = ips.map { it.hostAddress }.filter { it.startsWith("192.") }
+        val ipEnd = Regex("\\.(\\d+)$")
+        val availableIps = arrayListOf<String>()
+        var rest = 256
+        for (baseIp in ips2) {
+            for (n in 0 until 256) {
+                Thread {
+                    val ip = baseIp.replace(ipEnd, "\\.$n")
+                    if (checkAddress(ip, port)) {
+                        availableIps += ip
+                    }
+                    rest--
+                }.start()
+            }
+        }
+        while (rest > 0) {
+            //println(rest)
+            Thread.sleep(20L)
+        }
+        //println(availableIps)
+        return availableIps
+    }
 
     val ftp = FTPClient()
     var ip = "192.168.1.130"
@@ -31,14 +70,33 @@ object PsvitaDevice {
 
     fun downloadSmallFile(path: String): ByteArray {
         val file = File.createTempFile("vita", "download")
-        connectedFtp().download(path, file)
-        val data = file.readBytes()
-        file.delete()
-        return data
+        try {
+            connectedFtp().download(path, file)
+            return file.readBytes()
+        } catch (e: FTPException) {
+
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        } finally {
+            file.delete()
+        }
+        return byteArrayOf()
     }
 
     fun getParamSfo(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/sce_sys/param.sfo")
     fun getGameIcon(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/sce_sys/icon0.png")
+
+    fun getParamSfoCached(id: String): ByteArray {
+        val file = VitaOrganizerCache.getParamSfoFile(id)
+        if (!file.exists()) file.writeBytes(getParamSfo(id))
+        return file.readBytes()
+    }
+
+    fun getGameIconCached(id: String): ByteArray {
+        val file = VitaOrganizerCache.getIcon0File(id)
+        if (!file.exists()) file.writeBytes(getGameIcon(id))
+        return file.readBytes()
+    }
 
     fun uploadGame(id: String, zip: ZipFile) {
         val base = getGameFolder(id)
@@ -57,6 +115,8 @@ object PsvitaDevice {
                     connectedFtp().createDirectory(path)
                 } catch (e: IOException) {
                     throw e
+                } catch (e: FTPException) {
+                    e.printStackTrace()
                 } catch (e: Throwable) {
                     e.printStackTrace()
                 }

@@ -1,11 +1,12 @@
-package util
+package com.soywiz.util
 
 @Suppress("NOTHING_TO_INLINE")
 class UByteArray(val data: ByteArray) {
-	constructor(size: Int) : this(ByteArray(size))
-	val size: Int = data.size
-	inline operator fun get(n: Int) = this.data[n].toInt() and 0xFF
-	inline operator fun set(n: Int, v: Int) = let { this.data[n] = v.toByte() }
+    constructor(size: Int) : this(ByteArray(size))
+
+    val size: Int = data.size
+    inline operator fun get(n: Int) = this.data[n].toInt() and 0xFF
+    inline operator fun set(n: Int, v: Int) = let { this.data[n] = v.toByte() }
 }
 
 val Int.byte: Byte get() = this.toByte()

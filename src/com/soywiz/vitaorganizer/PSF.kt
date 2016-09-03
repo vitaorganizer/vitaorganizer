@@ -1,8 +1,8 @@
 package com.soywiz.vitaorganizer
 
-import util.Stream2
-import util.byte
-import util.invalidOp
+import com.soywiz.util.Stream2
+import com.soywiz.util.byte
+import com.soywiz.util.invalidOp
 
 // http://www.psdevwiki.com/ps3/PARAM.SFO#TITLE_ID
 // http://www.vitadevwiki.com/index.php?title=Title_ID
@@ -18,6 +18,7 @@ object PSF {
                 val valueSizePad: Int,
                 val valueOffset: Int
         )
+
         val magic = s.readBytes(4)
         if (magic.toList() != byteArrayOf(0, 'P'.byte, 'S'.byte, 'F'.byte).toList()) {
             invalidOp("Not a PSF file : But: ${magic.toList()}")

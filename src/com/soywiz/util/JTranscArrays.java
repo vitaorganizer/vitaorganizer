@@ -108,7 +108,7 @@ public class JTranscArrays {
     }
 
 	/*
-	static public void swizzle_inplace_abcd_dbca(int[] data) {
+    static public void swizzle_inplace_abcd_dbca(int[] data) {
 		int size = data.length;
 		for (int n = 0; n < size; n++) {
 			int v = data[n];

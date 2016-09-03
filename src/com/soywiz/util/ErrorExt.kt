@@ -1,4 +1,4 @@
-package util
+package com.soywiz.util
 
 class InvalidOperationException(msg: String) : RuntimeException(msg)
 
