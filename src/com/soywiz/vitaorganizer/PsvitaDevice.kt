@@ -3,6 +3,7 @@ package com.soywiz.vitaorganizer
 import it.sauronsoftware.ftp4j.FTPClient
 import it.sauronsoftware.ftp4j.FTPDataTransferListener
 import it.sauronsoftware.ftp4j.FTPException
+import it.sauronsoftware.ftp4j.FTPFile
 import java.io.File
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -96,6 +97,31 @@ object PsvitaDevice {
         val file = VitaOrganizerCache.entry(id).icon0File
         if (!file.exists()) file.writeBytes(getGameIcon(id))
         return file.readBytes()
+    }
+
+    val folderSizeCache = hashMapOf<String, Long>()
+
+    fun getFolderSize(path: String): Long {
+        return folderSizeCache.getOrPut(path) {
+            var out = 0L
+            val ftp = connectedFtp()
+            try {
+                for (file in ftp.list(path)) {
+                    if (file.type == FTPFile.TYPE_DIRECTORY) {
+                        getFolderSize("$path/${file.name}")
+                    } else {
+                        out += file.size
+                    }
+                }
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
+            out
+        }
+    }
+
+    fun getGameSize(id: String): Long {
+        return getFolderSize(getGameFolder(id))
     }
 
     fun uploadGame(id: String, zip: ZipFile) {

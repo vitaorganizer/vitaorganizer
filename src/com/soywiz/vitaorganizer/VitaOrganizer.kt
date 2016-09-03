@@ -8,7 +8,6 @@ import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.image.BufferedImage
-import java.awt.image.ColorModel
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.util.*
@@ -55,6 +54,13 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         var inVita = false
         var inPC = false
         val vpkFile: String? get() = entry.pathFile.readText(Charsets.UTF_8)
+        val size: Long by lazy {
+            try {
+                entry.sizeFile.readText().toLong()
+            } catch (e: Throwable) {
+                0L
+            }
+        }
 
         override fun toString(): String = id
     }
@@ -94,11 +100,12 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                             } else {
                                 "NONE"
                             },
+                            FileSize.toString(entry.size),
                             entry.title
                     ))
                 }
             } catch (e: Throwable) {
-
+                e.printStackTrace()
             }
         }
         model.fireTableDataChanged()
@@ -262,6 +269,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                         try {
                             PsvitaDevice.getParamSfoCached(gameId)
                             PsvitaDevice.getGameIconCached(gameId)
+                            val sizeFile = VitaOrganizerCache.entry(gameId).sizeFile
+                            if (!sizeFile.exists()) {
+                                sizeFile.writeText("" + PsvitaDevice.getGameSize(gameId))
+                            }
                             VITA_GAME_IDS += gameId
                             //val entry = getGameEntryById(gameId)
                             //entry.inVita = true
@@ -312,6 +323,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         model.addColumn("Icon")
         model.addColumn("ID")
         model.addColumn("Where")
+        model.addColumn("Size")
         model.addColumn("Title")
 
         //table.autoResizeMode = JTable.AUTO_RESIZE_OFF
@@ -324,6 +336,16 @@ object VitaOrganizer : JPanel(BorderLayout()) {
             resizable = false
         }
         table.getColumn("ID").apply {
+            width = 96
+            minWidth = 96
+            maxWidth = 96
+            preferredWidth = 96
+            resizable = false
+            cellRenderer = DefaultTableCellRenderer().apply {
+                setHorizontalAlignment(JLabel.CENTER);
+            }
+        }
+        table.getColumn("Size").apply {
             width = 96
             minWidth = 96
             maxWidth = 96
@@ -395,6 +417,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 }
                 if (!entry.paramSfoFile.exists()) {
                     entry.paramSfoFile.writeBytes(paramSfoData)
+                }
+                if (!entry.sizeFile.exists()) {
+                    val uncompressedSize = ZipFile(vpkFile).entries().toList().map { it.size }.sum()
+                    entry.sizeFile.writeText("" + uncompressedSize)
                 }
                 entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
                 VPK_GAME_IDS += gameId
