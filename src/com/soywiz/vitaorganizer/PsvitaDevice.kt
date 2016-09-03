@@ -87,13 +87,13 @@ object PsvitaDevice {
     fun getGameIcon(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/sce_sys/icon0.png")
 
     fun getParamSfoCached(id: String): ByteArray {
-        val file = VitaOrganizerCache.getParamSfoFile(id)
+        val file = VitaOrganizerCache.entry(id).paramSfoFile
         if (!file.exists()) file.writeBytes(getParamSfo(id))
         return file.readBytes()
     }
 
     fun getGameIconCached(id: String): ByteArray {
-        val file = VitaOrganizerCache.getIcon0File(id)
+        val file = VitaOrganizerCache.entry(id).icon0File
         if (!file.exists()) file.writeBytes(getGameIcon(id))
         return file.readBytes()
     }

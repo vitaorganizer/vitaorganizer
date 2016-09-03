@@ -6,6 +6,20 @@ import java.io.File
 object VitaOrganizerCache {
     val cacheFolder = File("vitaorganizer/cache")
 
+    init {
+        cacheFolder.mkdirs()
+    }
+
+    class Entry(val gameId: String) {
+        val icon0File = cacheFolder["$gameId.icon0.png"]
+        val paramSfoFile = cacheFolder["$gameId.param.sfo"]
+        val pathFile = cacheFolder["$gameId.path"]
+        val sizeFile = cacheFolder["$gameId.size"]
+    }
+
+    fun entry(gameId: String) = Entry(gameId)
+
+    /*
     fun setIcon0File(titleId: String, data: ByteArray) {
         getIcon0File(titleId).writeBytes(data)
     }
@@ -40,4 +54,5 @@ object VitaOrganizerCache {
             null
         }
     }
+    */
 }

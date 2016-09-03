@@ -42,9 +42,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
     }
 
     class GameEntry(val gameId: String) {
+        val entry = VitaOrganizerCache.entry(gameId)
         val psf by lazy {
             try {
-                PSF.read(VitaOrganizerCache.getParamSfoFile(gameId).readBytes().stream)
+                PSF.read(entry.paramSfoFile.readBytes().stream)
             } catch (e: Throwable) {
                 mapOf<String, Any>()
             }
@@ -53,7 +54,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         val title by lazy { psf["TITLE"].toString() }
         var inVita = false
         var inPC = false
-        val vpkFile: String? get() = VitaOrganizerCache.getVpkPath(gameId)
+        val vpkFile: String? get() = entry.pathFile.readText(Charsets.UTF_8)
 
         override fun toString(): String = id
     }
@@ -71,13 +72,13 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         for (gameId in VITA_GAME_IDS) getGameEntryById(gameId).inVita = true
 
         while (model.rowCount > 0) model.removeRow(model.rowCount - 1)
-        for (entries in ALL_GAME_IDS.values.sortedBy { it.title }) {
+        for (entry in ALL_GAME_IDS.values.sortedBy { it.title }) {
             try {
-                val gameId = entries.gameId
-                val icon = VitaOrganizerCache.getIcon0File(gameId)
+                val gameId = entry.gameId
+                val entry2 = VitaOrganizerCache.entry(gameId)
+                val icon = entry2.icon0File
                 val image = ImageIO.read(ByteArrayInputStream(icon.readBytes()))
-                val psf = PSF.read(VitaOrganizerCache.getParamSfoFile(gameId).readBytes().stream)
-                val entry = getGameEntryById(gameId)
+                val psf = PSF.read(entry2.paramSfoFile.readBytes().stream)
 
                 //println(psf)
                 if (image != null) {
@@ -119,6 +120,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         //val data = arrayOf(arrayOf(JLabel("Kathy"), "Smith", "Snowboarding", 5, false), arrayOf("John", "Doe", "Rowing", 3, true), arrayOf("Sue", "Black", "Knitting", 2, false), arrayOf("Jane", "White", "Speed reading", 20, true), arrayOf("Joe", "Brown", "Pool", 10, false))
 
         val table = object : JTable(model) {
+            val dialog = this@VitaOrganizer
             val gameTitlePopup = JMenuItem("").apply {
                 this.isEnabled = false
             }
@@ -128,7 +130,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
 
                 val deleteFromVita = JMenuItem("Delete from PSVita").apply {
                     addActionListener {
-                        //JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
+                        val entry = entry
+                        if (entry != null) {
+                            JOptionPane.showConfirmDialog(dialog, "Are you sure to delete '${entry.title}'?", "Confirmation", JOptionPane.OK_CANCEL_OPTION, JOptionPane.OK_OPTION)
+                        }
                     }
                     this.isEnabled = false
                 }
@@ -231,13 +236,26 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     }
                 })
             })
-            val connectButton = JButton("Connect to PsVita...").apply {
+
+            val connectText = "Connect to PsVita..."
+            val disconnectText = "Disconnect from %s"
+            var connected = false
+
+            val connectButton = JButton(connectText).apply {
                 val button = this
 
+                fun disconnect() {
+                    connected = false
+                    button.text = connectText
+                    VITA_GAME_IDS.clear()
+                    updateEntries()
+                }
+
                 fun connect(ip: String) {
+                    connected = true
                     VitaOrganizerSettings.lastDeviceIp = ip
                     PsvitaDevice.setIp(ip, 1337)
-                    button.text = ip
+                    button.text = disconnectText.format(ip)
                     VITA_GAME_IDS.clear()
                     for (gameId in PsvitaDevice.getGameIds()) {
                         //println(gameId)
@@ -256,20 +274,24 @@ object VitaOrganizer : JPanel(BorderLayout()) {
 
                 this.addMouseListener(object : MouseAdapter() {
                     override fun mouseClicked(e: MouseEvent?) {
-                        button.isEnabled = false
-                        if (PsvitaDevice.checkAddress(VitaOrganizerSettings.lastDeviceIp)) {
-                            connect(VitaOrganizerSettings.lastDeviceIp)
-                            button.isEnabled = true
-                            x
+                        if (connected) {
+                            disconnect()
                         } else {
-                            Thread {
-                                val ips = PsvitaDevice.discoverIp()
-                                println("Discovered ips: $ips")
-                                if (ips.size >= 1) {
-                                    connect(ips.first())
-                                }
+                            button.isEnabled = false
+                            if (PsvitaDevice.checkAddress(VitaOrganizerSettings.lastDeviceIp)) {
+                                connect(VitaOrganizerSettings.lastDeviceIp)
                                 button.isEnabled = true
-                            }.start()
+                                x
+                            } else {
+                                Thread {
+                                    val ips = PsvitaDevice.discoverIp()
+                                    println("Discovered ips: $ips")
+                                    if (ips.size >= 1) {
+                                        connect(ips.first())
+                                    }
+                                    button.isEnabled = true
+                                }.start()
+                            }
                         }
                     }
                 })
@@ -361,14 +383,20 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         for (vpkFile in File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.extension.toLowerCase() == "vpk" }) {
             try {
                 val zip = ZipFile(vpkFile)
-                val imageData = zip.getInputStream(zip.getEntry("sce_sys/icon0.png")).readBytes()
                 val paramSfoData = zip.getInputStream(zip.getEntry("sce_sys/param.sfo")).readBytes()
+
                 val psf = PSF.read(paramSfoData.open2("r"))
                 val gameId = psf["TITLE_ID"].toString()
 
-                VitaOrganizerCache.setIcon0File(gameId, imageData)
-                VitaOrganizerCache.setParamSfoFile(gameId, paramSfoData)
-                VitaOrganizerCache.setVpkPath(gameId, vpkFile.absolutePath)
+                val entry = VitaOrganizerCache.entry(gameId)
+
+                if (!entry.icon0File.exists()) {
+                    entry.icon0File.writeBytes(zip.getInputStream(zip.getEntry("sce_sys/icon0.png")).readBytes())
+                }
+                if (!entry.paramSfoFile.exists()) {
+                    entry.paramSfoFile.writeBytes(paramSfoData)
+                }
+                entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
                 VPK_GAME_IDS += gameId
                 //getGameEntryById(gameId).inPC = true
             } catch (e: Throwable) {
