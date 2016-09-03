@@ -124,10 +124,18 @@ object PsvitaDevice {
         return getFolderSize(getGameFolder(id))
     }
 
-    fun uploadGame(id: String, zip: ZipFile) {
+    class Status() {
+        var currentFile: Int = 0
+        var totalFiles: Int = 0
+        var currentSize: Long = 0L
+        var totalSize: Long = 0L
+    }
+
+    fun uploadGame(id: String, zip: ZipFile, updateStatus: (Status) -> Unit = { }) {
         val base = getGameFolder(id)
 
         val createDirectoryCache = hashSetOf<String>()
+        val status = Status()
 
         fun createDirectories(path: String) {
             val parent = File(path).parent
@@ -149,9 +157,18 @@ object PsvitaDevice {
             }
         }
 
-        for (entry in zip.entries()) {
+        val entries = zip.entries().toList()
+
+        status.currentFile = 0
+        status.totalFiles = entries.size
+
+        status.currentSize = 0L
+        status.totalSize = entries.map { it.size }.sum()
+
+        for (entry in entries) {
             val vname = "$base/${entry.name}"
             val directory = File(vname).parent
+            var startSize = status.currentSize
             println("Writting $vname...")
             if (!entry.isDirectory) {
                 createDirectories(directory)
@@ -160,18 +177,24 @@ object PsvitaDevice {
                     }
 
                     override fun completed() {
+                        updateStatus(status)
                     }
 
                     override fun aborted() {
                     }
 
-                    override fun transferred(p0: Int) {
+                    override fun transferred(size: Int) {
+                        status.currentSize += size
+                        updateStatus(status)
                     }
 
                     override fun failed() {
                     }
                 })
             }
+            status.currentSize = startSize + entry.size
+            status.currentFile++
+            updateStatus(status)
         }
 
         println("DONE. Now package should be promoted!")

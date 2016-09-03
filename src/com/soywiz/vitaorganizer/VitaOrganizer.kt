@@ -156,12 +156,22 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                         //JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
                         val entry = entry
                         if (entry != null) {
-                            val zip = ZipFile(entry.vpkFile)
-                            try {
-                                PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile))
-                            } catch (e: Throwable) {
-                                JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
-                            }
+                            Thread {
+                                statusLabel.text = "Sending game ${entry.id}..."
+                                //val zip = ZipFile(entry.vpkFile)
+                                try {
+                                    PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile)) { status ->
+                                        //println("$status")
+                                        val currentSizeStr = FileSize.toString(status.currentSize)
+                                        val totalSizeStr = FileSize.toString(status.totalSize)
+                                        statusLabel.text = "Uploading ${entry.id} :: ${status.currentFile}/${status.totalFiles} :: $currentSizeStr/$totalSizeStr"
+                                    }
+                                    //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
+                                } catch (e: Throwable) {
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
+                                }
+                                statusLabel.text = "Sent game ${entry.id}"
+                            }.start()
                         }
                     }
                 }
@@ -180,9 +190,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     sendToVita.isEnabled = false
 
                     if (entry != null) {
-                        gameTitlePopup.text = "${entry.id} : ${entry?.title}"
+                        gameTitlePopup.text = "${entry.id} : ${entry.title}"
                         deleteFromVita.isEnabled = entry.inVita
-                        sendToVita.isEnabled = !entry.inVita
+                        //sendToVita.isEnabled = !entry.inVita
+                        sendToVita.isEnabled = true
                     }
 
                     super.show(invoker, x, y)
