@@ -12,6 +12,15 @@ In other cases, you can run it with `java -jar vitaorganizer-0.1.jar`
 
 ### Building from source
 
+You can open build.gradle in intelliJ to get started. The main class is: `src/com/soywiz/vitaorganizer/VitaOrganizer`
 
+You can compile without intelliJ directly from the console just with gradle. Just call
+
+```
+gradle jar
+```
+
+It will generate the file `build/libs/vitaorganizer-0.1.jar` with all the dependencies included as an executable jar
+that should work on desktop java versions.
 
 ![](extra/screenshot.png)
