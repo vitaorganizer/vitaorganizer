@@ -103,6 +103,7 @@ object PsvitaDevice {
 
     fun getParamSfo(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/sce_sys/param.sfo")
     fun getGameIcon(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/sce_sys/icon0.png")
+    fun downloadEbootBin(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/eboot.bin")
 
     fun getParamSfoCached(id: String): ByteArray {
         val file = VitaOrganizerCache.entry(id).paramSfoFile

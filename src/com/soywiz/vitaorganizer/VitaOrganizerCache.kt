@@ -15,6 +15,7 @@ object VitaOrganizerCache {
         val paramSfoFile = cacheFolder["$gameId.param.sfo"]
         val pathFile = cacheFolder["$gameId.path"]
         val sizeFile = cacheFolder["$gameId.size"]
+        val permissionsFile = cacheFolder["$gameId.extperm"]
     }
 
     fun entry(gameId: String) = Entry(gameId)

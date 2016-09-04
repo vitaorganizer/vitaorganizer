@@ -117,6 +117,11 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 val icon = entry2.icon0File
                 val image = ImageIO.read(ByteArrayInputStream(icon.readBytes()))
                 val psf = PSF.read(entry2.paramSfoFile.readBytes().stream)
+                val extendedPermissions = try {
+                    entry2.permissionsFile.readText().toBoolean()
+                } catch (e: Throwable) {
+                    true
+                }
 
                 //println(psf)
                 if (image != null) {
@@ -132,6 +137,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                             } else {
                                 "NONE"
                             },
+                            if (extendedPermissions) "!UNSECURE!" else "SECURE",
                             FileSize.toString(entry.size),
                             entry.title
                     ))
@@ -273,6 +279,19 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                         val entry = entry
                         if (entry != null) {
                             Thread {
+                                val zip = ZipFile(entry.vpkFile)
+
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Checking eboot permissions..."
+                                }
+
+                                if (EbootBin.hasExtendedPermissions(zip.getBytes("eboot.bin").open2("r"))) {
+                                    val result = JOptionPane.showConfirmDialog(VitaOrganizer, "Game ${entry.id} requires extended permissions.\nAre you sure you want to install it. It could damage your device?", "WARNING!", JOptionPane.YES_NO_OPTION);
+                                    if (result != JOptionPane.YES_OPTION) {
+                                        throw InterruptedException("Not accepted installing game with extended permissions")
+                                    }
+                                }
+
                                 SwingUtilities.invokeLater {
                                     statusLabel.text = "Generating small VPK for promoting..."
                                 }
@@ -281,15 +300,13 @@ object VitaOrganizer : JPanel(BorderLayout()) {
 
                                 //val zip = ZipFile(entry.vpkFile)
                                 try {
-                                    val originalZip = ZipFile(entry.vpkFile)
-                                    val vpkData = createSmallVpk(originalZip)
+                                    val vpkData = createSmallVpk(zip)
 
                                     PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
                                         SwingUtilities.invokeLater {
                                             statusLabel.text = "Uploading VPK for promoting (${status.sizeRange})..."
                                         }
                                     }
-                                    originalZip.close()
 
                                     //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
                                 } catch (e: Throwable) {
@@ -311,9 +328,8 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                 SwingUtilities.invokeLater {
                                     statusLabel.text = "Sending game ${entry.id}..."
                                 }
-                                //val zip = ZipFile(entry.vpkFile)
                                 try {
-                                    PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile)) { status ->
+                                    PsvitaDevice.uploadGame(entry.id, zip) { status ->
                                         //println("$status")
                                         SwingUtilities.invokeLater {
                                             statusLabel.text = "Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}"
@@ -486,10 +502,21 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                 try {
                                     PsvitaDevice.getParamSfoCached(gameId)
                                     PsvitaDevice.getGameIconCached(gameId)
-                                    val sizeFile = VitaOrganizerCache.entry(gameId).sizeFile
+                                    val entry2 = VitaOrganizerCache.entry(gameId)
+                                    val sizeFile = entry2.sizeFile
                                     if (!sizeFile.exists()) {
                                         sizeFile.writeText("" + PsvitaDevice.getGameSize(gameId))
                                     }
+
+                                    if (!entry2.permissionsFile.exists()) {
+                                        val ebootBin = PsvitaDevice.downloadEbootBin(gameId)
+                                        try {
+                                            entry2.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBin.open2("r")))
+                                        } catch (e: Throwable) {
+                                            entry2.permissionsFile.writeText("true")
+                                        }
+                                    }
+
                                     synchronized(VITA_GAME_IDS) {
                                         VITA_GAME_IDS += gameId
                                     }
@@ -591,6 +618,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         model.addColumn("Icon")
         model.addColumn("ID")
         model.addColumn("Where")
+        model.addColumn("Permissions")
         model.addColumn("Size")
         model.addColumn("Title")
 
@@ -613,7 +641,17 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 setHorizontalAlignment(JLabel.CENTER);
             }
         }
-        table.getColumn("Size").apply {
+        table.getColumn("Where").apply {
+            width = 64
+            minWidth = 64
+            maxWidth = 64
+            preferredWidth = 64
+            resizable = false
+            cellRenderer = DefaultTableCellRenderer().apply {
+                setHorizontalAlignment(JLabel.CENTER);
+            }
+        }
+        table.getColumn("Permissions").apply {
             width = 96
             minWidth = 96
             maxWidth = 96
@@ -623,11 +661,11 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 setHorizontalAlignment(JLabel.CENTER);
             }
         }
-        table.getColumn("Where").apply {
-            width = 64
-            minWidth = 64
-            maxWidth = 64
-            preferredWidth = 64
+        table.getColumn("Size").apply {
+            width = 96
+            minWidth = 96
+            maxWidth = 96
+            preferredWidth = 96
             resizable = false
             cellRenderer = DefaultTableCellRenderer().apply {
                 setHorizontalAlignment(JLabel.CENTER);
@@ -700,7 +738,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
             //println(vpkFile)
             try {
                 val zip = ZipFile(vpkFile)
-                val paramSfoData = zip.getInputStream(zip.getEntry("sce_sys/param.sfo")).readBytes()
+                val paramSfoData = zip.getBytes("sce_sys/param.sfo")
 
                 val psf = PSF.read(paramSfoData.open2("r"))
                 val gameId = psf["TITLE_ID"].toString()
@@ -716,6 +754,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 if (!entry.sizeFile.exists()) {
                     val uncompressedSize = ZipFile(vpkFile).entries().toList().map { it.size }.sum()
                     entry.sizeFile.writeText("" + uncompressedSize)
+                }
+                if (!entry.permissionsFile.exists()) {
+                    val ebootBinData = zip.getBytes("eboot.bin")
+                    entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinData.open2("r")))
                 }
                 entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
                 synchronized(VPK_GAME_IDS) {
