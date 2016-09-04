@@ -1,6 +1,6 @@
 package com.soywiz.util
 
-data class SliceStream2(
+class SliceStream2(
         internal val parent: Stream2,
         internal val start: Long,
         internal val end: Long

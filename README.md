@@ -10,4 +10,8 @@ In other cases, you can run it with `java -jar vitaorganizer-0.1.jar`
 
 [Download VitaOrganizer 0.1 here](https://github.com/soywiz/vitaorganizer/releases/download/0.1/vitaorganizer-0.1.jar)
 
+### Building from source
+
+
+
 ![](extra/screenshot.png)

@@ -2,10 +2,9 @@ group 'com.soywiz'
 version '0.1'
 
 buildscript {
-    ext.kotlin_version = '1.1-M01'
+    ext.kotlin_version = '1.0.3'
 
     repositories {
-        maven { url "http://dl.bintray.com/kotlin/kotlin-eap-1.1" }
         mavenLocal()
         mavenCentral()
     }
@@ -20,7 +19,6 @@ apply plugin: 'kotlin'
 sourceCompatibility = 1.5
 
 repositories {
-    maven { url "http://dl.bintray.com/kotlin/kotlin-eap-1.1" }
     mavenLocal()
     mavenCentral()
 }
