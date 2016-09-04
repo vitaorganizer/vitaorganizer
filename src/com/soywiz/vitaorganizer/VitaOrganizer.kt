@@ -195,11 +195,11 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                     val originalZip = ZipFile(entry.vpkFile)
                                     val vpkData = createSmallVpk(originalZip)
 
-                                    SwingUtilities.invokeLater {
-                                        statusLabel.text = "Uploading VPK for promoting (${FileSize.toString(vpkData.size.toLong())})..."
+                                    PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
+                                        SwingUtilities.invokeLater {
+                                            statusLabel.text = "Uploading VPK for promoting (${status.sizeRange})..."
+                                        }
                                     }
-
-                                    PsvitaDevice.uploadFile("/$vpkPath", vpkData)
                                     originalZip.close()
 
                                     //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
@@ -228,10 +228,8 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                 try {
                                     PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile)) { status ->
                                         //println("$status")
-                                        val currentSizeStr = FileSize.toString(status.currentSize)
-                                        val totalSizeStr = FileSize.toString(status.totalSize)
                                         SwingUtilities.invokeLater {
-                                            statusLabel.text = "Uploading ${entry.id} :: ${status.currentFile}/${status.totalFiles} :: $currentSizeStr/$totalSizeStr"
+                                            statusLabel.text = "Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}"
                                         }
                                     }
                                     //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
@@ -339,6 +337,20 @@ object VitaOrganizer : JPanel(BorderLayout()) {
             val connectText = "Connect to PsVita..."
             val disconnectText = "Disconnect from %s"
             var connected = false
+            val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp) {
+                init {
+                    font = Font(Font.MONOSPACED, Font.PLAIN, 14)
+                }
+
+                override fun processKeyEvent(e: KeyEvent?) {
+                    super.processKeyEvent(e)
+                    VitaOrganizerSettings.lastDeviceIp = this.text
+                }
+            }
+
+            connectAddress.addActionListener {
+                println("aaa")
+            }
 
             val connectButton = JButton(connectText).apply {
                 val button = this
@@ -358,6 +370,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     VitaOrganizerSettings.lastDeviceIp = ip
                     PsvitaDevice.setIp(ip, 1337)
                     button.text = disconnectText.format(ip)
+                    connectAddress.text = ip
                     synchronized (VITA_GAME_IDS) {
                         VITA_GAME_IDS.clear()
                     }
@@ -442,6 +455,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 })
             }
             add(connectButton)
+            add(connectAddress)
+            add(object : JButton("Check for updates...") {
+
+            })
         }
 
         add(header, SpringLayout.NORTH)

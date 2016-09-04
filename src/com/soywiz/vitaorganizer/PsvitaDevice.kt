@@ -138,6 +138,9 @@ object PsvitaDevice {
         var totalFiles: Int = 0
         var currentSize: Long = 0L
         var totalSize: Long = 0L
+
+        val fileRange: String get() = "$currentFile/$totalFiles"
+        val sizeRange: String get() = "${FileSize.toString(currentSize)}/${FileSize.toString(totalSize)}"
     }
 
     val createDirectoryCache = hashSetOf<String>()
@@ -210,8 +213,13 @@ object PsvitaDevice {
         println("DONE. Now package should be promoted!")
     }
 
-    fun uploadFile(path: String, data: ByteArray) {
+    fun uploadFile(path: String, data: ByteArray, updateStatus: (Status) -> Unit = { }) {
+        val status = Status()
         createDirectories(File(path).parent)
+        status.currentFile = 0
+        status.totalFiles = 1
+        status.totalSize = data.size.toLong()
+        updateStatus(status)
         connectedFtp().upload(path, ByteArrayInputStream(data), 0L, 0L, object : FTPDataTransferListener {
             override fun started() {
             }
@@ -222,12 +230,16 @@ object PsvitaDevice {
             override fun aborted() {
             }
 
-            override fun transferred(p0: Int) {
+            override fun transferred(size: Int) {
+                status.currentSize += size
+                updateStatus(status)
             }
 
             override fun failed() {
             }
         })
+        status.currentFile++
+        updateStatus(status)
     }
 
     /*
