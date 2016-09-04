@@ -1,5 +1,5 @@
 group 'com.soywiz'
-version '0.1'
+version new File('resources/currentVersion.txt').text
 
 buildscript {
     ext.kotlin_version = '1.0.3'
