@@ -11,9 +11,13 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.IOException
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import java.nio.file.StandardWatchEventKinds
 import java.util.*
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
@@ -315,7 +319,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 }
             }
         }
-        table.preferredScrollableViewportSize = Dimension(640, 480)
+        table.preferredScrollableViewportSize = Dimension(800, 600)
 
         if (DEBUG) {
         }
@@ -348,6 +352,14 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                             VitaOrganizerSettings.vpkFolder = chooser.selectedFile.absolutePath
                             updateFileList()
                         }
+                    }
+                })
+            })
+
+            add(JButton("Refresh").apply {
+                this.addMouseListener(object : MouseAdapter() {
+                    override fun mouseClicked(e: MouseEvent?) {
+                        updateFileList()
                     }
                 })
             })
@@ -613,7 +625,11 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         synchronized(VPK_GAME_IDS) {
             VPK_GAME_IDS.clear()
         }
-        for (vpkFile in File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.extension.toLowerCase() == "vpk" }) {
+        for (vpkFile in File(VitaOrganizerSettings.vpkFolder).listFiles()) {
+            println(vpkFile)
+        }
+        for (vpkFile in File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }) {
+            //println(vpkFile)
             try {
                 val zip = ZipFile(vpkFile)
                 val paramSfoData = zip.getInputStream(zip.getEntry("sce_sys/param.sfo")).readBytes()
@@ -639,7 +655,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 }
                 //getGameEntryById(gameId).inPC = true
             } catch (e: Throwable) {
-
+                e.printStackTrace()
             }
         }
         updateEntries()
@@ -654,5 +670,17 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         g2.dispose()
 
         return resizedImg
+    }
+
+    fun fileWatchFolder(path: String) {
+        val watcher = FileSystems.getDefault().newWatchService()
+        val dir = FileSystems.getDefault().getPath(path)
+        try {
+
+            val key = dir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+
+        } catch (x: IOException) {
+            System.err.println(x);
+        }
     }
 }

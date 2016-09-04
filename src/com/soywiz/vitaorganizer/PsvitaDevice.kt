@@ -50,7 +50,14 @@ object PsvitaDevice {
         return availableIps
     }
 
-    val ftp = FTPClient()
+    val ftp = FTPClient().apply {
+        type = FTPClient.TYPE_BINARY
+    }
+
+    //init {
+        //ftp.sendCustomCommand()
+    //}
+
     var ip = "192.168.1.130"
     var port = 1337
 

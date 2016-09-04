@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="ftp4j" default="rel">
+
+    <condition property="revision" value="${svn.info.rev}" else="UNKNOWN">
+        <isset property="svn.info.rev" />
+    </condition>
+    <condition property="version" value="${svn.tag}" else="rv${revision}">
+        <isset property="svn.tag" />
+    </condition>
+    <condition property="target.zip.dir" value="${target.dir}" else="${basedir}">
+        <isset property="target.dir" />
+    </condition>
+    <property file="${basedir}/build.properties" />    
+
+	<target name="bin">
+		<delete dir="${ftp4j.dirs.bin}" />
+		<mkdir dir="${ftp4j.dirs.bin}" />
+		<javac srcdir="${ftp4j.dirs.src}" destdir="${ftp4j.dirs.bin}" includes="it/sauronsoftware/ftp4j/**" source="1.4" target="1.4" debug="true" />
+		<copy todir="${ftp4j.dirs.bin}">
+			<fileset dir="${ftp4j.dirs.src}">
+				<exclude name="**/*.java" />
+				<exclude name="**/package.html" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="jar" depends="bin">
+		<jar destfile="${ftp4j.files.jar}" basedir="${ftp4j.dirs.bin}" compress="true" />
+	</target>
+
+	<target name="doc">
+		<delete dir="${ftp4j.dirs.api}" />
+		<mkdir dir="${ftp4j.dirs.api}" />
+		<javadoc sourcepath="${ftp4j.dirs.src}" destdir="${ftp4j.dirs.api}" doctitle="ftp4j ${version}" access="protected" author="true" version="true" verbose="true">
+			<package name="it.sauronsoftware.ftp4j.*" />
+			<excludepackage name="it.sauronsoftware.ftp4j.base64" />
+		</javadoc>
+	</target>
+
+	<target name="rel" depends="bin,jar,doc">
+		<delete dir="${ftp4j.dirs.tmp}" />
+		<mkdir dir="${ftp4j.dirs.tmp}" />
+		<property name="ftp4j.dirs.rel" value="${ftp4j.dirs.tmp}/ftp4j-${version}" />
+		<mkdir dir="${ftp4j.dirs.rel}" />
+		<copy todir="${ftp4j.dirs.rel}" verbose="true">
+            <fileset dir="${basedir}" includes="LICENSE.txt" />
+            <fileset dir="${basedir}" includes="README.txt" />
+            <fileset dir="${basedir}" includes="CHANGELOG.txt" />
+            <fileset dir="${basedir}" includes="BUILD.txt" />
+            <fileset dir="${basedir}" includes="build.properties" />
+            <fileset dir="${basedir}" includes="build.xml" />
+			<fileset file="${ftp4j.files.jar}" />
+		</copy>
+		<mkdir dir="${ftp4j.dirs.rel}/src" />
+		<copy todir="${ftp4j.dirs.rel}/src" verbose="true">
+			<fileset dir="${ftp4j.dirs.src}" includes="it/sauronsoftware/ftp4j/**" />
+		</copy>
+		<mkdir dir="${ftp4j.dirs.rel}/doc" />
+		<copy todir="${ftp4j.dirs.rel}/doc" verbose="true">
+			<fileset dir="${ftp4j.dirs.doc}" />
+		</copy>
+		<zip destfile="${ftp4j.files.rel}" basedir="${ftp4j.dirs.tmp}" includes="ftp4j-${version}/**" />
+		<delete dir="${ftp4j.dirs.tmp}" />
+	</target>
+
+</project>

@@ -23,14 +23,10 @@ repositories {
     maven { url "http://dl.bintray.com/kotlin/kotlin-eap-1.1" }
     mavenLocal()
     mavenCentral()
-    flatDir {
-        dirs 'libs'
-    }
 }
 
 sourceSets {
-    main.java.srcDirs = ['src']
-    main.kotlin.srcDirs = ['src']
+    main.kotlin.srcDirs = main.java.srcDirs = ['src', 'ftp4j/src']
     main.resources.srcDirs = ['resources', 'assets']
     test.java.srcDirs = ['test']
     test.kotlin.srcDirs = ['test']
@@ -40,7 +36,6 @@ sourceSets {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     //compile "commons-net:commons-net:3.5"
-    compile name: 'ftp4j-1.7.2'
     testCompile "junit:junit:4.11"
 }
 

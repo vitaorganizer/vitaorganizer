@@ -1,0 +1,194 @@
+Version 1.7.2 - 2012/06/26
+
+- A bug has been fixed in the download routine, handling the "502 Command
+  REST not allowed by policy" message the right way.
+
+(Thanks to Ralf Bommersbach)
+
+
+Version 1.7.1 - 2012/04/12
+
+- The FTPConnector has now a setUseSuggestedAddressForDataConnections()
+  method that can be used to determinate if the connector should trust
+  the address returned by the server in the response of a PASV command,
+  or if it should rather connect to the same host used for the communication
+  channel. Before this release, this behavior had to be set using a
+  not so flexible system property. Althought the system property approach
+  is still supported, now every single connector can have its own default
+  behavior and the developer can change it for every single connection.
+- A bug related to the auto noop timer has been fixed.
+- Any call to SimpleDateFormat is now thread safe.
+- Enhancements in data transfer routines, which now are compatible with a
+  larger set of servers and proxies.
+
+(Thanks to Akom and Roberto Di Vincenzo)
+
+
+Version 1.7 - 2011/12/28
+
+- A change has been made in the FTP connectors architecture.
+  FTPConnector is no longer an interface: it is now an abstract class
+  implementing timeout aware connections. Timeouts for connection, read and
+  close operations can be set by the caller.
+- A connection attempt to a remote FTP server can now be aborted
+  calling the brand new abortCurrentConnectionAttempt() method in FTPClient.
+- Bugfix in the HTTPTunnelConnector.
+
+(Thanks to David Ekholm and Jose Sierra)
+
+
+Version 1.6.1 - 2011/08/26
+
+- The "502 Command REST not allowed by policy"
+  and "501 REST not compatible with server
+  configuration" responses to the "REST 0" command
+  are no longer as errors. This extends the library
+  compatibility to a greater number of server
+  types.
+- Each SIZE command is now preceded by a TYPE I
+  command, extending the library compatibility.
+- Enhancements in the remote file list routine.
+- A timezone issue has been solved in UnixListParser
+  and NetWareListParser.
+
+(Thanks to Magnus Lundvall, Raphael de Bem, Joe Gerstung and Thomas Andres)
+
+
+Version 1.6 - 2011/01/07
+
+- Append to a remote file support added.
+- Data transfer speed enhancements.
+- FTPES is now enforced if required.
+
+(Thanks to Jakub Stachowski and Corey Puffalt)
+
+
+Version 1.5.1 - 2010/05/30
+
+- REST command support compatibility enhanced.
+- Blank lines coming from the server are now ignored.
+
+(Thanks to Aniceto Pérez)
+
+
+Version 1.5 - 2010/03/11
+
+- MLSD command support added.
+- MODE Z support added.
+- Automatic NOOP on inactivity timeout added.
+- The library behaviour for passive data transfers has been
+  changed. The client trusts no longer the IP address returned
+  by the server in response to a PASV command. The library
+  now connects always to the same host name supplied for the
+  initial connection. This behaviour solves many frequently
+  reported NAT problems. However, the old behaviour can be
+  restored, by setting to true the value of the system property
+  called ftp4j.passiveDataTransfer.useSuggestedAddress.
+- The HTTPTunnelConnector has been improved, and now it is
+  fully HTTP 1.1 compliant.
+- A date parsing bug was fixed in UnixListParser and 
+  NetWareListParser components.
+
+(Thanks to Liu Yan, Steven Luke, Roberto Bellandi and
+           Alessandro Brunelli)
+
+
+Version 1.4.3 - 2009/07/14
+
+- Enhancements in download/upload error handling
+- UnixListParser enhancements
+- The REST command is now issued only if the server declares
+  explicitly its support in the FEAT command response
+
+(Thanks to Stephan Fudeus and Andreas Rudolph)
+
+
+Version 1.4.2 - 2009/06/01
+
+- In FTPS and FTPES mode the client now issues a "PBSZ 0" command
+  before sending the "PROT P" one. Some servers require it.
+- Minor API change: the streamLength information is no more required
+  by the upload method.
+
+(Thanks to Lukas Loehrer)
+
+
+Version 1.4.1 - 2009/05/20
+
+- Bug resolved: append instead overwrite on download
+- Bug resolved: blank files in textual mode on upload/download
+
+
+Version 1.4 - 2009/05/18
+
+- FTPS and FTPES support added
+- New connection architecture, classes FTPConnection and SSLConnector
+  have been removed
+
+
+Version 1.3.3 - 2009/04/29
+
+- UTF-8 support enhanced
+
+
+Version 1.3.2 - 2009/04/15
+
+- REST command support is no more required by the client
+
+(Thanks to Giuseppe Baccini)
+
+
+Version 1.3.1 - 2008/11/16
+
+- Bugfix in upload routine
+
+(Thanks to Tobias Burggraf)
+
+
+Version 1.3 - 2008/11/05
+
+- Active and passive connection modes improved for larger server
+  compatibility.
+- System properties support added for more customizable active
+  transfer modes.
+- Auto NOOP during data transfers is now disabled by default.
+  The ftp4j.dataTransfer.autoNOOPDelay system property can be
+  used to enable the feature (see manual).
+- SSLConnector improved
+- Bugfix in the automatic transfer type detection routine.
+
+(Thanks to Marco Bascetta)
+
+
+Version 1.2 - 2008/10/19
+
+- FTPClient.list(String fileSpec) method added.
+- SSLConnector added.
+
+(Thanks to Aniceto Pérez)
+
+
+Version 1.1.2 - 2008/10/05
+
+- NOOP commands automatically sent during file transfers.
+- Bugfix to better handle MAC style list responses.
+  
+(Thanks to Aniceto Pérez and Ashika Umanga Umagiliya)
+
+
+Version 1.1.1 - 2008/04/18
+
+- Improvements in HTTPTunnelConnector
+   - HTTP/1.0 responses now are supported
+   - Bugfixes in the base64 component
+
+(Thanks to Florian Mahlecke and Ashika Umanga Umagiliya)
+
+
+Version 1.1 - 2008/04/11
+
+- Improvements in encoding support
+   - UTF-8 server support auto detection
+   - setCharset() and getCharset() methods added to FTPClient
+
+(Thanks to Peter Rellermeyer)

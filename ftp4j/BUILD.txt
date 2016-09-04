@@ -1,0 +1,15 @@
+You need Apache Ant to build ftp4j.
+
+See: http://ant.apache.org/
+
+Available targets:
+
+  1. bin - Generates binary files in ${basedir}/bin.
+
+  2. jar - Generates ${basedir}/ftp4j-${version}.jar file.
+
+  3. doc - Generates javadoc api documentation in ${basedir}/doc/api.
+
+  4. rel - Generates ${basedir}/ftp4j-${version}.zip (full distribution) in ${basedir}. This is the default target.
+
+General build properties can be managed within the build.properties file.
