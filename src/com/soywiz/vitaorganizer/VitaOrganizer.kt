@@ -11,6 +11,9 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.net.URI
+import java.net.URISyntaxException
+import java.net.URL
 import java.util.*
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
@@ -28,9 +31,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         //PsvitaDevice.discoverIp()
         //SwingUtilities.invokeLater {
         //Create and set up the window.
-        val frame = JFrame("VitaOrganizer 0.1")
+        val frame = JFrame("VitaOrganizer $currentVersion")
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-        frame.iconImage = ImageIO.read(ClassLoader.getSystemResource("vitafrontblk.jpg"))
+        frame.iconImage = ImageIO.read(getResourceURL("vitafrontblk.jpg"))
 
         //Create and set up the content pane.
         val newContentPane = VitaOrganizer
@@ -42,6 +45,21 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         frame.setLocationRelativeTo(null)
         frame.isVisible = true
         //}
+    }
+
+    val currentVersion: String get() = getResourceString("currentVersion.txt") ?: "unknown"
+
+    fun getResourceURL(name: String) = ClassLoader.getSystemResource(name)
+    fun getResourceBytes(name: String) = try {
+        ClassLoader.getSystemResource(name).readBytes()
+    } catch (e: Throwable) {
+        null
+    }
+
+    fun getResourceString(name: String) = try {
+        ClassLoader.getSystemResource(name).readText()
+    } catch (e: Throwable) {
+        null
     }
 
     class GameEntry(val gameId: String) {
@@ -238,7 +256,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                 }
                                 SwingUtilities.invokeLater {
                                     statusLabel.text = "Sent game data ${entry.id}"
-                                    JOptionPane.showMessageDialog(VitaOrganizer, "Game sent successfully", "Actions", JOptionPane.INFORMATION_MESSAGE);
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "Game ${entry.id} sent successfully", "Actions", JOptionPane.INFORMATION_MESSAGE);
                                 }
                             }.start()
                         }
@@ -358,7 +376,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 fun disconnect() {
                     connected = false
                     button.text = connectText
-                    synchronized (VITA_GAME_IDS) {
+                    synchronized(VITA_GAME_IDS) {
                         VITA_GAME_IDS.clear()
                     }
                     updateEntries()
@@ -371,7 +389,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     PsvitaDevice.setIp(ip, 1337)
                     button.text = disconnectText.format(ip)
                     connectAddress.text = ip
-                    synchronized (VITA_GAME_IDS) {
+                    synchronized(VITA_GAME_IDS) {
                         VITA_GAME_IDS.clear()
                     }
                     var done = false
@@ -392,7 +410,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                     if (!sizeFile.exists()) {
                                         sizeFile.writeText("" + PsvitaDevice.getGameSize(gameId))
                                     }
-                                    synchronized (VITA_GAME_IDS) {
+                                    synchronized(VITA_GAME_IDS) {
                                         VITA_GAME_IDS += gameId
                                     }
                                     updated = true
@@ -454,11 +472,29 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     }
                 })
             }
+            val checkUpdatesButton = object : JButton("Check for updates...") {
+
+            }
+            checkUpdatesButton.addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent) {
+                    val text = URL("https://raw.githubusercontent.com/soywiz/vitaorganizer/master/lastVersion.txt").readText()
+                    val parts = text.lines()
+                    val lastVersion = parts[0]
+                    val lastVersionUrl = parts[1]
+                    if (lastVersion == currentVersion) {
+                        JOptionPane.showMessageDialog(VitaOrganizer, "You have the lastest version: $currentVersion", "Actions", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        val result = JOptionPane.showConfirmDialog(VitaOrganizer, "There is a new version: $lastVersion\nYou have: $currentVersion\nWant to download last version?", "Actions", JOptionPane.YES_NO_OPTION);
+                        if (result == JOptionPane.OK_OPTION) {
+                            openWebpage(URL(lastVersionUrl))
+                        }
+                    }
+                    println(parts)
+                }
+            })
             add(connectButton)
             add(connectAddress)
-            add(object : JButton("Check for updates...") {
-
-            })
+            add(checkUpdatesButton)
         }
 
         add(header, SpringLayout.NORTH)
@@ -552,6 +588,27 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         updateFileList()
     }
 
+    fun openWebpage(uri: URI) {
+        val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop() else null
+        if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+            try {
+                desktop.browse(uri)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+        }
+    }
+
+    fun openWebpage(url: URL) {
+        try {
+            openWebpage(url.toURI())
+        } catch (e: URISyntaxException) {
+            e.printStackTrace()
+        }
+
+    }
+
     fun updateFileList() {
         synchronized(VPK_GAME_IDS) {
             VPK_GAME_IDS.clear()
@@ -597,21 +654,5 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         g2.dispose()
 
         return resizedImg
-    }
-
-    private fun printDebugData(table: JTable) {
-        val numRows = table.rowCount
-        val numCols = table.columnCount
-        val model = table.model
-
-        println("Value of data: ")
-        for (i in 0..numRows - 1) {
-            print("    row $i:")
-            for (j in 0..numCols - 1) {
-                print("  " + model.getValueAt(i, j))
-            }
-            println()
-        }
-        println("--------------------------")
     }
 }
