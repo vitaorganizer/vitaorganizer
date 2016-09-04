@@ -4,6 +4,7 @@ import it.sauronsoftware.ftp4j.FTPClient
 import it.sauronsoftware.ftp4j.FTPDataTransferListener
 import it.sauronsoftware.ftp4j.FTPException
 import it.sauronsoftware.ftp4j.FTPFile
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -59,9 +60,17 @@ object PsvitaDevice {
     }
 
     private fun connectedFtp(): FTPClient {
-        if (!ftp.isConnected) {
-            ftp.connect(ip, port)
-            ftp.login("", "")
+        retries@for (n in 0 until 5) {
+            if (!ftp.isConnected) {
+                ftp.connect(ip, port)
+                ftp.login("", "")
+            }
+            try {
+                ftp.noop()
+                break@retries
+            } catch (e: IOException) {
+                ftp.disconnect(false)
+            }
         }
         return ftp
     }
@@ -131,31 +140,32 @@ object PsvitaDevice {
         var totalSize: Long = 0L
     }
 
+    val createDirectoryCache = hashSetOf<String>()
+
+    fun createDirectories(path: String, createDirectoryCache: HashSet<String> = PsvitaDevice.createDirectoryCache) {
+        val parent = File(path).parent
+        if (parent != "" && parent != null) {
+            createDirectories(parent, createDirectoryCache)
+        }
+        if (path !in createDirectoryCache) {
+            println("Creating directory $path...")
+            createDirectoryCache.add(path)
+            try {
+                connectedFtp().createDirectory(path)
+            } catch (e: IOException) {
+                throw e
+            } catch (e: FTPException) {
+                e.printStackTrace()
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun uploadGame(id: String, zip: ZipFile, updateStatus: (Status) -> Unit = { }) {
         val base = getGameFolder(id)
 
-        val createDirectoryCache = hashSetOf<String>()
         val status = Status()
-
-        fun createDirectories(path: String) {
-            val parent = File(path).parent
-            if (parent != "" && parent != null) {
-                createDirectories(parent)
-            }
-            if (path !in createDirectoryCache) {
-                println("Creating directory $path...")
-                createDirectoryCache.add(path)
-                try {
-                    connectedFtp().createDirectory(path)
-                } catch (e: IOException) {
-                    throw e
-                } catch (e: FTPException) {
-                    e.printStackTrace()
-                } catch (e: Throwable) {
-                    e.printStackTrace()
-                }
-            }
-        }
 
         val entries = zip.entries().toList()
 
@@ -198,6 +208,26 @@ object PsvitaDevice {
         }
 
         println("DONE. Now package should be promoted!")
+    }
+
+    fun uploadFile(path: String, data: ByteArray) {
+        createDirectories(File(path).parent)
+        connectedFtp().upload(path, ByteArrayInputStream(data), 0L, 0L, object : FTPDataTransferListener {
+            override fun started() {
+            }
+
+            override fun completed() {
+            }
+
+            override fun aborted() {
+            }
+
+            override fun transferred(p0: Int) {
+            }
+
+            override fun failed() {
+            }
+        })
     }
 
     /*

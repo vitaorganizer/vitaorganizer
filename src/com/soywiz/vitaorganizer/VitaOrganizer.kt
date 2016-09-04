@@ -9,9 +9,13 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
+import java.util.zip.Deflater
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import javax.imageio.ImageIO
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
@@ -24,7 +28,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
         //PsvitaDevice.discoverIp()
         //SwingUtilities.invokeLater {
         //Create and set up the window.
-        val frame = JFrame("VitaOrganizer")
+        val frame = JFrame("VitaOrganizer 0.1")
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.iconImage = ImageIO.read(ClassLoader.getSystemResource("vitafrontblk.jpg"))
 
@@ -155,26 +159,89 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     this.isEnabled = false
                 }
 
-                val sendToVita = JMenuItem("Send to PSVita").apply {
+                fun createSmallVpk(zip: ZipFile): ByteArray {
+                    // out put file
+                    val outBytes = ByteArrayOutputStream()
+                    val out = ZipOutputStream(outBytes)
+                    out.setLevel(Deflater.DEFAULT_COMPRESSION)
+
+                    // name the file inside the zip  file
+                    for (e in zip.entries()) {
+                        if (e.name == "eboot.bin" || e.name.startsWith("sce_sys/")) {
+                            out.putNextEntry(ZipEntry(e.name))
+                            out.write(zip.getInputStream(e).readBytes())
+                        }
+                    }
+
+                    out.close()
+
+                    return outBytes.toByteArray()
+                }
+
+                val sendVpkToVita = JMenuItem("Send promoting VPK to PSVita").apply {
                     addActionListener {
                         //JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
                         val entry = entry
                         if (entry != null) {
                             Thread {
-                                statusLabel.text = "Sending game ${entry.id}..."
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Generating small VPK for promoting..."
+                                }
+
+                                val vpkPath = "ux0:/organizer/${entry.id}.VPK"
+
+                                //val zip = ZipFile(entry.vpkFile)
+                                try {
+                                    val originalZip = ZipFile(entry.vpkFile)
+                                    val vpkData = createSmallVpk(originalZip)
+
+                                    SwingUtilities.invokeLater {
+                                        statusLabel.text = "Uploading VPK for promoting (${FileSize.toString(vpkData.size.toLong())})..."
+                                    }
+
+                                    PsvitaDevice.uploadFile("/$vpkPath", vpkData)
+                                    originalZip.close()
+
+                                    //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
+                                } catch (e: Throwable) {
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
+                                }
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Sent game vpk ${entry.id}"
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "Now use VitaShell to install\n$vpkPath\n\nAfer that active ftp again and use this program to Send Data to PSVita", "Actions", JOptionPane.INFORMATION_MESSAGE);
+                                }
+                            }.start()
+                        }
+                    }
+                }
+
+                val sendToVita = JMenuItem("Send Data to PSVita").apply {
+                    addActionListener {
+                        //JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
+                        val entry = entry
+                        if (entry != null) {
+                            Thread {
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Sending game ${entry.id}..."
+                                }
                                 //val zip = ZipFile(entry.vpkFile)
                                 try {
                                     PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile)) { status ->
                                         //println("$status")
                                         val currentSizeStr = FileSize.toString(status.currentSize)
                                         val totalSizeStr = FileSize.toString(status.totalSize)
-                                        statusLabel.text = "Uploading ${entry.id} :: ${status.currentFile}/${status.totalFiles} :: $currentSizeStr/$totalSizeStr"
+                                        SwingUtilities.invokeLater {
+                                            statusLabel.text = "Uploading ${entry.id} :: ${status.currentFile}/${status.totalFiles} :: $currentSizeStr/$totalSizeStr"
+                                        }
                                     }
                                     //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
                                 } catch (e: Throwable) {
                                     JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
                                 }
-                                statusLabel.text = "Sent game ${entry.id}"
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Sent game data ${entry.id}"
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "Game sent successfully", "Actions", JOptionPane.INFORMATION_MESSAGE);
+                                }
                             }.start()
                         }
                     }
@@ -184,6 +251,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     add(gameTitlePopup)
                     add(JSeparator())
                     add(deleteFromVita)
+                    add(sendVpkToVita)
                     add(sendToVita)
                 }
 
@@ -300,7 +368,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                             var vitaGameCount = 0
                             val vitaGameIds = PsvitaDevice.getGameIds()
                             for (gameId in vitaGameIds) {
-                                statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
+                                }
                                 //println(gameId)
                                 try {
                                     PsvitaDevice.getParamSfoCached(gameId)
@@ -325,7 +395,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                             updated = true
                         }
 
-                        statusLabel.text = "Connected"
+                        SwingUtilities.invokeLater {
+                            statusLabel.text = "Connected"
+                        }
                     }.start()
 
                     Thread {
