@@ -249,6 +249,14 @@ object PsvitaDevice {
         updateStatus(status)
     }
 
+    fun removeFile(path: String) {
+        connectedFtp().deleteFile(path)
+    }
+
+    fun promoteVpk(vpkPath: String) {
+        connectedFtp().sendCustomCommand("PROM $vpkPath")
+    }
+
     /*
     fun writePackage() {
         val PACKAGE_PARENT = "ux0:ptmp"

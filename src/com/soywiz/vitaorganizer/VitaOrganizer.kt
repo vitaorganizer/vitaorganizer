@@ -267,12 +267,78 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     }
                 }
 
+                val sendToVita1Step = JMenuItem("Send Full App to PSVita in just one 1-step (Requires VitaShell >= 0.9.2)").apply {
+                    addActionListener {
+                        //JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
+                        val entry = entry
+                        if (entry != null) {
+                            Thread {
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Generating small VPK for promoting..."
+                                }
+
+                                val vpkPath = "ux0:/organizer/${entry.id}.VPK"
+
+                                //val zip = ZipFile(entry.vpkFile)
+                                try {
+                                    val originalZip = ZipFile(entry.vpkFile)
+                                    val vpkData = createSmallVpk(originalZip)
+
+                                    PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
+                                        SwingUtilities.invokeLater {
+                                            statusLabel.text = "Uploading VPK for promoting (${status.sizeRange})..."
+                                        }
+                                    }
+                                    originalZip.close()
+
+                                    //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
+                                } catch (e: Throwable) {
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
+                                }
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Sent game vpk ${entry.id}"
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "Now use VitaShell to install\n$vpkPath\n\nAfer that active ftp again and use this program to Send Data to PSVita", "Actions", JOptionPane.INFORMATION_MESSAGE);
+                                }
+
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Promoting VPK..."
+                                }
+
+                                PsvitaDevice.promoteVpk(vpkPath)
+
+                                PsvitaDevice.removeFile("/$vpkPath")
+
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Sending game ${entry.id}..."
+                                }
+                                //val zip = ZipFile(entry.vpkFile)
+                                try {
+                                    PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile)) { status ->
+                                        //println("$status")
+                                        SwingUtilities.invokeLater {
+                                            statusLabel.text = "Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}"
+                                        }
+                                    }
+                                    //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
+                                } catch (e: Throwable) {
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
+                                }
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Sent game data ${entry.id}"
+                                    JOptionPane.showMessageDialog(VitaOrganizer, "Game ${entry.id} sent successfully", "Actions", JOptionPane.INFORMATION_MESSAGE);
+                                }
+                            }.start()
+                        }
+                    }
+                }
+
                 init {
                     add(gameTitlePopup)
                     add(JSeparator())
                     add(deleteFromVita)
                     add(sendVpkToVita)
                     add(sendToVita)
+                    add(sendToVita1Step)
                 }
 
                 override fun show(invoker: Component?, x: Int, y: Int) {
@@ -280,12 +346,14 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                     gameTitlePopup.text = "UNKNOWN"
                     deleteFromVita.isEnabled = false
                     sendToVita.isEnabled = false
+                    sendToVita1Step.isEnabled = false
 
                     if (entry != null) {
                         gameTitlePopup.text = "${entry.id} : ${entry.title}"
                         deleteFromVita.isEnabled = entry.inVita
                         //sendToVita.isEnabled = !entry.inVita
-                        sendToVita.isEnabled = true
+                        sendToVita.isEnabled = entry.inPC
+                        sendToVita1Step.isEnabled = entry.inPC
                     }
 
                     super.show(invoker, x, y)
