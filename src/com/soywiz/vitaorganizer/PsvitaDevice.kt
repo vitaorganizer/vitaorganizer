@@ -52,6 +52,10 @@ object PsvitaDevice {
 
     val ftp = FTPClient().apply {
         type = FTPClient.TYPE_BINARY
+        //autoNoopTimeout = 50000L
+        this.connector.setCloseTimeout(20)
+        this.connector.setReadTimeout(240) // PROM could take a lot of time!
+        this.connector.setConnectionTimeout(120)
     }
 
     //init {
@@ -173,20 +177,22 @@ object PsvitaDevice {
         }
     }
 
-    fun uploadGame(id: String, zip: ZipFile, updateStatus: (Status) -> Unit = { }) {
+    fun uploadGame(id: String, zip: ZipFile, filter: (path: String) -> Boolean = { true }, updateStatus: (Status) -> Unit = { }) {
         val base = getGameFolder(id)
 
         val status = Status()
 
-        val entries = zip.entries().toList()
+        val unfilteredEntries = zip.entries().toList()
+
+        val filteredEntries = unfilteredEntries.filter { filter(it.name) }
 
         status.currentFile = 0
-        status.totalFiles = entries.size
+        status.totalFiles = filteredEntries.size
 
         status.currentSize = 0L
-        status.totalSize = entries.map { it.size }.sum()
+        status.totalSize = filteredEntries.map { it.size }.sum()
 
-        for (entry in entries) {
+        for (entry in filteredEntries) {
             val vname = "$base/${entry.name}"
             val directory = File(vname).parent
             val startSize = status.currentSize

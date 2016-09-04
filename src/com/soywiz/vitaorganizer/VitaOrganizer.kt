@@ -267,7 +267,14 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                 }
                                 //val zip = ZipFile(entry.vpkFile)
                                 try {
-                                    PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile)) { status ->
+                                    PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile), filter = { path ->
+                                        // Skip files already installed in the VPK
+                                        if (path == "eboot.bin" || path.startsWith("sce_sys/")) {
+                                            false
+                                        } else {
+                                            true
+                                        }
+                                    }) { status ->
                                         //println("$status")
                                         SwingUtilities.invokeLater {
                                             statusLabel.text = "Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}"
@@ -325,13 +332,9 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                 } catch (e: Throwable) {
                                     JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
                                 }
-                                SwingUtilities.invokeLater {
-                                    statusLabel.text = "Sent game vpk ${entry.id}"
-                                    JOptionPane.showMessageDialog(VitaOrganizer, "Now use VitaShell to install\n$vpkPath\n\nAfer that active ftp again and use this program to Send Data to PSVita", "Actions", JOptionPane.INFORMATION_MESSAGE);
-                                }
 
                                 SwingUtilities.invokeLater {
-                                    statusLabel.text = "Promoting VPK..."
+                                    statusLabel.text = "Promoting VPK (this could take a while)..."
                                 }
 
                                 PsvitaDevice.promoteVpk(vpkPath)
@@ -342,7 +345,14 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                     statusLabel.text = "Sending game ${entry.id}..."
                                 }
                                 try {
-                                    PsvitaDevice.uploadGame(entry.id, zip) { status ->
+                                    PsvitaDevice.uploadGame(entry.id, zip, filter = { path ->
+                                        // Skip files already installed in the VPK
+                                        if (path == "eboot.bin" || path.startsWith("sce_sys/")) {
+                                            false
+                                        } else {
+                                            true
+                                        }
+                                    }) { status ->
                                         //println("$status")
                                         SwingUtilities.invokeLater {
                                             statusLabel.text = "Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}"
