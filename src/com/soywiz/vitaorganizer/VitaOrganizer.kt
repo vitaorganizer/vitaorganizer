@@ -96,6 +96,12 @@ object VitaOrganizer : JPanel(BorderLayout()) {
 
     val statusLabel = JLabel("Started")
 
+    inline fun updateStatus(status: String) {
+        SwingUtilities.invokeLater {
+            statusLabel.text = status
+        }
+    }
+
     fun updateEntries() {
         val ALL_GAME_IDS = LinkedHashMap<String, GameEntry>()
 
@@ -214,9 +220,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                             Thread {
                                 val zip = ZipFile(entry.vpkFile)
 
-                                SwingUtilities.invokeLater {
-                                    statusLabel.text = "Checking eboot permissions..."
-                                }
+                                updateStatus("Checking eboot permissions...")
 
                                 if (EbootBin.hasExtendedPermissions(zip.getBytes("eboot.bin").open2("r"))) {
                                     val result = JOptionPane.showConfirmDialog(VitaOrganizer, "Game ${entry.id} requires extended permissions.\nAre you sure you want to install it. It could damage your device?", "WARNING!", JOptionPane.YES_NO_OPTION);
@@ -225,9 +229,8 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                     }
                                 }
 
-                                SwingUtilities.invokeLater {
-                                    statusLabel.text = "Generating small VPK for promoting..."
-                                }
+                                updateStatus("Generating small VPK for promoting...")
+
 
                                 val vpkPath = "ux0:/organizer/${entry.id}.VPK"
 
@@ -236,9 +239,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                     val vpkData = createSmallVpk(zip)
 
                                     PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
-                                        SwingUtilities.invokeLater {
-                                            statusLabel.text = "Uploading VPK for promoting (${status.sizeRange})..."
-                                        }
+                                        updateStatus("Uploading VPK for promoting (${status.sizeRange})...")
                                     }
 
                                     //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
@@ -262,9 +263,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                         val entry = entry
                         if (entry != null) {
                             Thread {
-                                SwingUtilities.invokeLater {
-                                    statusLabel.text = "Sending game ${entry.id}..."
-                                }
+                                updateStatus("Sending game ${entry.id}...")
                                 //val zip = ZipFile(entry.vpkFile)
                                 try {
                                     PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile), filter = { path ->
@@ -276,16 +275,14 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                         }
                                     }) { status ->
                                         //println("$status")
-                                        SwingUtilities.invokeLater {
-                                            statusLabel.text = "Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}"
-                                        }
+                                        updateStatus("Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}")
                                     }
                                     //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
                                 } catch (e: Throwable) {
                                     JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
                                 }
+                                updateStatus("Sent game data ${entry.id}")
                                 SwingUtilities.invokeLater {
-                                    statusLabel.text = "Sent game data ${entry.id}"
                                     JOptionPane.showMessageDialog(VitaOrganizer, "Game ${entry.id} sent successfully", "Actions", JOptionPane.INFORMATION_MESSAGE);
                                 }
                             }.start()
@@ -518,9 +515,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                             var vitaGameCount = 0
                             val vitaGameIds = PsvitaDevice.getGameIds()
                             for (gameId in vitaGameIds) {
-                                SwingUtilities.invokeLater {
-                                    statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
-                                }
+                                updateStatus("Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)...")
                                 //println(gameId)
                                 try {
                                     PsvitaDevice.getParamSfoCached(gameId)
@@ -556,9 +551,7 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                             updated = true
                         }
 
-                        SwingUtilities.invokeLater {
-                            statusLabel.text = "Connected"
-                        }
+                        updateStatus("Connected")
                     }.start()
 
                     Thread {
@@ -579,10 +572,10 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                 this.addMouseListener(object : MouseAdapter() {
                     override fun mouseClicked(e: MouseEvent?) {
                         if (connected) {
-                            statusLabel.text = "Disconnecting..."
+                            updateStatus("Disconnecting...")
                             disconnect()
                         } else {
-                            statusLabel.text = "Connecting..."
+                            updateStatus("Connecting...")
                             button.isEnabled = false
                             if (PsvitaDevice.checkAddress(VitaOrganizerSettings.lastDeviceIp)) {
                                 connect(VitaOrganizerSettings.lastDeviceIp)
