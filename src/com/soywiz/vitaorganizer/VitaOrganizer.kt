@@ -212,6 +212,19 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                         val entry = entry
                         if (entry != null) {
                             Thread {
+                                val zip = ZipFile(entry.vpkFile)
+
+                                SwingUtilities.invokeLater {
+                                    statusLabel.text = "Checking eboot permissions..."
+                                }
+
+                                if (EbootBin.hasExtendedPermissions(zip.getBytes("eboot.bin").open2("r"))) {
+                                    val result = JOptionPane.showConfirmDialog(VitaOrganizer, "Game ${entry.id} requires extended permissions.\nAre you sure you want to install it. It could damage your device?", "WARNING!", JOptionPane.YES_NO_OPTION);
+                                    if (result != JOptionPane.YES_OPTION) {
+                                        throw InterruptedException("Not accepted installing game with extended permissions")
+                                    }
+                                }
+
                                 SwingUtilities.invokeLater {
                                     statusLabel.text = "Generating small VPK for promoting..."
                                 }
@@ -220,15 +233,13 @@ object VitaOrganizer : JPanel(BorderLayout()) {
 
                                 //val zip = ZipFile(entry.vpkFile)
                                 try {
-                                    val originalZip = ZipFile(entry.vpkFile)
-                                    val vpkData = createSmallVpk(originalZip)
+                                    val vpkData = createSmallVpk(zip)
 
                                     PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
                                         SwingUtilities.invokeLater {
                                             statusLabel.text = "Uploading VPK for promoting (${status.sizeRange})..."
                                         }
                                     }
-                                    originalZip.close()
 
                                     //statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
                                 } catch (e: Throwable) {
@@ -238,6 +249,8 @@ object VitaOrganizer : JPanel(BorderLayout()) {
                                     statusLabel.text = "Sent game vpk ${entry.id}"
                                     JOptionPane.showMessageDialog(VitaOrganizer, "Now use VitaShell to install\n$vpkPath\n\nAfer that active ftp again and use this program to Send Data to PSVita", "Actions", JOptionPane.INFORMATION_MESSAGE);
                                 }
+
+                                zip.close()
                             }.start()
                         }
                     }
