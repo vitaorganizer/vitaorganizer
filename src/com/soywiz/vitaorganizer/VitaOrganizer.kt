@@ -39,7 +39,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			//Create and set up the window.
 			val frame = JFrame("VitaOrganizer $currentVersion")
 			frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-			frame.iconImage = ImageIO.read(getResourceURL("vitafrontblk.jpg"))
+			frame.iconImage = ImageIO.read(getResourceURL("icon.png"))
 
 			//Create and set up the content pane.
 			val newContentPane = VitaOrganizer()
