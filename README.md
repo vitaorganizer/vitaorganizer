@@ -1,5 +1,7 @@
 ## VitaOrganizer 0.3
 
+![](extra/screenshot-0.3.png)
+
 Desktop tool for listing and uploading games and homebrew applications to PSVITA without the size requirements
 of uploading the whole VPK and extracting it later.
 
@@ -36,5 +38,11 @@ gradle jar
 It will generate the file `build/libs/vitaorganizer-VERSION.jar` with all the dependencies included as an executable jar
 that should work on desktop java versions.
 
-![](extra/screenshot-0.3.png)
+In order to generate a native windows executable:
 
+```
+gradle launch4j
+```
+
+It will generate the file `build/libs/vitaorganizer-VERSION.exe`. It uses launch4j as launcher,
+and proguard for minimizing all the files so the executable will be smaller.

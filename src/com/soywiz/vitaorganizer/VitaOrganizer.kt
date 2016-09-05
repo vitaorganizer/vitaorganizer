@@ -423,6 +423,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 		}
 		table.preferredScrollableViewportSize = Dimension(800, 600)
+		//table.rowSelectionAllowed = false
+		//table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
 		//Create the scroll pane and add the table to it.
 		val scrollPane = JScrollPane(table)
