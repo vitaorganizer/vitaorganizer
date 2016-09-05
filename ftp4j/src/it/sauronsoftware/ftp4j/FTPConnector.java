@@ -21,6 +21,7 @@ package it.sauronsoftware.ftp4j;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 
 /**
  * This abstract class is the base for creating a connector. Connectors are used
@@ -117,6 +118,13 @@ public abstract class FTPConnector {
 	 */
 	public void setReadTimeout(int readTimeout) {
 		this.readTimeout = readTimeout;
+		if (connectingCommunicationChannelSocket != null) {
+			try {
+				connectingCommunicationChannelSocket.setSoTimeout(readTimeout);
+			} catch (SocketException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/**

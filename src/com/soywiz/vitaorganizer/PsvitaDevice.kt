@@ -6,6 +6,7 @@ import it.sauronsoftware.ftp4j.FTPException
 import it.sauronsoftware.ftp4j.FTPFile
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
@@ -52,10 +53,26 @@ object PsvitaDevice {
 
     val ftp = FTPClient().apply {
         type = FTPClient.TYPE_BINARY
-        //autoNoopTimeout = 50000L
-        this.connector.setCloseTimeout(20)
-        this.connector.setReadTimeout(240) // PROM could take a lot of time!
-        this.connector.setConnectionTimeout(120)
+    }
+
+    fun setFtpPromoteTimeouts() {
+        //ftp.connector.setCloseTimeout(20)
+        //ftp.connector.setReadTimeout(240) // PROM could take a lot of time!
+        //ftp.connector.setConnectionTimeout(120)
+    }
+
+    fun resetFtpTimeouts() {
+        ftp.connector.setCloseTimeout(20)
+        ftp.connector.setReadTimeout(240) // PROM could take a lot of time!
+        ftp.connector.setConnectionTimeout(120)
+
+        //ftp.connector.setCloseTimeout(2)
+        //ftp.connector.setReadTimeout(2)
+        //ftp.connector.setConnectionTimeout(2)
+    }
+
+    init {
+        resetFtpTimeouts()
     }
 
     //init {
@@ -91,22 +108,34 @@ object PsvitaDevice {
     fun getGameFolder(id: String) = "/ux0:/app/${File(id).name}"
 
     fun downloadSmallFile(path: String): ByteArray {
+        try {
+            if (connectedFtp().fileSize(path) == 0L) {
+                return byteArrayOf()
+            }
+        } catch (e: Throwable) {
+            return byteArrayOf()
+        }
+
         val file = File.createTempFile("vita", "download")
         try {
             connectedFtp().download(path, file)
             return file.readBytes()
         } catch (e: FTPException) {
-
+            e.printStackTrace()
         } catch (e: Throwable) {
             e.printStackTrace()
         } finally {
+            //e.printStackTrace()
             file.delete()
         }
         return byteArrayOf()
     }
 
     fun getParamSfo(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/sce_sys/param.sfo")
-    fun getGameIcon(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/sce_sys/icon0.png")
+    fun getGameIcon(id: String): ByteArray {
+        val result = downloadSmallFile("${getGameFolder(id)}/sce_sys/icon0.png")
+        return result
+    }
     fun downloadEbootBin(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/eboot.bin")
 
     fun getParamSfoCached(id: String): ByteArray {
@@ -121,15 +150,15 @@ object PsvitaDevice {
         return file.readBytes()
     }
 
-
     fun getFolderSize(path: String, folderSizeCache: HashMap<String, Long> = hashMapOf<String, Long>()): Long {
         return folderSizeCache.getOrPut(path) {
             var out = 0L
             val ftp = connectedFtp()
             try {
                 for (file in ftp.list(path)) {
+                    //println("$path/${file.name}: ${file.size}")
                     if (file.type == FTPFile.TYPE_DIRECTORY) {
-                        getFolderSize("$path/${file.name}", folderSizeCache)
+                        out += getFolderSize("$path/${file.name}", folderSizeCache)
                     } else {
                         out += file.size
                     }
@@ -157,7 +186,8 @@ object PsvitaDevice {
 
     val createDirectoryCache = hashSetOf<String>()
 
-    fun createDirectories(path: String, createDirectoryCache: HashSet<String> = PsvitaDevice.createDirectoryCache) {
+    fun createDirectories(_path: String, createDirectoryCache: HashSet<String> = PsvitaDevice.createDirectoryCache) {
+        val path = _path.replace('\\', '/')
         val parent = File(path).parent
         if (parent != "" && parent != null) {
             createDirectories(parent, createDirectoryCache)
@@ -193,31 +223,37 @@ object PsvitaDevice {
         status.totalSize = filteredEntries.map { it.size }.sum()
 
         for (entry in filteredEntries) {
-            val vname = "$base/${entry.name}"
-            val directory = File(vname).parent
+            val normalizedName = entry.name.replace('\\', '/')
+            val vname = "$base/$normalizedName"
+            val directory = File(vname).parent.replace('\\', '/')
             val startSize = status.currentSize
             println("Writting $vname...")
             if (!entry.isDirectory) {
                 createDirectories(directory)
-                connectedFtp().upload(vname, zip.getInputStream(entry), 0L, 0L, object : FTPDataTransferListener {
-                    override fun started() {
-                    }
+                try {
+                    connectedFtp().upload(vname, zip.getInputStream(entry), 0L, 0L, object : FTPDataTransferListener {
+                        override fun started() {
+                        }
 
-                    override fun completed() {
-                        updateStatus(status)
-                    }
+                        override fun completed() {
+                            updateStatus(status)
+                        }
 
-                    override fun aborted() {
-                    }
+                        override fun aborted() {
+                        }
 
-                    override fun transferred(size: Int) {
-                        status.currentSize += size
-                        updateStatus(status)
-                    }
+                        override fun transferred(size: Int) {
+                            status.currentSize += size
+                            updateStatus(status)
+                        }
 
-                    override fun failed() {
-                    }
-                })
+                        override fun failed() {
+                        }
+                    })
+                }catch (e: FTPException) {
+                    e.printStackTrace()
+                    throw FileNotFoundException("Can't upload file $vname")
+                }
             }
             status.currentSize = startSize + entry.size
             status.currentFile++
@@ -257,11 +293,19 @@ object PsvitaDevice {
     }
 
     fun removeFile(path: String) {
-        connectedFtp().deleteFile(path)
+        try {
+            connectedFtp().deleteFile(path)
+        } catch (e: Throwable) {
+            println("Can't delete $path")
+            e.printStackTrace()
+        }
     }
 
     fun promoteVpk(vpkPath: String) {
+        setFtpPromoteTimeouts()
+        println("Promoting: 'PROM $vpkPath'")
         connectedFtp().sendCustomCommand("PROM $vpkPath")
+        resetFtpTimeouts()
     }
 
     /*

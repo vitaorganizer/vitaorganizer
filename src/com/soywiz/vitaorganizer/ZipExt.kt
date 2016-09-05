@@ -1,10 +1,12 @@
 package com.soywiz.vitaorganizer
 
+import java.io.FileNotFoundException
 import java.io.InputStream
 import java.util.zip.ZipFile
 
 fun ZipFile.getInputStream(name: String): InputStream {
-    return this.getInputStream(this.getEntry(name))
+    val entry = this.getEntry(name) ?: throw FileNotFoundException("Can't find '$name' inside zip")
+    return this.getInputStream(entry)
 }
 
 fun ZipFile.getBytes(name: String): ByteArray {

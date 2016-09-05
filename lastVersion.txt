@@ -1,2 +1,2 @@
-0.2
+0.3
 https://github.com/soywiz/vitaorganizer
