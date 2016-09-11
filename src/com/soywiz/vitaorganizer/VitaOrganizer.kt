@@ -118,18 +118,18 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				if (entry != null) remoteTasks.queue(SendPromotingVpkToVitaTask(entry!!))
 			}
 
-			val sendDataToVita = JMenuItem("Send Data to PSVita").action {
+			val sendDataToVita = JMenuItem(Texts.format("SEND_DATA_TO_VITA_ACTION")).action {
 				if (entry != null) remoteTasks.queue(SendDataToVitaTask(entry!!))
 			}
 
-			val sendToVita1Step = JMenuItem("Send Full App to PSVita in just one 1-step (Requires VitaShell >= 0.9.5)").action {
+			val sendToVita1Step = JMenuItem(Texts.format("SEND_FULL_APP_TO_VITA_ACTION")).action {
 				if (entry != null) remoteTasks.queue(OneStepToVitaTask(entry!!))
 			}
 
 			init {
 				add(gameTitlePopup)
 				add(JSeparator())
-				add(JMenuItem(if (OS.isWindows) "Show file in explorer" else "Show file in finder").action {
+				add(JMenuItem(if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")).action {
 					if (entry != null) {
 						showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
 					}
@@ -139,7 +139,7 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
 					}
 				})
-				add(JMenuItem("Repack : Compression 9 + Remove duplicates + Make is safe").action {
+				add(JMenuItem(Texts.format("MENU_REPACK")).action {
 					if (entry != null) remoteTasks.queue(RepackVpkTask(entry!!, setSecure = true))
 				})
 
