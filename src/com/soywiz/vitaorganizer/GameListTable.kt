@@ -221,6 +221,7 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 					))
 				}
 			} catch (e: Throwable) {
+				println("Error processing: ${entry.gameId}")
 				e.printStackTrace()
 			}
 		}

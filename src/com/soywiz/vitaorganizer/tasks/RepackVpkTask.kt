@@ -3,11 +3,12 @@ package com.soywiz.vitaorganizer.tasks
 import com.soywiz.vitaorganizer.FileSize
 import com.soywiz.vitaorganizer.GameEntry
 import com.soywiz.vitaorganizer.VitaOrganizer
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.util.zip.*
+import java.util.zip.Deflater
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 
 class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_COMPRESSION, val setSecure: Boolean? = null) : VitaTask() {
 	override fun perform() {
@@ -15,6 +16,9 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 		val file = entry.vpkLocalFile!!
 		val tempFile = File("${file.absolutePath}.temp")
 		val tempFile2 = File("${file.absolutePath}.temp2")
+
+		tempFile.delete()
+		tempFile2.delete()
 
 		val temp = ByteArray(10 * 1024 * 1024)
 
@@ -39,6 +43,7 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 							val full = zip.getInputStream(e).readBytes()
 							if (setSecure) {
 								full[0x80] = (full[0x80].toInt() and 1.inv()).toByte() // Remove bit 0
+								full[0x80] = (full[0x80].toInt() or 2).toByte() // Set bit 1?
 							} else {
 								full[0x80] = (full[0x80].toInt() or 1).toByte() // Set bit 0
 							}
@@ -69,10 +74,13 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 		}
 		status("Done...")
 
-		file.renameTo(tempFile2)
-		tempFile.renameTo(file)
-		tempFile2.delete()
-		entry.entry.delete() // flush this info!
+		//Thread.sleep(300L)
+
+		println("Renames + deletes:")
+		println(file.renameTo(tempFile2))
+		println(tempFile.renameTo(file))
+		println(tempFile2.delete())
+		println(entry.entry.delete()) // flush this info!
 
 		VitaOrganizer.updateFileList()
 	}

@@ -5,7 +5,6 @@ import java.util.zip.ZipFile
 import javax.swing.JOptionPane
 
 class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaTask() {
-	val zip = ZipFile(entry.vpkLocalPath)
 	val vpkPath = "ux0:/organizer/${entry.id}.VPK"
 
 	override fun checkBeforeQueue() {
@@ -17,12 +16,12 @@ class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaTask() {
 		}
 	}
 
-	override fun perform() {
+	fun performBase() {
 		status(Texts.format("STEP_GENERATING_SMALL_VPK_FOR_PROMOTING"))
 
 		//val zip = ZipFile(entry.vpkFile)
 		try {
-			val vpkData = createSmallVpk(zip)
+			val vpkData = ZipFile(entry.vpkLocalPath).use { zip -> createSmallVpk(zip) }
 
 			status(Texts.format("STEP_GENERATED_SMALL_VPK_FOR_PROMOTING"))
 
@@ -34,9 +33,11 @@ class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaTask() {
 			e.printStackTrace()
 			JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	override fun perform() {
+		performBase()
 		status("Sent game vpk ${entry.id}")
 		info("Now use VitaShell to install\n$vpkPath\n\nAfter that active ftp again and use this program to Send Data to PSVita")
-
-		zip.close()
 	}
 }
