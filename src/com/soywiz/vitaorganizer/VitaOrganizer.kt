@@ -1,18 +1,16 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.open2
-import com.soywiz.util.stream
 import com.soywiz.vitaorganizer.ext.getBytes
+import com.soywiz.vitaorganizer.ext.getResourceString
+import com.soywiz.vitaorganizer.ext.getResourceURL
 import com.soywiz.vitaorganizer.ext.showDialog
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
+import com.soywiz.vitaorganizer.tasks.*
 import java.awt.*
-import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.net.URI
@@ -21,21 +19,14 @@ import java.net.URL
 import java.nio.file.FileSystems
 import java.nio.file.StandardWatchEventKinds
 import java.util.*
-import java.util.zip.Deflater
-import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
 import javax.imageio.ImageIO
 import javax.swing.*
-import javax.swing.event.ListSelectionEvent
-import javax.swing.event.ListSelectionListener
-import javax.swing.table.DefaultTableCellRenderer
-import javax.swing.table.DefaultTableModel
-import javax.swing.table.TableModel
-import javax.swing.table.TableRowSorter
 
 class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 	companion object {
+		lateinit var instance: VitaOrganizer
+
 		@JvmStatic fun main(args: Array<String>) {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 
@@ -44,27 +35,12 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 			//SwingUtilities.invokeLater {
 			//Create and set up the window.
 			val frame = JFrame("VitaOrganizer $currentVersion")
-
-			frame.jMenuBar = JMenuBar().apply {
-				add(JMenu(Texts.format("MENU_FILE")).apply {
-					add(JMenuItem("Select folder..."))
-					add(JMenuItem("Refresh"))
-					add(JSeparator())
-					add(JMenuItem("Exit"))
-				})
-				add(JMenu(Texts.format("MENU_HELP")).apply {
-					add(JMenuItem("Open website"))
-					add(JSeparator())
-					add(JMenuItem("Check for updates..."))
-					add(JMenuItem("About..."))
-				})
-			}
-
 			frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-			frame.iconImage = ImageIO.read(getResourceURL("icon.png"))
+			frame.iconImage = ImageIO.read(getResourceURL("com/soywiz/vitaorganizer/icon.png"))
 
 			//Create and set up the content pane.
 			val newContentPane = VitaOrganizer(frame)
+			instance = newContentPane
 			newContentPane.isOpaque = true //content panes must be opaque
 			frame.contentPane = newContentPane
 
@@ -76,45 +52,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 
 		}
 
-		@JvmStatic fun getResourceURL(name: String) = ClassLoader.getSystemResource(name)
-		@JvmStatic fun getResourceBytes(name: String) = try {
-			ClassLoader.getSystemResource(name).readBytes()
-		} catch (e: Throwable) {
-			null
-		}
-
-		@JvmStatic fun getResourceString(name: String) = try {
-			ClassLoader.getSystemResource(name).readText()
-		} catch (e: Throwable) {
-			null
-		}
-
-		@JvmStatic val currentVersion: String get() = getResourceString("currentVersion.txt") ?: "unknown"
-	}
-
-	class GameEntry(val gameId: String) {
-		val entry = VitaOrganizerCache.entry(gameId)
-		val psf by lazy {
-			try {
-				PSF.read(entry.paramSfoFile.readBytes().stream)
-			} catch (e: Throwable) {
-				mapOf<String, Any>()
-			}
-		}
-		val id by lazy { psf["TITLE_ID"].toString() }
-		val title by lazy { psf["TITLE"].toString() }
-		var inVita = false
-		var inPC = false
-		val vpkFile: String? get() = entry.pathFile.readText(Charsets.UTF_8)
-		val size: Long by lazy {
-			try {
-				entry.sizeFile.readText().toLong()
-			} catch (e: Throwable) {
-				0L
-			}
-		}
-
-		override fun toString(): String = id
+		@JvmStatic val currentVersion: String get() = getResourceString("com/soywiz/vitaorganizer/currentVersion.txt") ?: "unknown"
 	}
 
 	val VPK_GAME_IDS = hashSetOf<String>()
@@ -170,78 +108,11 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 				this.isEnabled = false
 			}
 
-			fun createSmallVpk(zip: ZipFile): ByteArray {
-				// out put file
-				val outBytes = ByteArrayOutputStream()
-				val out = ZipOutputStream(outBytes)
-				out.setLevel(Deflater.DEFAULT_COMPRESSION)
-
-				// name the file inside the zip  file
-				for (e in zip.entries()) {
-					if (e.name == "eboot.bin" || e.name.startsWith("sce_sys/")) {
-						out.putNextEntry(ZipEntry(e.name))
-						out.write(zip.getInputStream(e).readBytes())
-					}
-				}
-
-				out.close()
-
-				return outBytes.toByteArray()
-			}
-
 			val sendVpkToVita = JMenuItem(Texts.format("SEND_PROMOTING_VPK_TO_VITA_ACTION")).apply {
 				addActionListener {
 					//JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
 					val entry = entry
-					if (entry != null) {
-						Thread {
-							val zip = ZipFile(entry.vpkFile)
-
-							updateStatus(Texts.format("STEP_CHECKING_EBOOT_PERMISSIONS"))
-
-							if (EbootBin.hasExtendedPermissions(zip.getBytes("eboot.bin").open2("r"))) {
-								val result = JOptionPane.showConfirmDialog(
-									this@VitaOrganizer,
-									"Game ${entry.id} requires extended permissions.\nAre you sure you want to install it. It could damage your device?",
-									"WARNING!",
-									JOptionPane.YES_NO_OPTION
-								)
-
-								if (result != JOptionPane.YES_OPTION) {
-									throw InterruptedException("Not accepted installing game with extended permissions")
-								}
-							}
-
-							updateStatus(Texts.format("STEP_GENERATING_SMALL_VPK_FOR_PROMOTING"))
-
-							val vpkPath = "ux0:/organizer/${entry.id}.VPK"
-
-							//val zip = ZipFile(entry.vpkFile)
-							try {
-								val vpkData = createSmallVpk(zip)
-
-								PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
-									updateStatus(Texts.format("STEP_UPLOADING_VPK_FOR_PROMOTING", "current" to status.currentSize, "total" to status.totalSize))
-								}
-
-								//statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
-							} catch (e: Throwable) {
-								e.printStackTrace()
-								JOptionPane.showMessageDialog(this@VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
-							}
-							SwingUtilities.invokeLater {
-								statusLabel.text = "Sent game vpk ${entry.id}"
-								JOptionPane.showMessageDialog(
-									this@VitaOrganizer,
-									"Now use VitaShell to install\n$vpkPath\n\nAfer that active ftp again and use this program to Send Data to PSVita",
-									Texts.format("INFORMATION"),
-									JOptionPane.INFORMATION_MESSAGE
-								);
-							}
-
-							zip.close()
-						}.start()
-					}
+					if (entry != null) addTask(SendPromotingVpkToVitaTask(entry))
 				}
 			}
 
@@ -249,32 +120,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 				addActionListener {
 					//JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
 					val entry = entry
-					if (entry != null) {
-						Thread {
-							updateStatus("Sending game ${entry.id}...")
-							//val zip = ZipFile(entry.vpkFile)
-							try {
-								PsvitaDevice.uploadGame(entry.id, ZipFile(entry.vpkFile), filter = { path ->
-									// Skip files already installed in the VPK
-									if (path == "eboot.bin" || path.startsWith("sce_sys/")) {
-										false
-									} else {
-										true
-									}
-								}) { status ->
-									//println("$status")
-									updateStatus("Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}")
-								}
-								//statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
-							} catch (e: Throwable) {
-								JOptionPane.showMessageDialog(this@VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
-							}
-							updateStatus("Sent game data ${entry.id}")
-							SwingUtilities.invokeLater {
-								JOptionPane.showMessageDialog(this@VitaOrganizer, "Game ${entry.id} sent successfully", "Actions", JOptionPane.INFORMATION_MESSAGE);
-							}
-						}.start()
-					}
+					if (entry != null) addTask(SendDataToVitaTask(entry))
 				}
 			}
 
@@ -282,75 +128,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 				addActionListener {
 					//JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
 					val entry = entry
-					if (entry != null) {
-						Thread {
-							val zip = ZipFile(entry.vpkFile)
-
-							SwingUtilities.invokeLater {
-								statusLabel.text = "Checking eboot permissions..."
-							}
-
-							if (EbootBin.hasExtendedPermissions(zip.getBytes("eboot.bin").open2("r"))) {
-								val result = JOptionPane.showConfirmDialog(this@VitaOrganizer, "Game ${entry.id} requires extended permissions.\nAre you sure you want to install it. It could damage your device?", "WARNING!", JOptionPane.YES_NO_OPTION);
-								if (result != JOptionPane.YES_OPTION) {
-									throw InterruptedException("Not accepted installing game with extended permissions")
-								}
-							}
-
-							SwingUtilities.invokeLater {
-								statusLabel.text = "Generating small VPK for promoting..."
-							}
-
-							val vpkPath = "ux0:/organizer/${entry.id}.VPK"
-
-							//val zip = ZipFile(entry.vpkFile)
-							try {
-								val vpkData = createSmallVpk(zip)
-
-								PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
-									SwingUtilities.invokeLater {
-										statusLabel.text = "Uploading VPK for promoting (${status.sizeRange})..."
-									}
-								}
-
-								//statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
-							} catch (e: Throwable) {
-								JOptionPane.showMessageDialog(this@VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
-							}
-
-							updateStatus("Promoting VPK (this could take a while)...")
-
-							PsvitaDevice.promoteVpk("ux0:organizer/${entry.id}.VPK")
-
-							PsvitaDevice.removeFile("/$vpkPath")
-
-							updateStatus("Sending game ${entry.id}...")
-							try {
-								PsvitaDevice.uploadGame(entry.id, zip, filter = { path ->
-									// Skip files already installed in the VPK
-									if (path == "eboot.bin" || path.startsWith("sce_sys/")) {
-										false
-									} else {
-										true
-									}
-								}) { status ->
-									//println("$status")
-									updateStatus("Uploading ${entry.id} :: ${status.fileRange} :: ${status.sizeRange}")
-								}
-								//statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
-
-								SwingUtilities.invokeLater {
-									statusLabel.text = "Sent game data ${entry.id}"
-									JOptionPane.showMessageDialog(this@VitaOrganizer, "Game ${entry.id} sent successfully", "Actions", JOptionPane.INFORMATION_MESSAGE);
-								}
-							} catch (e: Throwable) {
-								println("Error uploading game")
-								e.printStackTrace()
-								JOptionPane.showMessageDialog(this@VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
-							}
-
-						}.start()
-					}
+					if (entry != null) addTask(OneStepToVitaTask(entry))
 				}
 			}
 
@@ -402,7 +180,53 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 		}
 	}
 
+	fun selectFolder() {
+		val chooser = JFileChooser()
+		chooser.currentDirectory = java.io.File(".")
+		chooser.dialogTitle = "Select PsVita VPK folder"
+		chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+		chooser.isAcceptAllFileFilterUsed = false
+		chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
+		val result = chooser.showOpenDialog(this@VitaOrganizer)
+		if (result == JFileChooser.APPROVE_OPTION) {
+			VitaOrganizerSettings.vpkFolder = chooser.selectedFile.absolutePath
+			updateFileList()
+		}
+	}
+
 	init {
+		fun JMenuItem.action(callback: () -> Unit): JMenuItem {
+			addActionListener { callback() }
+			return this
+		}
+
+		frame.jMenuBar = JMenuBar().apply {
+			add(JMenu(Texts.format("MENU_FILE")).apply {
+				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER")).action {
+					selectFolder()
+				})
+				add(JMenuItem(Texts.format("MENU_REFRESH")).action {
+					updateFileList()
+				})
+				add(JSeparator())
+				add(JMenuItem(Texts.format("MENU_EXIT")).action {
+					System.exit(0)
+				})
+			})
+			add(JMenu(Texts.format("MENU_HELP")).apply {
+				add(JMenuItem(Texts.format("MENU_WEBSITE")).action {
+					openWebpage(URL("http://github.com/soywiz/vitaorganizer"))
+				})
+				add(JSeparator())
+				add(JMenuItem(Texts.format("MENU_CHECK_FOR_UPDATES")).action {
+					checkForUpdates()
+				})
+				add(JMenuItem(Texts.format("MENU_ABOUT")).action {
+					openAbout()
+				})
+			})
+		}
+
 		//val columnNames = arrayOf("Icon", "ID", "Title")
 
 		//val data = arrayOf(arrayOf(JLabel("Kathy"), "Smith", "Snowboarding", 5, false), arrayOf("John", "Doe", "Rowing", 3, true), arrayOf("Sue", "Black", "Knitting", 2, false), arrayOf("Jane", "White", "Speed reading", 20, true), arrayOf("Joe", "Brown", "Pool", 10, false))
@@ -426,21 +250,11 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 
 		val header = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
 
-			add(JButton("Select folder...").apply {
+			add(JButton(Texts.format("MENU_SELECT_FOLDER")).apply {
 				this.addMouseListener(object : MouseAdapter() {
 					override fun mouseClicked(e: MouseEvent?) {
 						super.mouseClicked(e)
-						val chooser = JFileChooser()
-						chooser.currentDirectory = java.io.File(".")
-						chooser.dialogTitle = "Select PsVita VPK folder"
-						chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-						chooser.isAcceptAllFileFilterUsed = false
-						chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
-						val result = chooser.showOpenDialog(this@VitaOrganizer)
-						if (result == JFileChooser.APPROVE_OPTION) {
-							VitaOrganizerSettings.vpkFolder = chooser.selectedFile.absolutePath
-							updateFileList()
-						}
+						selectFolder()
 					}
 				})
 			})
@@ -593,19 +407,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 
 			checkUpdatesButton.addMouseListener(object : MouseAdapter() {
 				override fun mouseClicked(e: MouseEvent) {
-					val text = URL("https://raw.githubusercontent.com/soywiz/vitaorganizer/master/lastVersion.txt").readText()
-					val parts = text.lines()
-					val lastVersion = parts[0]
-					val lastVersionUrl = parts[1]
-					if (lastVersion == currentVersion) {
-						JOptionPane.showMessageDialog(this@VitaOrganizer, "You have the lastest version: $currentVersion", "Actions", JOptionPane.INFORMATION_MESSAGE);
-					} else {
-						val result = JOptionPane.showConfirmDialog(this@VitaOrganizer, "There is a new version: $lastVersion\nYou have: $currentVersion\nWant to download last version?", "Actions", JOptionPane.YES_NO_OPTION);
-						if (result == JOptionPane.OK_OPTION) {
-							openWebpage(URL(lastVersionUrl))
-						}
-					}
-					println(parts)
+					checkForUpdates()
 				}
 			})
 			add(connectButton)
@@ -638,7 +440,20 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 		} catch (e: URISyntaxException) {
 			e.printStackTrace()
 		}
+	}
 
+	fun openAbout() {
+
+	}
+
+	val queue = VitaOrganizerTasks()
+
+	fun addTask(task: VitaOrganizerTasks.Task) {
+		queue.queueTask(task)
+	}
+
+	fun checkForUpdates() {
+		addTask(CheckForUpdatesTask())
 	}
 
 	fun updateFileList() {
@@ -689,7 +504,6 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 			updateEntries()
 		}.start()
 	}
-
 
 
 	fun fileWatchFolder(path: String) {

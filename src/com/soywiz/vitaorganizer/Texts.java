@@ -9,7 +9,7 @@ import java.util.ResourceBundle;
 
 public class Texts {
     @NonNls
-    static private final String BUNDLE = "Texts";
+    static private final String BUNDLE = "com.soywiz.vitaorganizer.Texts";
 
     static private ResourceBundle bundle = ResourceBundle.getBundle(BUNDLE);
 

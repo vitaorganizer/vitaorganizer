@@ -50,7 +50,7 @@ and proguard for minimizing all the files so the executable will be smaller.
 ### Translations
 
 VitaOrganizer supports localization. It uses the default ResourceBundle java system. It includes intelliJ support.
-You can edit/create: `resources/Texts_*.properties` files in order to translate the application.
+You can edit/create: `resources/com/soywiz/vitaorganizer/Texts_*.properties` files in order to translate the application.
 You can edit those files easily using intelliJ. More information: https://www.jetbrains.com/help/idea/2016.2/editing-resource-bundle.html
 Texts are referenced into intelliJ easily and allows to find back references.
 

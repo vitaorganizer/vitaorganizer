@@ -159,16 +159,16 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 		})
 	}
 
-	fun getEntryAtRow(row: Int): VitaOrganizer.GameEntry = dataModel.getValueAt(this.convertRowIndexToModel(row), 1) as VitaOrganizer.GameEntry
+	fun getEntryAtRow(row: Int): GameEntry = dataModel.getValueAt(this.convertRowIndexToModel(row), 1) as GameEntry
 
-	val currentEntry: VitaOrganizer.GameEntry get() = getEntryAtRow(this.selectedRow)
+	val currentEntry: GameEntry get() = getEntryAtRow(this.selectedRow)
 
 	fun showMenuForRow(row: Int) {
 		val rect = getCellRect(row, 1, true)
 		showMenuAtFor(rect.x, rect.y + rect.height, getEntryAtRow(row))
 	}
 
-	open fun showMenuAtFor(x: Int, y: Int, entry: VitaOrganizer.GameEntry) {
+	open fun showMenuAtFor(x: Int, y: Int, entry: GameEntry) {
 	}
 
 	fun showMenu() {
@@ -186,7 +186,7 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 		}
 	}
 
-	fun updateEntries(ALL_GAME_IDS: List<VitaOrganizer.GameEntry>) {
+	fun updateEntries(ALL_GAME_IDS: List<GameEntry>) {
 		val newRows = arrayListOf<Array<Any>>()
 
 		for (entry in ALL_GAME_IDS.sortedBy { it.title }) {
@@ -196,11 +196,7 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 				val icon = entry2.icon0File
 				val image = ImageIO.read(ByteArrayInputStream(icon.readBytes()))
 				val psf = PSF.read(entry2.paramSfoFile.readBytes().stream)
-				val extendedPermissions = try {
-					entry2.permissionsFile.readText().toBoolean()
-				} catch (e: Throwable) {
-					true
-				}
+				val extendedPermissions = entry.hasExtendedPermissions
 
 				//println(psf)
 				if (image != null) {
