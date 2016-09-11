@@ -4,6 +4,7 @@ import com.soywiz.util.open2
 import com.soywiz.util.stream
 import com.soywiz.vitaorganizer.i18n.Text
 import com.soywiz.vitaorganizer.i18n.Texts
+import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import java.awt.*
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
@@ -30,7 +31,7 @@ import javax.swing.event.ListSelectionEvent
 import javax.swing.event.ListSelectionListener
 import javax.swing.table.*
 
-class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
+class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 	companion object {
 		@JvmStatic fun main(args: Array<String>) {
 			println("Locale.getDefault():" + Locale.getDefault())
@@ -54,7 +55,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			frame.iconImage = ImageIO.read(getResourceURL("icon.png"))
 
 			//Create and set up the content pane.
-			val newContentPane = VitaOrganizer()
+			val newContentPane = VitaOrganizer(frame)
 			newContentPane.isOpaque = true //content panes must be opaque
 			frame.contentPane = newContentPane
 
@@ -63,6 +64,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			frame.setLocationRelativeTo(null)
 			frame.isVisible = true
 			//}
+
 		}
 
 		@JvmStatic fun getResourceURL(name: String) = ClassLoader.getSystemResource(name)
@@ -404,6 +406,14 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					add(sendVpkToVita)
 					add(sendToVita)
 					add(sendToVita1Step)
+					add(JMenuItem("Show PSF").apply {
+						addActionListener {
+							val entry = entry
+							if (entry != null) {
+								frame.showDialog(KeyValueViewerFrame(Texts.PSF_VIEWER_TITLE.format("id" to entry.id, "title" to entry.title), entry.psf))
+							}
+						}
+					})
 				}
 
 				override fun show(invoker: Component?, x: Int, y: Int) {

@@ -34,4 +34,6 @@ object Texts {
 	val INFORMATION by Translation()
 	val SENT_VPK_TITLE by Translation()
 	val SENT_VPK_MESSAGE by Translation()
+
+	val PSF_VIEWER_TITLE by Translation()
 }
