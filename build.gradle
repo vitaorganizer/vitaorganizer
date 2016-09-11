@@ -29,7 +29,8 @@ apply plugin: 'edu.sc.seis.launch4j'
 mainClassName = 'com.soywiz.vitaorganizer.VitaOrganizer'
 compileJava.options.encoding = 'UTF-8'
 
-sourceCompatibility = 1.5
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
 
 repositories {
     mavenLocal()

@@ -13,11 +13,11 @@ public class Texts {
 
     static private ResourceBundle bundle = ResourceBundle.getBundle(BUNDLE);
 
-    static public String format(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Pair<String, Object> ...pairs) {
-        return TextFormatter.format(bundle.getString(key), pairs);
+    static public String format(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Pair<String, ?>... pairs) {
+        return TextFormatter.format(bundle.getString(key), (Pair<String, ?>[]) pairs);
     }
 
-    static public String formatMap(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Map<String, Object> map) {
+    static public String formatMap(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Map<String, ?> map) {
         return TextFormatter.format(bundle.getString(key), map);
     }
 }
