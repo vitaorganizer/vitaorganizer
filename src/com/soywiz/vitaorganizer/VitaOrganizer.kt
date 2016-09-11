@@ -146,6 +146,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						} else {
 							"NONE"
 						},
+						psf["APP_VER"] ?: psf["VERSION"] ?: "Unknown",
 						if (extendedPermissions) "!UNSECURE!" else "SECURE",
 						FileSize(entry.size),
 						entry.title
@@ -577,9 +578,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 							} else {
 								this@VitaOrganizer.updateStatus("Connecting...")
 								button.button.isEnabled = false
+
+								connect(VitaOrganizerSettings.lastDeviceIp)
+								button.button.isEnabled = true
+
+								/*
 								if (PsvitaDevice.checkAddress(VitaOrganizerSettings.lastDeviceIp)) {
-									connect(VitaOrganizerSettings.lastDeviceIp)
-									button.button.isEnabled = true
 								} else {
 									Thread {
 										val ips = PsvitaDevice.discoverIp()
@@ -590,6 +594,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 										button.button.isEnabled = true
 									}.start()
 								}
+								*/
 							}
 						}
 					})
@@ -636,6 +641,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		model.addColumn("Icon")
 		model.addColumn("ID")
 		model.addColumn("Where")
+		model.addColumn("Version")
 		model.addColumn("Permissions")
 		model.addColumn("Size")
 		model.addColumn("Title")
@@ -660,6 +666,16 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 		}
 		table.getColumn("Where").apply {
+			width = 64
+			minWidth = 64
+			maxWidth = 64
+			preferredWidth = 64
+			resizable = false
+			cellRenderer = DefaultTableCellRenderer().apply {
+				horizontalAlignment = JLabel.CENTER;
+			}
+		}
+		table.getColumn("Version").apply {
 			width = 64
 			minWidth = 64
 			maxWidth = 64
