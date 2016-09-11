@@ -9,9 +9,7 @@ import com.soywiz.vitaorganizer.ext.showDialog
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import com.soywiz.vitaorganizer.tasks.*
 import java.awt.*
-import java.awt.event.KeyEvent
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
+import java.awt.event.*
 import java.io.File
 import java.net.URI
 import java.net.URISyntaxException
@@ -195,6 +193,21 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 	}
 
+	val filterTextField = object : JTextField("") {
+		init {
+			font = Font(Font.MONOSPACED, Font.PLAIN, 14)
+			columns = 16
+		}
+
+		override fun processKeyEvent(e: KeyEvent?) {
+			super.processKeyEvent(e)
+			table.filter = this.text
+		}
+	}.apply {
+		//addActionListener {
+		//	println("aaa")
+		//}
+	}
 
 	init {
 
@@ -275,21 +288,7 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				}
 			}
 
-			val filterTextField = object : JTextField("") {
-				init {
-					font = Font(Font.MONOSPACED, Font.PLAIN, 14)
-					columns = 16
-				}
 
-				override fun processKeyEvent(e: KeyEvent?) {
-					super.processKeyEvent(e)
-					table.filter = this.text
-				}
-			}.apply {
-				//addActionListener {
-				//	println("aaa")
-				//}
-			}
 
 			val connectButton = object : JButton(connectText) {
 				val button = this
@@ -411,6 +410,8 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			add(connectAddress)
 			add(JLabel(Texts.format("LABEL_FILTER")))
 			add(filterTextField)
+
+			//filterTextField.requestFocus()
 		}
 
 		add(header, SpringLayout.NORTH)
@@ -418,6 +419,14 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		add(footer, SpringLayout.SOUTH)
 
 		updateFileList()
+
+		frame.addWindowListener(object : WindowAdapter() {
+			override fun windowOpened(e: WindowEvent) {
+				filterTextField.requestFocus()
+			}
+		})
+
+		//frame.focusOwner = filterTextField
 	}
 
 	fun openWebpage(uri: URI) {
