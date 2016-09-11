@@ -16,7 +16,7 @@ class OneStepToVitaTask(val entry: GameEntry) : VitaTask() {
 	override fun perform() {
 		sendPromotingVpkTask.perform()
 
-		updateStatus("Promoting VPK (this could take a while)...")
+		status("Promoting VPK (this could take a while)...")
 		PsvitaDevice.promoteVpk(sendPromotingVpkTask.vpkPath)
 		PsvitaDevice.removeFile(sendPromotingVpkTask.vpkPath)
 

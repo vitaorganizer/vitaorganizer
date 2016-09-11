@@ -17,6 +17,7 @@ fun createSmallVpk(zip: ZipFile): ByteArray {
 		if (e.name == "eboot.bin" || e.name.startsWith("sce_sys/")) {
 			out.putNextEntry(ZipEntry(e.name))
 			out.write(zip.getInputStream(e).readBytes())
+			out.closeEntry()
 		}
 	}
 

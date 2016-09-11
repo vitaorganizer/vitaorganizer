@@ -16,7 +16,7 @@ open class VitaTask {
 	val globalProgress = Progress(0L, 0L)
 	val localProgress = Progress(0L, 0L)
 
-	fun updateStatus(status: String) {
+	fun status(status: String) {
 		SwingUtilities.invokeLater {
 			VitaOrganizer.updateStatus(status)
 		}
@@ -41,6 +41,10 @@ open class VitaTask {
 
 	fun progress(current: Long, max: Long) {
 		localProgress.set(current, max)
+	}
+
+	fun progress(current: Int, max: Int) {
+		localProgress.set(current.toLong(), max.toLong())
 	}
 
 	open fun checkBeforeQueue() {

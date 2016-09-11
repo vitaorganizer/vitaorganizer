@@ -16,6 +16,14 @@ object VitaOrganizerCache {
         val pathFile = cacheFolder["$gameId.path"]
         val sizeFile = cacheFolder["$gameId.size"]
         val permissionsFile = cacheFolder["$gameId.extperm"]
+
+        fun delete() {
+            icon0File.delete()
+            paramSfoFile.delete()
+            pathFile.delete()
+            sizeFile.delete()
+            permissionsFile.delete()
+        }
     }
 
     fun entry(gameId: String) = Entry(gameId)

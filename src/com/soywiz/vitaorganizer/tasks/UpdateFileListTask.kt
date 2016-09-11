@@ -12,11 +12,11 @@ class UpdateFileListTask : VitaTask() {
 			VitaOrganizer.VPK_GAME_IDS.clear()
 		}
 		val vpkFiles = File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }
-		updateStatus(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
+		status(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
 		var count = 0
 		for (vpkFile in File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }) {
 			//println(vpkFile)
-			updateStatus(Texts.format("STEP_ANALYZING_ITEM", "name" to vpkFile.name, "current" to count + 1, "total" to vpkFiles.size))
+			status(Texts.format("STEP_ANALYZING_ITEM", "name" to vpkFile.name, "current" to count + 1, "total" to vpkFiles.size))
 			try {
 				val zip = ZipFile(vpkFile)
 				val paramSfoData = zip.getBytes("sce_sys/param.sfo")
@@ -50,7 +50,7 @@ class UpdateFileListTask : VitaTask() {
 				e.printStackTrace()
 			}
 		}
-		updateStatus(Texts.format("STEP_DONE"))
+		status(Texts.format("STEP_DONE"))
 		VitaOrganizer.updateEntries()
 	}
 }

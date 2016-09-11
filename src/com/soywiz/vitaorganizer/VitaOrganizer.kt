@@ -1,5 +1,6 @@
 package com.soywiz.vitaorganizer
 
+import com.soywiz.util.OS
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.action
 import com.soywiz.vitaorganizer.ext.getResourceString
@@ -82,6 +83,14 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		table.setEntries(ALL_GAME_IDS.values.toList())
 	}
 
+	fun showFileInExplorerOrFinder(file: File) {
+		if (OS.isWindows) {
+			ProcessBuilder("explorer.exe", "/select," + file.absolutePath).start().waitFor()
+		} else {
+			ProcessBuilder("open", "-R", file.absolutePath).start().waitFor()
+		}
+	}
+
 	val table = object : GameListTable() {
 		val dialog = this@VitaOrganizer
 		val gameTitlePopup = JMenuItem("").apply {
@@ -120,11 +129,20 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			init {
 				add(gameTitlePopup)
 				add(JSeparator())
+				add(JMenuItem(if (OS.isWindows) "Show file in explorer" else "Show file in finder").action {
+					if (entry != null) {
+						showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
+					}
+				})
 				add(JMenuItem(Texts.format("MENU_SHOW_PSF")).action {
 					if (entry != null) {
 						frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
 					}
 				})
+				add(JMenuItem("Repack : Compression 9 + Remove duplicates + Make is safe").action {
+					if (entry != null) remoteTasks.queue(RepackVpkTask(entry!!, setSecure = true))
+				})
+
 				add(JSeparator())
 				//add(deleteFromVita)
 				add(sendVpkToVita)
@@ -373,16 +391,8 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				}
 			}
 
-			val checkUpdatesButton = JButton(Texts.format("MENU_CHECK_FOR_UPDATES")).apply {
-				addMouseListener(object : MouseAdapter() {
-					override fun mouseClicked(e: MouseEvent) {
-						checkForUpdates()
-					}
-				})
-			}
 			add(connectButton)
 			add(connectAddress)
-			add(checkUpdatesButton)
 		}
 
 		add(header, SpringLayout.NORTH)
