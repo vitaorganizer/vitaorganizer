@@ -53,7 +53,7 @@ that should work on desktop java versions.
 In order to generate a native windows executable:
 
 ```
-gradle launch4j
+gradle minimizedJar launch4j
 ```
 
 It will generate the file `build/libs/vitaorganizer-VERSION.exe`. It uses launch4j as launcher,
