@@ -46,6 +46,7 @@ sourceSets {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains:annotations-java5:15.0"
     //compile "commons-net:commons-net:3.5"
     testCompile "junit:junit:4.11"
 }

@@ -1,4 +1,4 @@
-package com.soywiz.vitaorganizer
+package com.soywiz.vitaorganizer.ext
 
 import javax.swing.JDialog
 import javax.swing.JFrame

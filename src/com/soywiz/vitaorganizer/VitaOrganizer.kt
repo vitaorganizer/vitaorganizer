@@ -2,8 +2,8 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.open2
 import com.soywiz.util.stream
-import com.soywiz.vitaorganizer.i18n.Text
-import com.soywiz.vitaorganizer.i18n.Texts
+import com.soywiz.vitaorganizer.ext.getBytes
+import com.soywiz.vitaorganizer.ext.showDialog
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import java.awt.*
 import java.awt.event.KeyAdapter
@@ -29,27 +29,36 @@ import javax.imageio.ImageIO
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
 import javax.swing.event.ListSelectionListener
-import javax.swing.table.*
+import javax.swing.table.DefaultTableCellRenderer
+import javax.swing.table.DefaultTableModel
+import javax.swing.table.TableModel
+import javax.swing.table.TableRowSorter
 
 class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 	companion object {
 		@JvmStatic fun main(args: Array<String>) {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+
 			println("Locale.getDefault():" + Locale.getDefault())
 			//PsvitaDevice.discoverIp()
 			//SwingUtilities.invokeLater {
 			//Create and set up the window.
 			val frame = JFrame("VitaOrganizer $currentVersion")
 
-			//frame.jMenuBar = JMenuBar().apply {
-			//	add(JMenu("&File").apply {
-			//		add(JMenuItem("Open folder..."))
-			//		add(JMenuItem("Exit"))
-			//	})
-			//	add(JMenu("Help").apply {
-			//		add(JMenuItem("Check for updates..."))
-			//		add(JMenuItem("Open website"))
-			//	})
-			//}
+			frame.jMenuBar = JMenuBar().apply {
+				add(JMenu(Texts.format("MENU_FILE")).apply {
+					add(JMenuItem("Select folder..."))
+					add(JMenuItem("Refresh"))
+					add(JSeparator())
+					add(JMenuItem("Exit"))
+				})
+				add(JMenu(Texts.format("MENU_HELP")).apply {
+					add(JMenuItem("Open website"))
+					add(JSeparator())
+					add(JMenuItem("Check for updates..."))
+					add(JMenuItem("About..."))
+				})
+			}
 
 			frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 			frame.iconImage = ImageIO.read(getResourceURL("icon.png"))
@@ -111,7 +120,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 	val VPK_GAME_IDS = hashSetOf<String>()
 	val VITA_GAME_IDS = hashSetOf<String>()
 
-	val statusLabel = JLabel(Texts.STEP_STARTED.format())
+	val statusLabel = JLabel(Texts.format("STEP_STARTED"))
 
 	override fun updateStatus(status: String) {
 		SwingUtilities.invokeLater {
@@ -152,16 +161,16 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 						ImageIcon(getScaledImage(image, 64, 64)),
 						entry,
 						if (entry.inVita && entry.inPC) {
-							"BOTH"
+							Texts.format("LOCATION_BOTH")
 						} else if (entry.inVita) {
-							"VITA"
+							Texts.format("LOCATION_VITA")
 						} else if (entry.inPC) {
-							"PC"
+							Texts.format("LOCATION_PC")
 						} else {
-							"NONE"
+							Texts.format("LOCATION_NONE")
 						},
-						psf["APP_VER"] ?: psf["VERSION"] ?: Texts.UNKNOWN_VERSION.format(),
-						(if (extendedPermissions) Texts.PERMISSIONS_UNSECURE else Texts.PERMISSIONS_SECURE).format(),
+						psf["APP_VER"] ?: psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION"),
+						(if (extendedPermissions) Texts.format("PERMISSIONS_UNSECURE") else Texts.format("PERMISSIONS_SECURE")),
 						FileSize(entry.size),
 						entry.title
 					))
@@ -184,8 +193,6 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	init {
-		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-
 		//val columnNames = arrayOf("Icon", "ID", "Title")
 
 		//val data = arrayOf(arrayOf(JLabel("Kathy"), "Smith", "Snowboarding", 5, false), arrayOf("John", "Doe", "Rowing", 3, true), arrayOf("Sue", "Black", "Knitting", 2, false), arrayOf("Jane", "White", "Speed reading", 20, true), arrayOf("Joe", "Brown", "Pool", 10, false))
@@ -199,15 +206,15 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 			val popupMenu = object : JPopupMenu() {
 				var entry: GameEntry? = null
 
-				val deleteFromVita = JMenuItem(Texts.DELETE_FROM_PSVITA_ACTION.format()).apply {
+				val deleteFromVita = JMenuItem(Texts.format("DELETE_FROM_PSVITA_ACTION")).apply {
 					addActionListener {
 						val entry = entry
 						if (entry != null) {
 							val info = mapOf("title" to entry.title)
 							JOptionPane.showConfirmDialog(
 								dialog,
-								Texts.DELETE_FROM_PSVITA_MESSAGE.format(info),
-								Texts.DELETE_FROM_PSVITA_TITLE.format(info),
+								Texts.formatMap("DELETE_FROM_PSVITA_MESSAGE", info),
+								Texts.formatMap("DELETE_FROM_PSVITA_TITLE", info),
 								JOptionPane.OK_CANCEL_OPTION, JOptionPane.OK_OPTION
 							)
 						}
@@ -234,7 +241,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 					return outBytes.toByteArray()
 				}
 
-				val sendVpkToVita = JMenuItem(Texts.SEND_PROMOTING_VPK_TO_VITA_ACTION.format()).apply {
+				val sendVpkToVita = JMenuItem(Texts.format("SEND_PROMOTING_VPK_TO_VITA_ACTION")).apply {
 					addActionListener {
 						//JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
 						val entry = entry
@@ -242,7 +249,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 							Thread {
 								val zip = ZipFile(entry.vpkFile)
 
-								updateStatus(Texts.STEP_CHECKING_EBOOT_PERMISSIONS)
+								updateStatus(Texts.format("STEP_CHECKING_EBOOT_PERMISSIONS"))
 
 								if (EbootBin.hasExtendedPermissions(zip.getBytes("eboot.bin").open2("r"))) {
 									val result = JOptionPane.showConfirmDialog(
@@ -257,7 +264,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 									}
 								}
 
-								updateStatus(Texts.STEP_GENERATING_SMALL_VPK_FOR_PROMOTING)
+								updateStatus(Texts.format("STEP_GENERATING_SMALL_VPK_FOR_PROMOTING"))
 
 								val vpkPath = "ux0:/organizer/${entry.id}.VPK"
 
@@ -266,7 +273,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 									val vpkData = createSmallVpk(zip)
 
 									PsvitaDevice.uploadFile("/$vpkPath", vpkData) { status ->
-										updateStatus(Texts.STEP_UPLOADING_VPK_FOR_PROMOTING.format("current" to status.currentSize, "total" to status.totalSize))
+										updateStatus(Texts.format("STEP_UPLOADING_VPK_FOR_PROMOTING", "current" to status.currentSize, "total" to status.totalSize))
 									}
 
 									//statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
@@ -279,7 +286,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 									JOptionPane.showMessageDialog(
 										this@VitaOrganizer,
 										"Now use VitaShell to install\n$vpkPath\n\nAfer that active ftp again and use this program to Send Data to PSVita",
-										Texts.INFORMATION.toString(),
+										Texts.format("INFORMATION"),
 										JOptionPane.INFORMATION_MESSAGE
 									);
 								}
@@ -406,11 +413,11 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 					add(sendVpkToVita)
 					add(sendToVita)
 					add(sendToVita1Step)
-					add(JMenuItem("Show PSF").apply {
+					add(JMenuItem(Texts.format("MENU_SHOW_PSF")).apply {
 						addActionListener {
 							val entry = entry
 							if (entry != null) {
-								frame.showDialog(KeyValueViewerFrame(Texts.PSF_VIEWER_TITLE.format("id" to entry.id, "title" to entry.title), entry.psf))
+								frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry.id, "title" to entry.title), entry.psf))
 							}
 						}
 					})
@@ -679,7 +686,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 
 		table.fillsViewportHeight = true
 
-		fun createColumn(text: Text): Int {
+		fun createColumn(text: String): Int {
 			val id = model.columnCount
 			model.addColumn(text.toString())
 			//return table.columnModel.getColumn(id)
@@ -687,13 +694,13 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 			//return table.getColumn(text.toString())
 		}
 
-		val ID_COLUMN_ICON = createColumn(Texts.COLUMN_ICON)
-		val ID_COLUMN_ID = createColumn(Texts.COLUMN_ID)
-		val ID_COLUMN_WHERE = createColumn(Texts.COLUMN_WHERE)
-		val ID_COLUMN_VERSION = createColumn(Texts.COLUMN_VERSION)
-		val ID_COLUMN_PERMISSIONS = createColumn(Texts.COLUMN_PERMISSIONS)
-		val ID_COLUMN_SIZE = createColumn(Texts.COLUMN_SIZE)
-		val ID_COLUMN_TITLE = createColumn(Texts.COLUMN_TITLE)
+		val ID_COLUMN_ICON = createColumn(Texts.format("COLUMN_ICON"))
+		val ID_COLUMN_ID = createColumn(Texts.format("COLUMN_ID"))
+		val ID_COLUMN_WHERE = createColumn(Texts.format("COLUMN_WHERE"))
+		val ID_COLUMN_VERSION = createColumn(Texts.format("COLUMN_VERSION"))
+		val ID_COLUMN_PERMISSIONS = createColumn(Texts.format("COLUMN_PERMISSIONS"))
+		val ID_COLUMN_SIZE = createColumn(Texts.format("COLUMN_SIZE"))
+		val ID_COLUMN_TITLE = createColumn(Texts.format("COLUMN_TITLE"))
 
 		//table.autoResizeMode = JTable.AUTO_RESIZE_OFF
 		table.autoResizeMode = JTable.AUTO_RESIZE_ALL_COLUMNS
@@ -707,7 +714,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 		val COLUMN_TITLE = table.columnModel.getColumn(ID_COLUMN_TITLE)
 
 		COLUMN_ICON.apply {
-			headerValue = Texts.COLUMN_ICON
+			//headerValue = Texts2.COLUMN_ICON
 			width = 64
 			minWidth = 64
 			maxWidth = 64
@@ -829,11 +836,11 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 				VPK_GAME_IDS.clear()
 			}
 			val vpkFiles = File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }
-			updateStatus(Texts.STEP_ANALYZING_FILES.format("folder" to VitaOrganizerSettings.vpkFolder))
+			updateStatus(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
 			var count = 0
 			for (vpkFile in File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }) {
 				//println(vpkFile)
-				updateStatus(Texts.STEP_ANALYZING_ITEM.format("name" to vpkFile.name, "current" to count + 1, "total" to vpkFiles.size))
+				updateStatus(Texts.format("STEP_ANALYZING_ITEM", "name" to vpkFile.name, "current" to count + 1, "total" to vpkFiles.size))
 				try {
 					val zip = ZipFile(vpkFile)
 					val paramSfoData = zip.getBytes("sce_sys/param.sfo")
@@ -867,7 +874,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 					e.printStackTrace()
 				}
 			}
-			updateStatus(Texts.STEP_DONE)
+			updateStatus(Texts.format("STEP_DONE"))
 			updateEntries()
 		}.start()
 	}

@@ -1,5 +1,6 @@
 package com.soywiz.vitaorganizer.i18n
 
+import com.soywiz.vitaorganizer.TextFormatter
 import org.junit.Assert
 import org.junit.Test
 

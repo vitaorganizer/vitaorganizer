@@ -1,4 +1,4 @@
-package com.soywiz.vitaorganizer
+package com.soywiz.vitaorganizer.ext
 
 import java.io.FileNotFoundException
 import java.io.InputStream
