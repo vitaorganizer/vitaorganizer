@@ -45,7 +45,36 @@ open class GameListTable : JPanel(BorderLayout()) {
 		if (value.isNullOrEmpty()) {
 			sorter.rowFilter = null
 		} else {
+			val matcher = Regex("(?i)$value")
+
 			sorter.rowFilter = RowFilter.regexFilter("(?i)$value")
+			sorter.rowFilter = object : RowFilter<TableModel, Any>() {
+				override fun include(value: Entry<out TableModel, out Any>): Boolean {
+					//matcher.matches(entry.getStringValue(entry.))
+					//val model = entry.model
+					//table.cell
+					//return true
+
+					for (index in 0 until value.valueCount) {
+						if (index < value.valueCount) {
+							if (include(value.getValue(index))) return true
+						}
+					}
+					return false
+				}
+
+				private fun include(item: Any): Boolean {
+					when (item) {
+						is GameEntry -> {
+							for (value in item.psf.values) {
+								if (matcher.containsMatchIn(value.toString())) return true
+							}
+							return false
+						}
+						else -> return matcher.containsMatchIn(item.toString())
+					}
+				}
+			}
 		}
 	}
 
@@ -76,7 +105,6 @@ open class GameListTable : JPanel(BorderLayout()) {
 		//table.rowSorter
 
 		//table.rowSorter = sorter
-
 
 
 		//sorter.rowFilter = RowFilter.regexFilter(".*foo.*")
