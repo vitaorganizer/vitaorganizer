@@ -1,7 +1,7 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.open2
-import com.soywiz.vitaorganizer.ext.getBytes
+import com.soywiz.vitaorganizer.ext.action
 import com.soywiz.vitaorganizer.ext.getResourceString
 import com.soywiz.vitaorganizer.ext.getResourceURL
 import com.soywiz.vitaorganizer.ext.showDialog
@@ -12,48 +12,49 @@ import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.File
-import java.io.IOException
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
-import java.nio.file.FileSystems
-import java.nio.file.StandardWatchEventKinds
 import java.util.*
-import java.util.zip.ZipFile
 import javax.imageio.ImageIO
 import javax.swing.*
 
-class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
-	companion object {
-		lateinit var instance: VitaOrganizer
-
-		@JvmStatic fun main(args: Array<String>) {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-
-			println("Locale.getDefault():" + Locale.getDefault())
-			//PsvitaDevice.discoverIp()
-			//SwingUtilities.invokeLater {
-			//Create and set up the window.
-			val frame = JFrame("VitaOrganizer $currentVersion")
-			frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-			frame.iconImage = ImageIO.read(getResourceURL("com/soywiz/vitaorganizer/icon.png"))
-
-			//Create and set up the content pane.
-			val newContentPane = VitaOrganizer(frame)
-			instance = newContentPane
-			newContentPane.isOpaque = true //content panes must be opaque
-			frame.contentPane = newContentPane
-
-			//Display the window.
-			frame.pack()
-			frame.setLocationRelativeTo(null)
-			frame.isVisible = true
-			//}
-
-		}
-
-		@JvmStatic val currentVersion: String get() = getResourceString("com/soywiz/vitaorganizer/currentVersion.txt") ?: "unknown"
+object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
+	@JvmStatic fun main(args: Array<String>) {
+		VitaOrganizer.start()
 	}
+
+	val localTasks = VitaTaskQueue()
+	val remoteTasks = VitaTaskQueue()
+
+	init {
+		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+		println("Locale.getDefault():" + Locale.getDefault())
+	}
+
+	val frame = JFrame("VitaOrganizer $currentVersion").apply {
+		defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+		iconImage = ImageIO.read(getResourceURL("com/soywiz/vitaorganizer/icon.png"))
+	}
+
+	fun start() {
+		frame.pack()
+		frame.setLocationRelativeTo(null)
+		frame.isVisible = true
+	}
+
+	init {
+		//Create and set up the content pane.
+		val newContentPane = VitaOrganizer
+		newContentPane.isOpaque = true //content panes must be opaque
+		frame.contentPane = newContentPane
+
+		//Display the window.
+
+		//}
+	}
+
+	val currentVersion: String get() = getResourceString("com/soywiz/vitaorganizer/currentVersion.txt") ?: "unknown"
 
 	val VPK_GAME_IDS = hashSetOf<String>()
 	val VITA_GAME_IDS = hashSetOf<String>()
@@ -78,9 +79,7 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 			for (gameId in VITA_GAME_IDS) getGameEntryById(gameId).inVita = true
 		}
 
-		val newRows = arrayListOf<Array<Any>>()
-
-		table.updateEntries(ALL_GAME_IDS.values.toList())
+		table.setEntries(ALL_GAME_IDS.values.toList())
 	}
 
 	val table = object : GameListTable() {
@@ -92,61 +91,44 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 		val popupMenu = object : JPopupMenu() {
 			var entry: GameEntry? = null
 
-			val deleteFromVita = JMenuItem(Texts.format("DELETE_FROM_PSVITA_ACTION")).apply {
-				addActionListener {
-					val entry = entry
-					if (entry != null) {
-						val info = mapOf("title" to entry.title)
-						JOptionPane.showConfirmDialog(
-							dialog,
-							Texts.formatMap("DELETE_FROM_PSVITA_MESSAGE", info),
-							Texts.formatMap("DELETE_FROM_PSVITA_TITLE", info),
-							JOptionPane.OK_CANCEL_OPTION, JOptionPane.OK_OPTION
-						)
-					}
+			val deleteFromVita = JMenuItem(Texts.format("DELETE_FROM_PSVITA_ACTION")).action {
+				val entry = entry
+				if (entry != null) {
+					val info = mapOf("title" to entry.title)
+					JOptionPane.showConfirmDialog(
+						dialog,
+						Texts.formatMap("DELETE_FROM_PSVITA_MESSAGE", info),
+						Texts.formatMap("DELETE_FROM_PSVITA_TITLE", info),
+						JOptionPane.OK_CANCEL_OPTION, JOptionPane.OK_OPTION
+					)
 				}
-				this.isEnabled = false
+				//this.isEnabled = false
 			}
 
-			val sendVpkToVita = JMenuItem(Texts.format("SEND_PROMOTING_VPK_TO_VITA_ACTION")).apply {
-				addActionListener {
-					//JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
-					val entry = entry
-					if (entry != null) addTask(SendPromotingVpkToVitaTask(entry))
-				}
+			val sendVpkToVita = JMenuItem(Texts.format("SEND_PROMOTING_VPK_TO_VITA_ACTION")).action {
+				if (entry != null) remoteTasks.queue(SendPromotingVpkToVitaTask(entry!!))
 			}
 
-			val sendToVita = JMenuItem("Send Data to PSVita").apply {
-				addActionListener {
-					//JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
-					val entry = entry
-					if (entry != null) addTask(SendDataToVitaTask(entry))
-				}
+			val sendDataToVita = JMenuItem("Send Data to PSVita").action {
+				if (entry != null) remoteTasks.queue(SendDataToVitaTask(entry!!))
 			}
 
-			val sendToVita1Step = JMenuItem("Send Full App to PSVita in just one 1-step (Requires VitaShell >= 0.9.5)").apply {
-				addActionListener {
-					//JOptionPane.showMessageDialog(frame, "Right-click performed on table and choose DELETE")
-					val entry = entry
-					if (entry != null) addTask(OneStepToVitaTask(entry))
-				}
+			val sendToVita1Step = JMenuItem("Send Full App to PSVita in just one 1-step (Requires VitaShell >= 0.9.5)").action {
+				if (entry != null) remoteTasks.queue(OneStepToVitaTask(entry!!))
 			}
 
 			init {
 				add(gameTitlePopup)
 				add(JSeparator())
-				add(JMenuItem(Texts.format("MENU_SHOW_PSF")).apply {
-					addActionListener {
-						val entry = entry
-						if (entry != null) {
-							frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry.id, "title" to entry.title), entry.psf))
-						}
+				add(JMenuItem(Texts.format("MENU_SHOW_PSF")).action {
+					if (entry != null) {
+						frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
 					}
 				})
 				add(JSeparator())
 				//add(deleteFromVita)
 				add(sendVpkToVita)
-				add(sendToVita)
+				add(sendDataToVita)
 				add(JSeparator())
 				add(sendToVita1Step)
 			}
@@ -155,14 +137,15 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 				val entry = entry
 				gameTitlePopup.text = "UNKNOWN"
 				deleteFromVita.isEnabled = false
-				sendToVita.isEnabled = false
+				sendVpkToVita.isEnabled = false
+				sendDataToVita.isEnabled = false
 				sendToVita1Step.isEnabled = false
 
 				if (entry != null) {
 					gameTitlePopup.text = "${entry.id} : ${entry.title}"
 					deleteFromVita.isEnabled = entry.inVita
-					//sendToVita.isEnabled = !entry.inVita
-					sendToVita.isEnabled = entry.inPC
+					sendVpkToVita.isEnabled = entry.inPC
+					sendDataToVita.isEnabled = entry.inPC
 					sendToVita1Step.isEnabled = entry.inPC
 				}
 
@@ -176,14 +159,14 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 		}
 
 		init {
-			this.componentPopupMenu = popupMenu
+			//this.componentPopupMenu = popupMenu
 		}
 	}
 
 	fun selectFolder() {
 		val chooser = JFileChooser()
 		chooser.currentDirectory = java.io.File(".")
-		chooser.dialogTitle = "Select PsVita VPK folder"
+		chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
 		chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
 		chooser.isAcceptAllFileFilterUsed = false
 		chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
@@ -194,11 +177,9 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 		}
 	}
 
+
 	init {
-		fun JMenuItem.action(callback: () -> Unit): JMenuItem {
-			addActionListener { callback() }
-			return this
-		}
+
 
 		frame.jMenuBar = JMenuBar().apply {
 			add(JMenu(Texts.format("MENU_FILE")).apply {
@@ -250,21 +231,12 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 
 		val header = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
 
-			add(JButton(Texts.format("MENU_SELECT_FOLDER")).apply {
-				this.addMouseListener(object : MouseAdapter() {
-					override fun mouseClicked(e: MouseEvent?) {
-						super.mouseClicked(e)
-						selectFolder()
-					}
-				})
+			add(JButton(Texts.format("MENU_SELECT_FOLDER")).action {
+				selectFolder()
 			})
 
-			add(JButton("Refresh").apply {
-				this.addMouseListener(object : MouseAdapter() {
-					override fun mouseClicked(e: MouseEvent?) {
-						updateFileList()
-					}
-				})
+			add(JButton("Refresh").action {
+				updateFileList()
 			})
 
 			val connectText = "Connect to PsVita..."
@@ -401,15 +373,13 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 				}
 			}
 
-			val checkUpdatesButton = object : JButton("Check for updates...") {
-
+			val checkUpdatesButton = JButton(Texts.format("MENU_CHECK_FOR_UPDATES")).apply {
+				addMouseListener(object : MouseAdapter() {
+					override fun mouseClicked(e: MouseEvent) {
+						checkForUpdates()
+					}
+				})
 			}
-
-			checkUpdatesButton.addMouseListener(object : MouseAdapter() {
-				override fun mouseClicked(e: MouseEvent) {
-					checkForUpdates()
-				}
-			})
 			add(connectButton)
 			add(connectAddress)
 			add(checkUpdatesButton)
@@ -446,75 +416,24 @@ class VitaOrganizer(val frame: JFrame) : JPanel(BorderLayout()), StatusUpdater {
 
 	}
 
-	val queue = VitaOrganizerTasks()
-
-	fun addTask(task: VitaOrganizerTasks.Task) {
-		queue.queueTask(task)
-	}
-
 	fun checkForUpdates() {
-		addTask(CheckForUpdatesTask())
+		localTasks.queue(CheckForUpdatesTask())
 	}
 
 	fun updateFileList() {
-		Thread {
-			synchronized(VPK_GAME_IDS) {
-				VPK_GAME_IDS.clear()
-			}
-			val vpkFiles = File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }
-			updateStatus(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
-			var count = 0
-			for (vpkFile in File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }) {
-				//println(vpkFile)
-				updateStatus(Texts.format("STEP_ANALYZING_ITEM", "name" to vpkFile.name, "current" to count + 1, "total" to vpkFiles.size))
-				try {
-					val zip = ZipFile(vpkFile)
-					val paramSfoData = zip.getBytes("sce_sys/param.sfo")
-
-					val psf = PSF.read(paramSfoData.open2("r"))
-					val gameId = psf["TITLE_ID"].toString()
-
-					val entry = VitaOrganizerCache.entry(gameId)
-
-					if (!entry.icon0File.exists()) {
-						entry.icon0File.writeBytes(zip.getInputStream(zip.getEntry("sce_sys/icon0.png")).readBytes())
-					}
-					if (!entry.paramSfoFile.exists()) {
-						entry.paramSfoFile.writeBytes(paramSfoData)
-					}
-					if (!entry.sizeFile.exists()) {
-						val uncompressedSize = ZipFile(vpkFile).entries().toList().map { it.size }.sum()
-						entry.sizeFile.writeText("" + uncompressedSize)
-					}
-					if (!entry.permissionsFile.exists()) {
-						val ebootBinData = zip.getBytes("eboot.bin")
-						entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinData.open2("r")))
-					}
-					entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
-					synchronized(VPK_GAME_IDS) {
-						VPK_GAME_IDS += gameId
-					}
-					//getGameEntryById(gameId).inPC = true
-				} catch (e: Throwable) {
-					println("Error processing ${vpkFile.name}")
-					e.printStackTrace()
-				}
-			}
-			updateStatus(Texts.format("STEP_DONE"))
-			updateEntries()
-		}.start()
+		localTasks.queue(UpdateFileListTask())
 	}
 
 
-	fun fileWatchFolder(path: String) {
-		val watcher = FileSystems.getDefault().newWatchService()
-		val dir = FileSystems.getDefault().getPath(path)
-		try {
-
-			val key = dir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-
-		} catch (x: IOException) {
-			System.err.println(x);
-		}
-	}
+	//fun fileWatchFolder(path: String) {
+	//	val watcher = FileSystems.getDefault().newWatchService()
+	//	val dir = FileSystems.getDefault().getPath(path)
+	//	try {
+	//
+	//		val key = dir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+	//
+	//	} catch (x: IOException) {
+	//		System.err.println(x);
+	//	}
+	//}
 }

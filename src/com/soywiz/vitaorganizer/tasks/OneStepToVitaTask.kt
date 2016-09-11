@@ -2,9 +2,9 @@ package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.vitaorganizer.GameEntry
 import com.soywiz.vitaorganizer.PsvitaDevice
-import com.soywiz.vitaorganizer.VitaOrganizerTasks
+import com.soywiz.vitaorganizer.VitaTaskQueue
 
-class OneStepToVitaTask(val entry: GameEntry) : VitaOrganizerTasks.Task() {
+class OneStepToVitaTask(val entry: GameEntry) : VitaTask() {
 	val sendPromotingVpkTask = SendPromotingVpkToVitaTask(entry)
 	val sendDataTask = SendDataToVitaTask(entry)
 

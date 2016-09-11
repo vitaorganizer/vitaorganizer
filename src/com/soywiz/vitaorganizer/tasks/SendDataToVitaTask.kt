@@ -2,11 +2,11 @@ package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.vitaorganizer.GameEntry
 import com.soywiz.vitaorganizer.PsvitaDevice
-import com.soywiz.vitaorganizer.VitaOrganizerTasks
+import com.soywiz.vitaorganizer.VitaTaskQueue
 import java.util.zip.ZipFile
 import javax.swing.JOptionPane
 
-class SendDataToVitaTask(val entry: GameEntry) : VitaOrganizerTasks.Task() {
+class SendDataToVitaTask(val entry: GameEntry) : VitaTask() {
 	override fun perform() {
 		updateStatus("Sending game ${entry.id}...")
 		//val zip = ZipFile(entry.vpkFile)

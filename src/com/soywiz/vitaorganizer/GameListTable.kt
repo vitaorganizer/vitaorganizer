@@ -13,8 +13,7 @@ import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JLabel
 import javax.swing.JTable
-import javax.swing.event.ListSelectionEvent
-import javax.swing.event.ListSelectionListener
+import javax.swing.ListSelectionModel
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
 import javax.swing.table.TableModel
@@ -123,9 +122,11 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 				horizontalAlignment = JLabel.CENTER
 			}
 		}
+
 		table.rowSorter = TableRowSorter<TableModel>(table.model).apply {
 			setComparator(COLUMN_SIZE.modelIndex, { a, b -> (a as Comparable<Any>).compareTo((b as Comparable<Any>)) })
 		}
+
 		COLUMN_TITLE.apply {
 			width = 512
 			preferredWidth = 512
@@ -134,11 +135,10 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 
 		table.font = Font(Font.MONOSPACED, Font.PLAIN, 14)
 
-		table.selectionModel.addListSelectionListener(object : ListSelectionListener {
-			override fun valueChanged(e: ListSelectionEvent?) {
-				println(e)
-			}
-		});
+		table.selectionModel.addListSelectionListener { e -> println(e) };
+
+		table.selectionModel.selectionMode = ListSelectionModel.SINGLE_SELECTION
+		table.columnModel.selectionModel.selectionMode = ListSelectionModel.SINGLE_SELECTION
 
 		table.addKeyListener(object : KeyAdapter() {
 			override fun keyPressed(e: KeyEvent) {
@@ -151,9 +151,11 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 		})
 
 		table.addMouseListener(object : MouseAdapter() {
-			override fun mouseClicked(e: MouseEvent) {
-				super.mouseClicked(e)
+			override fun mouseReleased(e: MouseEvent) {
+				super.mouseReleased(e)
 				val row = table.rowAtPoint(Point(e.x, e.y))
+				table.clearSelection()
+				table.addRowSelectionInterval(row, row)
 				if (row >= 0) table.showMenu()
 			}
 		})
@@ -186,10 +188,10 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 		}
 	}
 
-	fun updateEntries(ALL_GAME_IDS: List<GameEntry>) {
+	fun setEntries(games: List<GameEntry>) {
 		val newRows = arrayListOf<Array<Any>>()
 
-		for (entry in ALL_GAME_IDS.sortedBy { it.title }) {
+		for (entry in games.sortedBy { it.title }) {
 			try {
 				val gameId = entry.gameId
 				val entry2 = VitaOrganizerCache.entry(gameId)

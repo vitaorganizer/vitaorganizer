@@ -4,7 +4,7 @@ import com.soywiz.vitaorganizer.*
 import java.util.zip.ZipFile
 import javax.swing.JOptionPane
 
-class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaOrganizerTasks.Task() {
+class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaTask() {
 	val zip = ZipFile(entry.vpkFile)
 	val vpkPath = "ux0:/organizer/${entry.id}.VPK"
 
@@ -32,7 +32,7 @@ class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaOrganizerTasks.Task
 			}
 		} catch (e: Throwable) {
 			e.printStackTrace()
-			JOptionPane.showMessageDialog(VitaOrganizer.instance, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(VitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
 		}
 		updateStatus("Sent game vpk ${entry.id}")
 		info("Now use VitaShell to install\n$vpkPath\n\nAfter that active ftp again and use this program to Send Data to PSVita")
