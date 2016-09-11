@@ -38,6 +38,18 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			//SwingUtilities.invokeLater {
 			//Create and set up the window.
 			val frame = JFrame("VitaOrganizer $currentVersion")
+
+			//frame.jMenuBar = JMenuBar().apply {
+			//	add(JMenu("&File").apply {
+			//		add(JMenuItem("Open folder..."))
+			//		add(JMenuItem("Exit"))
+			//	})
+			//	add(JMenu("Help").apply {
+			//		add(JMenuItem("Check for updates..."))
+			//		add(JMenuItem("Open website"))
+			//	})
+			//}
+
 			frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 			frame.iconImage = ImageIO.read(getResourceURL("icon.png"))
 
@@ -457,6 +469,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 
 		val header = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
+
 			add(JButton("Select folder...").apply {
 				this.addMouseListener(object : MouseAdapter() {
 					override fun mouseClicked(e: MouseEvent?) {
@@ -621,6 +634,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			val checkUpdatesButton = object : JButton("Check for updates...") {
 
 			}
+
 			checkUpdatesButton.addMouseListener(object : MouseAdapter() {
 				override fun mouseClicked(e: MouseEvent) {
 					val text = URL("https://raw.githubusercontent.com/soywiz/vitaorganizer/master/lastVersion.txt").readText()
