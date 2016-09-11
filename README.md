@@ -46,3 +46,34 @@ gradle launch4j
 
 It will generate the file `build/libs/vitaorganizer-VERSION.exe`. It uses launch4j as launcher,
 and proguard for minimizing all the files so the executable will be smaller.
+
+### Translations
+
+VitaOrganizer supports localization. You can fork the project and create/update files in resources/translations.
+
+Each translation can be found here:
+```
+resources/translations/<ISO 639-1>.properties
+```
+
+So:
+```
+resources/translations/en.properties - English
+resources/translations/es.properties - Spanish
+resources/translations/fr.properties - French
+...
+```
+
+You can find the complete list here: https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+
+In order to test several languages, you can launch the JVM with the following arguments:
+```
+-Duser.country=ES -Duser.language=es
+```
+
+Each supported text is defined in `src/com/soywiz/vitaorganizer/i18n/Texts.kt`
+Texts are identified by an ID, that is the name of the variable defined in Texts class.
+When translating the program tries to load the property language file from your current operating system language,
+then tries to load texts in english, and if it can't find any suitable language file, it displays the ID of the text.
+
+All files are in UTF-8 encoding.

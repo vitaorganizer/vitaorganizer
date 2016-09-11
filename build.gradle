@@ -27,6 +27,7 @@ apply plugin: 'application'
 apply plugin: 'edu.sc.seis.launch4j'
 
 mainClassName = 'com.soywiz.vitaorganizer.VitaOrganizer'
+compileJava.options.encoding = 'UTF-8'
 
 sourceCompatibility = 1.5
 
