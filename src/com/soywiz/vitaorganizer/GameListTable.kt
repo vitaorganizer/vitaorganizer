@@ -2,6 +2,7 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.stream
 import com.soywiz.vitaorganizer.ext.getScaledImage
+import java.awt.BorderLayout
 import java.awt.Font
 import java.awt.Point
 import java.awt.event.KeyAdapter
@@ -10,27 +11,93 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.io.ByteArrayInputStream
 import javax.imageio.ImageIO
-import javax.swing.ImageIcon
-import javax.swing.JLabel
-import javax.swing.JTable
-import javax.swing.ListSelectionModel
+import javax.swing.*
+import javax.swing.event.RowSorterEvent
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
 import javax.swing.table.TableModel
 import javax.swing.table.TableRowSorter
 
-open class GameListTable : JTable(object : DefaultTableModel() {
-	override fun isCellEditable(row: Int, column: Int): Boolean {
-		return false
+open class GameListTable : JPanel(BorderLayout()) {
+	val model2 = object : DefaultTableModel() {
+		override fun isCellEditable(row: Int, column: Int): Boolean {
+			return false
+		}
 	}
-}) {
-	val model2 = model as DefaultTableModel
+
+
+	val table = object : JTable(model2) {
+		override fun getColumnClass(column: Int): Class<*> {
+			return getValueAt(0, column).javaClass
+		}
+	}
+	val scrollPanel = JScrollPane(table)
+	lateinit var sorter: TableRowSorter<TableModel>
+
+	var filter = ""
+		set(value) {
+			field = value
+			updateRowFilter(value)
+		}
+		get() = field
+
+	private fun updateRowFilter(value: String) {
+		if (value.isNullOrEmpty()) {
+			sorter.rowFilter = null
+		} else {
+			sorter.rowFilter = RowFilter.regexFilter("(?i)$value")
+		}
+	}
+
+	fun setSorter() {
+		sorter = TableRowSorter<TableModel>(model2).apply {
+			setComparator(5, { a, b -> (a as Comparable<Any>).compareTo((b as Comparable<Any>)) })
+			//rowFilter = object : RowFilter<TableModel, Any>() {
+			//	override fun include(entry: Entry<out TableModel, out Any>?): Boolean {
+			//		return true
+			//	}
+			//}
+		}
+		sorter.addRowSorterListener { e ->
+			if (e.type === RowSorterEvent.Type.SORTED) {
+				// We need to call both revalidate() and repaint()
+				table.revalidate()
+				table.repaint()
+			}
+		}
+		table.rowSorter = sorter
+	}
+
+	//val sorter = (rowSorter as DefaultRowSorter<DefaultTableModel, Any?>)
 
 	init {
-		val table = this
+		add(scrollPanel, BorderLayout.CENTER)
+
+		//table.rowSorter
+
+		//table.rowSorter = sorter
+
+
+
+		//sorter.rowFilter = RowFilter.regexFilter(".*foo.*")
+		//sorter.sortsOnUpdates = true
+
 
 		table.rowHeight = 64
-		table.autoCreateRowSorter = true
+
+		//JTable table = new JTable(myModel);
+		//table.setRowSorter(sorter);
+
+		//table.autoCreateRowSorter = true
+
+		//rowSorter.rowFilter = RowFilter.regexFilter<TableModel, Any>("Plant")
+		/*
+		rowSorter.rowFilter = object : RowFilter<TableModel, Any>() {
+			override fun include(entry: Entry<out TableModel, out Any>?): Boolean {
+				return false
+			}
+		}
+		*/
 
 		//table.getColumnModel().getColumn(0).cellRenderer = JTable.IconRenderer()
 		//(table.model2 as DefaultTableModel).addRow(arrayOf("John", "Doe", "Rowing", 3, true))
@@ -123,9 +190,10 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 			}
 		}
 
-		table.rowSorter = TableRowSorter<TableModel>(table.model).apply {
-			setComparator(COLUMN_SIZE.modelIndex, { a, b -> (a as Comparable<Any>).compareTo((b as Comparable<Any>)) })
-		}
+		setSorter()
+		//table.rowSorter = TableRowSorter<TableModel>(table.model).apply {
+		//	setComparator(COLUMN_SIZE.modelIndex, { a, b -> (a as Comparable<Any>).compareTo((b as Comparable<Any>)) })
+		//}
 
 		COLUMN_TITLE.apply {
 			width = 512
@@ -135,7 +203,7 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 
 		table.font = Font(Font.MONOSPACED, Font.PLAIN, 14)
 
-		table.selectionModel.addListSelectionListener { e -> println(e) };
+		//table.selectionModel.addListSelectionListener { e -> println(e) };
 
 		table.selectionModel.selectionMode = ListSelectionModel.SINGLE_SELECTION
 		table.columnModel.selectionModel.selectionMode = ListSelectionModel.SINGLE_SELECTION
@@ -143,7 +211,7 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 		table.addKeyListener(object : KeyAdapter() {
 			override fun keyPressed(e: KeyEvent) {
 				if (e.keyCode == KeyEvent.VK_ENTER) {
-					table.showMenu()
+					showMenu()
 				} else {
 					super.keyPressed(e)
 				}
@@ -156,17 +224,20 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 				val row = table.rowAtPoint(Point(e.x, e.y))
 				table.clearSelection()
 				table.addRowSelectionInterval(row, row)
-				if (row >= 0) table.showMenu()
+				if (row >= 0) showMenu()
 			}
 		})
+
+		updateRowFilter(filter)
+		//filter = "Plant"
 	}
 
-	fun getEntryAtRow(row: Int): GameEntry = dataModel.getValueAt(this.convertRowIndexToModel(row), 1) as GameEntry
+	fun getEntryAtRow(row: Int): GameEntry = model2.getValueAt(table.convertRowIndexToModel(row), 1) as GameEntry
 
-	val currentEntry: GameEntry get() = getEntryAtRow(this.selectedRow)
+	val currentEntry: GameEntry get() = getEntryAtRow(table.selectedRow)
 
 	fun showMenuForRow(row: Int) {
-		val rect = getCellRect(row, 1, true)
+		val rect = table.getCellRect(row, 1, true)
 		showMenuAtFor(rect.x, rect.y + rect.height, getEntryAtRow(row))
 	}
 
@@ -174,11 +245,7 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 	}
 
 	fun showMenu() {
-		showMenuForRow(selectedRow)
-	}
-
-	override fun getColumnClass(column: Int): Class<*> {
-		return getValueAt(0, column).javaClass
+		showMenuForRow(table.selectedRow)
 	}
 
 	override fun processKeyEvent(e: KeyEvent) {
@@ -226,9 +293,13 @@ open class GameListTable : JTable(object : DefaultTableModel() {
 			}
 		}
 
-		while (model.rowCount > 0) model2.removeRow(model.rowCount - 1)
+		while (model2.rowCount > 0) model2.removeRow(model2.rowCount - 1)
 		for (row in newRows) model2.addRow(row)
 
 		model2.fireTableDataChanged()
+
+
+		//sorter.sort()
+
 	}
 }

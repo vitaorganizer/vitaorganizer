@@ -173,7 +173,7 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		override fun showMenuAtFor(x: Int, y: Int, entry: GameEntry) {
 			popupMenu.entry = entry
-			popupMenu.show(this, x, y)
+			popupMenu.show(this.table, x, y)
 		}
 
 		init {
@@ -231,12 +231,12 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		//val data = arrayOf(arrayOf(JLabel("Kathy"), "Smith", "Snowboarding", 5, false), arrayOf("John", "Doe", "Rowing", 3, true), arrayOf("Sue", "Black", "Knitting", 2, false), arrayOf("Jane", "White", "Speed reading", 20, true), arrayOf("Joe", "Brown", "Pool", 10, false))
 
 
-		table.preferredScrollableViewportSize = Dimension(800, 600)
+		table.table.preferredScrollableViewportSize = Dimension(800, 600)
 		//table.rowSelectionAllowed = false
 		//table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
 		//Create the scroll pane and add the table to it.
-		val scrollPane = JScrollPane(table)
+		val scrollPane = table
 
 		//Add the scroll pane to this panel.
 		//val const = SpringLayout.Constraints()
@@ -269,10 +269,26 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					super.processKeyEvent(e)
 					VitaOrganizerSettings.lastDeviceIp = this.text
 				}
+			}.apply {
+				addActionListener {
+					println("aaa")
+				}
 			}
 
-			connectAddress.addActionListener {
-				println("aaa")
+			val filterTextField = object : JTextField("") {
+				init {
+					font = Font(Font.MONOSPACED, Font.PLAIN, 14)
+					columns = 16
+				}
+
+				override fun processKeyEvent(e: KeyEvent?) {
+					super.processKeyEvent(e)
+					table.filter = this.text
+				}
+			}.apply {
+				//addActionListener {
+				//	println("aaa")
+				//}
 			}
 
 			val connectButton = object : JButton(connectText) {
@@ -393,6 +409,8 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			add(connectButton)
 			add(connectAddress)
+			add(JLabel(Texts.format("LABEL_FILTER")))
+			add(filterTextField)
 		}
 
 		add(header, SpringLayout.NORTH)
