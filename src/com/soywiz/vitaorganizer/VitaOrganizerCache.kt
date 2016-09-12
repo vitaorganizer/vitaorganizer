@@ -16,6 +16,8 @@ object VitaOrganizerCache {
         val pathFile = cacheFolder["$gameId.path"]
         val sizeFile = cacheFolder["$gameId.size"]
         val permissionsFile = cacheFolder["$gameId.extperm"]
+        val dumperVersionFile = cacheFolder["$gameId.dumperversion"]
+        val compressionFile = cacheFolder["$gameId.compression"]
 
         fun delete() {
             icon0File.delete()
@@ -23,6 +25,8 @@ object VitaOrganizerCache {
             pathFile.delete()
             sizeFile.delete()
             permissionsFile.delete()
+            dumperVersionFile.delete()
+            compressionFile.delete()
         }
     }
 

@@ -94,6 +94,12 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		val gameTitlePopup = JMenuItem("").apply {
 			this.isEnabled = false
 		}
+		val gameDumperVersionPopup = JMenuItem("").apply {
+			this.isEnabled = false
+		}
+		val gameCompressionLevelPopup = JMenuItem("").apply {
+			this.isEnabled = false
+		}
 
 		val popupMenu = object : JPopupMenu() {
 			var entry: GameEntry? = null
@@ -126,6 +132,8 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			init {
 				add(gameTitlePopup)
+				add(gameDumperVersionPopup)
+				add(gameCompressionLevelPopup)
 				add(JSeparator())
 				add(JMenuItem(if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")).action {
 					if (entry != null) {
@@ -152,12 +160,16 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			override fun show(invoker: Component?, x: Int, y: Int) {
 				val entry = entry
 				gameTitlePopup.text = "UNKNOWN"
+				gameDumperVersionPopup.text = "UNKNOWN"
+				gameCompressionLevelPopup.text = "UNKNOWN"
 				deleteFromVita.isEnabled = false
 				sendVpkToVita.isEnabled = false
 				sendDataToVita.isEnabled = false
 				sendToVita1Step.isEnabled = false
 
 				if (entry != null) {
+					gameDumperVersionPopup.text = "Dumper : ${entry.dumperVersion}"
+					gameCompressionLevelPopup.text = "Compression Level : ${entry.compressionLevel}"
 					gameTitlePopup.text = "${entry.id} : ${entry.title}"
 					deleteFromVita.isEnabled = entry.inVita
 					sendVpkToVita.isEnabled = entry.inPC
