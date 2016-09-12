@@ -4,6 +4,7 @@
 /.gradle
 /out
 /build
+/classes
 .idea
 *.ipr
 *.iws
