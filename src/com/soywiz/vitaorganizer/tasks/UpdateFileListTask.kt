@@ -2,6 +2,9 @@ package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.*
+import com.soywiz.util.DumperNamesHelper
+import com.soywiz.util.DumperModules
+import com.soywiz.util.DumperNames
 import com.soywiz.vitaorganizer.ext.getBytes
 import java.io.File
 import java.util.zip.ZipFile
@@ -24,6 +27,26 @@ class UpdateFileListTask : VitaTask() {
 					val gameId = psf["TITLE_ID"].toString()
 
 					val entry = VitaOrganizerCache.entry(gameId)
+
+					//try to find compressionlevel and vitaminversion or maiversion
+					val paramsfo = zip.getEntry("sce_sys/param.sfo")
+					val compressionLevel = if (paramsfo != null) paramsfo.method.toString() else ""
+
+					var dumper = DumperNames.UNKNOWN
+					for ( file in DumperModules.values() ) {
+						val suprx = zip.getEntry(file.file)
+						if (suprx != null) {
+							dumper = DumperNamesHelper().findDumperBySize(suprx.size)
+						}
+					}
+
+					println("For file ${vpkFile} Compressionslevel : ${compressionLevel} Dumperversion : ${dumper}")
+					if (!entry.compressionFile.exists()) {
+						entry.compressionFile.writeText(compressionLevel.toString())
+					}
+					if (!entry.dumperVersionFile.exists()) {
+						entry.dumperVersionFile.writeText(dumper.shortName)
+					}
 
 					if (!entry.icon0File.exists()) {
 						entry.icon0File.writeBytes(zip.getInputStream(zip.getEntry("sce_sys/icon0.png")).readBytes())
