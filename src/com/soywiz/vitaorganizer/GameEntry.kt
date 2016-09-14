@@ -1,6 +1,7 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.stream
+import com.soywiz.util.DumperNamesHelper
 import java.io.File
 
 class GameEntry(val gameId: String) {
@@ -21,6 +22,8 @@ class GameEntry(val gameId: String) {
 	}
 	val id by lazy { psf["TITLE_ID"].toString() }
 	val title by lazy { psf["TITLE"].toString() }
+	val dumperVersion by lazy { DumperNamesHelper().findDumperByShortName( entry.dumperVersionFile.readText() ).longName }
+	val compressionLevel by lazy { entry.compressionFile.readText() }
 	var inVita = false
 	var inPC = false
 	val vpkLocalPath: String? get() = entry.pathFile.readText(Charsets.UTF_8)
