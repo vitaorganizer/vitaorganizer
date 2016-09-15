@@ -94,5 +94,6 @@ launch4j {
     mainClassName = project.mainClassName
     //copyConfigurable = project.tasks.fatJar.outputs.files
     //jar = "lib/${project.tasks.fatJar.archiveName}"
+    maxHeapSize = 1024
     jar = "../../build/libs/vitaorganizer-${ext.version}.min.jar"
 }
