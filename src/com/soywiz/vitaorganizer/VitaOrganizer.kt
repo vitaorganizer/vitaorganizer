@@ -83,7 +83,7 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 	fun showFileInExplorerOrFinder(file: File) {
 		if (OS.isWindows) {
-			ProcessBuilder("explorer.exe", "/select," + file.absolutePath).start().waitFor()
+			ProcessBuilder("explorer.exe", "/select,", file.absolutePath).start().waitFor()
 		} else {
 			ProcessBuilder("open", "-R", file.absolutePath).start().waitFor()
 		}
