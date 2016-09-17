@@ -159,9 +159,9 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			override fun show(invoker: Component?, x: Int, y: Int) {
 				val entry = entry
-				gameTitlePopup.text = "UNKNOWN"
-				gameDumperVersionPopup.text = "UNKNOWN"
-				gameCompressionLevelPopup.text = "UNKNOWN"
+				gameTitlePopup.text = Texts.format("UNKNOWN_VERSION")
+				gameDumperVersionPopup.text = Texts.format("UNKNOWN_VERSION")
+				gameCompressionLevelPopup.text = Texts.format("UNKNOWN_VERSION")
 				deleteFromVita.isEnabled = false
 				sendVpkToVita.isEnabled = false
 				sendDataToVita.isEnabled = false
