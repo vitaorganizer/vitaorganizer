@@ -150,10 +150,15 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				})
 
 				add(JSeparator())
-				//add(deleteFromVita)
+				add(JMenuItem(Texts.format("METHOD1_INFO")).apply {
+					isEnabled = false
+				})
 				add(sendVpkToVita)
 				add(sendDataToVita)
 				add(JSeparator())
+				add(JMenuItem(Texts.format("METHOD2_INFO")).apply {
+					isEnabled = false
+				})
 				add(sendToVita1Step)
 			}
 
