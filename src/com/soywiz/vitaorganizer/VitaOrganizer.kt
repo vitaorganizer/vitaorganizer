@@ -168,8 +168,8 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				sendToVita1Step.isEnabled = false
 
 				if (entry != null) {
-					gameDumperVersionPopup.text = "Dumper : ${entry.dumperVersion}"
-					gameCompressionLevelPopup.text = "Compression Level : ${entry.compressionLevel}"
+					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
+					gameCompressionLevelPopup.text = Texts.format("COMPRESSION_LEVEL", "level" to entry.compressionLevel)
 					gameTitlePopup.text = "${entry.id} : ${entry.title}"
 					deleteFromVita.isEnabled = entry.inVita
 					sendVpkToVita.isEnabled = entry.inPC
@@ -278,12 +278,11 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				selectFolder()
 			})
 
-			add(JButton("Refresh").action {
+			add(JButton(Texts.format("MENU_REFRESH")).action {
 				updateFileList()
 			})
 
-			val connectText = "Connect to PsVita..."
-			val disconnectText = "Disconnect from %s"
+			val connectText = Texts.format("CONNECT_TO_PSVITA")
 			var connected = false
 			val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp) {
 				init {
@@ -312,14 +311,14 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						VITA_GAME_IDS.clear()
 					}
 					updateEntries()
-					statusLabel.text = "Disconnected"
+					statusLabel.text = Texts.format("DISCONNECTED")
 				}
 
 				fun connect(ip: String) {
 					connected = true
 					VitaOrganizerSettings.lastDeviceIp = ip
 					PsvitaDevice.setIp(ip, 1337)
-					button.text = disconnectText.format(ip)
+					button.text = Texts.format("DISCONNECT_FROM_IP", "ip" to ip)
 					connectAddress.text = ip
 					synchronized(VITA_GAME_IDS) {
 						VITA_GAME_IDS.clear()
@@ -331,7 +330,7 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 							var vitaGameCount = 0
 							val vitaGameIds = PsvitaDevice.getGameIds()
 							for (gameId in vitaGameIds) {
-								updateStatus("Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)...")
+								updateStatus(Texts.format("PROCESSING_GAME", "current" to (vitaGameCount + 1), "total" to vitaGameIds.size, "gameId" to gameId))
 								//println(gameId)
 								try {
 									PsvitaDevice.getParamSfoCached(gameId)
@@ -367,7 +366,7 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 							updated = true
 						}
 
-						updateStatus("Connected")
+						updateStatus(Texts.format("CONNECTED"))
 					}.start()
 
 					Thread {
@@ -390,10 +389,10 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					addMouseListener(object : MouseAdapter() {
 						override fun mouseClicked(e: MouseEvent?) {
 							if (connected) {
-								this@VitaOrganizer.updateStatus("Disconnecting...")
+								this@VitaOrganizer.updateStatus(Texts.format("DISCONNECTING"))
 								disconnect()
 							} else {
-								this@VitaOrganizer.updateStatus("Connecting...")
+								this@VitaOrganizer.updateStatus(Texts.format("CONNECTING"))
 								button.button.isEnabled = false
 
 								connect(VitaOrganizerSettings.lastDeviceIp)
