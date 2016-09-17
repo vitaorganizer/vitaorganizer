@@ -2,6 +2,7 @@ package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.vitaorganizer.FileSize
 import com.soywiz.vitaorganizer.GameEntry
+import com.soywiz.vitaorganizer.Texts
 import com.soywiz.vitaorganizer.VitaOrganizer
 import java.io.File
 import java.io.FileOutputStream
@@ -12,7 +13,7 @@ import java.util.zip.ZipOutputStream
 
 class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_COMPRESSION, val setSecure: Boolean? = null) : VitaTask() {
 	override fun perform() {
-		status("Repacking vpk...")
+		status(Texts.format("STEP_REPACKING_VPK"))
 		val file = entry.vpkLocalFile!!
 		val tempFile = File("${file.absolutePath}.temp")
 		val tempFile2 = File("${file.absolutePath}.temp2")
@@ -31,9 +32,12 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 					val totalSize = entries.map { it.size }.sum()
 
 					for ((index, e) in entries.withIndex()) {
-
 						fun updateStatus() {
-							status("Repacking ${index}/${entries.size} :: ${FileSize.toString(currentSize)}/${FileSize.toString(totalSize)}")
+							status(Texts.format(
+								"STEP_REPACKING_ENTRY",
+								"current" to (index + 1), "total" to entries.size,
+								"currentSize" to FileSize.toString(currentSize), "totalSize" to FileSize.toString(totalSize)
+							))
 							progress(index, entries.size)
 						}
 
@@ -72,7 +76,7 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 				}
 			}
 		}
-		status("Done...")
+		status(Texts.format("STEP_DONE"))
 
 		//Thread.sleep(300L)
 

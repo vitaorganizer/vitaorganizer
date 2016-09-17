@@ -16,11 +16,16 @@ class CheckForUpdatesTask : VitaTask() {
 			JOptionPane.showMessageDialog(
 				VitaOrganizer,
 				Texts.format("YOU_HAVE_LASTEST_VERSION", "version" to VitaOrganizer.currentVersion),
-				"Actions",
+				Texts.format("ACTIONS_TITLE"),
 				JOptionPane.INFORMATION_MESSAGE
 			);
 		} else {
-			val result = JOptionPane.showConfirmDialog(VitaOrganizer, "There is a new version: $lastVersion\nYou have: ${VitaOrganizer.currentVersion}\nWant to download last version?", "Actions", JOptionPane.YES_NO_OPTION);
+			val result = JOptionPane.showConfirmDialog(
+				VitaOrganizer,
+				"There is a new version: $lastVersion\nYou have: ${VitaOrganizer.currentVersion}\nWant to download last version?",
+				Texts.format("ACTIONS_TITLE"),
+				JOptionPane.YES_NO_OPTION
+			);
 			if (result == JOptionPane.OK_OPTION) {
 				VitaOrganizer.openWebpage(URL(lastVersionUrl))
 			}

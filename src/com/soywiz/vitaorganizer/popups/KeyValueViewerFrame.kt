@@ -1,5 +1,6 @@
 package com.soywiz.vitaorganizer.popups
 
+import com.soywiz.vitaorganizer.Texts
 import java.awt.BorderLayout
 import java.awt.Font
 import javax.swing.JFrame
@@ -20,8 +21,9 @@ class KeyValueViewerFrame(title: String, val map: Map<String, Any>) : JFrame(tit
 
 			val model = DefaultTableModel()
 			val table = JTable(model)
-			model.addColumn("Key")
-			model.addColumn("Value")
+
+			model.addColumn(Texts.format("KEY_COLUMN"))
+			model.addColumn(Texts.format("VALUE_COLUMN"))
 			for (pair in arrayPairs) model.addRow(pair)
 
 			table.columnModel.getColumn(0).apply {

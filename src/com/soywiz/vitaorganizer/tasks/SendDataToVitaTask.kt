@@ -2,11 +2,13 @@ package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.vitaorganizer.GameEntry
 import com.soywiz.vitaorganizer.PsvitaDevice
+import com.soywiz.vitaorganizer.Texts
 import java.util.zip.ZipFile
 
 class SendDataToVitaTask(val entry: GameEntry) : VitaTask() {
 	fun performBase() {
-		status("Sending game ${entry.id}...")
+
+		status(Texts.format("STEP_SENDING_GAME", "id" to entry.id))
 		//val zip = ZipFile(entry.vpkFile)
 		try {
 			ZipFile(entry.vpkLocalPath).use { zip ->
