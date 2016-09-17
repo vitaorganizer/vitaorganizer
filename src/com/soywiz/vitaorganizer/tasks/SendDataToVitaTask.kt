@@ -28,11 +28,11 @@ class SendDataToVitaTask(val entry: GameEntry) : VitaTask() {
 		} catch (e: Throwable) {
 			error(e.toString())
 		}
-		status("Sent game data ${entry.id}")
+		status(Texts.format("SENT_GAME_DATA", "id" to entry.id))
 	}
 
 	override fun perform() {
 		performBase()
-		info("Game ${entry.id} sent successfully")
+		status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to entry.id))
 	}
 }

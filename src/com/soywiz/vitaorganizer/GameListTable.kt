@@ -310,7 +310,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 							Texts.format("LOCATION_NONE")
 						},
 						psf["APP_VER"] ?: psf["VERSION"] ?: Texts.format("UNKNOWN_VERSION"),
-						(if (extendedPermissions) Texts.format("PERMISSIONS_UNSECURE") else Texts.format("PERMISSIONS_SECURE")),
+						(if (extendedPermissions) Texts.format("PERMISSIONS_UNSAFE") else Texts.format("PERMISSIONS_SAFE")),
 						FileSize(entry.size),
 						entry.title
 					))

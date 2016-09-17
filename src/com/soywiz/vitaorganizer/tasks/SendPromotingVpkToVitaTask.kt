@@ -1,6 +1,9 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.*
+import com.soywiz.vitaorganizer.GameEntry
+import com.soywiz.vitaorganizer.PsvitaDevice
+import com.soywiz.vitaorganizer.Texts
+import com.soywiz.vitaorganizer.VitaOrganizer
 import java.util.zip.ZipFile
 import javax.swing.JOptionPane
 
@@ -10,8 +13,11 @@ class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaTask() {
 	override fun checkBeforeQueue() {
 		//updateStatus(Texts.format("STEP_CHECKING_EBOOT_PERMISSIONS"))
 		if (entry.hasExtendedPermissions) {
-			if (!warn("WARNING!", "Game ${entry.id} requires extended permissions.\nAre you sure you want to install it. It could damage your device?")) {
-				throw InterruptedException("Not accepted installing game with extended permissions")
+			if (!warn(
+				Texts.format("WARNING_EX"),
+				Texts.format("WARNING_UNSAFE", "id" to entry.id)
+			)) {
+				throw InterruptedException(Texts.format("UNSAFE_NOT_ACCEPTED"))
 			}
 		}
 	}
@@ -37,7 +43,7 @@ class SendPromotingVpkToVitaTask(val entry: GameEntry) : VitaTask() {
 
 	override fun perform() {
 		performBase()
-		status("Sent game vpk ${entry.id}")
-		info("Now use VitaShell to install\n$vpkPath\n\nAfter that active ftp again and use this program to Send Data to PSVita")
+		status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to entry.id))
+		info(Texts.format("VITASHELL_INSTALL", "vpkPath" to vpkPath))
 	}
 }
