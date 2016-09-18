@@ -1,10 +1,10 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.util.open2
-import com.soywiz.vitaorganizer.*
-import com.soywiz.util.DumperNamesHelper
 import com.soywiz.util.DumperModules
 import com.soywiz.util.DumperNames
+import com.soywiz.util.DumperNamesHelper
+import com.soywiz.util.open2
+import com.soywiz.vitaorganizer.*
 import com.soywiz.vitaorganizer.ext.getBytes
 import java.io.File
 import java.util.zip.ZipFile
@@ -14,9 +14,26 @@ class UpdateFileListTask : VitaTask() {
 		synchronized(VitaOrganizer.VPK_GAME_IDS) {
 			VitaOrganizer.VPK_GAME_IDS.clear()
 		}
-		val vpkFiles = File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }
 		status(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
-		for ((index, vpkFile) in File(VitaOrganizerSettings.vpkFolder).listFiles().filter { it.name.toLowerCase().endsWith(".vpk") }.withIndex()) {
+
+		val MAX_SUBDIRECTORY_LEVELS = 2
+
+		fun listVpkFiles(folder: File, level: Int = 0): List<File> {
+			val out = arrayListOf<File>()
+			if (level > MAX_SUBDIRECTORY_LEVELS) return out
+			for (child in folder.listFiles()) {
+				if (child.isDirectory) {
+					out += listVpkFiles(child, level = level + 1)
+				} else {
+					if (child.extension.toLowerCase() == "vpk") out += child
+				}
+			}
+			return out
+		}
+
+		val vpkFiles = listVpkFiles(File(VitaOrganizerSettings.vpkFolder))
+
+		for ((index, vpkFile) in vpkFiles.withIndex()) {
 			//println(vpkFile)
 			status(Texts.format("STEP_ANALYZING_ITEM", "name" to vpkFile.name, "current" to index + 1, "total" to vpkFiles.size))
 			try {
@@ -33,7 +50,7 @@ class UpdateFileListTask : VitaTask() {
 					val compressionLevel = if (paramsfo != null) paramsfo.method.toString() else ""
 
 					var dumper = DumperNames.UNKNOWN
-					for ( file in DumperModules.values() ) {
+					for (file in DumperModules.values()) {
 						val suprx = zip.getEntry(file.file)
 						if (suprx != null) {
 							dumper = DumperNamesHelper().findDumperBySize(suprx.size)

@@ -17,6 +17,14 @@ You can download a prebuild binary here, or just build from source:
 
 ## CHANGELOG
 
+**0.5**
+
+* Filtering feature
+* Dumper Version/Compression Level display
+* About dialog
+* Added 2 level of subdirectories
+* More translations
+
 **0.4**
 
 * Improved row selection
