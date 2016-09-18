@@ -2,17 +2,14 @@ package com.soywiz.vitaorganizer.ext
 
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.JButton
-import javax.swing.JDialog
-import javax.swing.JFrame
-import javax.swing.JMenuItem
+import javax.swing.*
 
 fun JFrame.showDialog(modal: JFrame) {
-
 	val dialog = JDialog(this, modal.title, true)
 	dialog.contentPane.add(modal.components.first())
 	dialog.pack()
 	dialog.setLocationRelativeTo(this)
+	dialog.isResizable = modal.isResizable
 	dialog.isVisible = true
 	//frame.isEnabled = false
 
@@ -27,7 +24,7 @@ fun JMenuItem.action(callback: () -> Unit): JMenuItem {
 	return this
 }
 
-fun JButton.action(callback: () -> Unit): JButton {
+fun <T: JComponent> T.onClick(callback: () -> Unit): T {
 	addMouseListener(object: MouseAdapter() {
 		override fun mouseClicked(e: MouseEvent?) {
 			callback()
@@ -35,3 +32,5 @@ fun JButton.action(callback: () -> Unit): JButton {
 	})
 	return this
 }
+
+fun JButton.action(callback: () -> Unit): JButton = onClick(callback)

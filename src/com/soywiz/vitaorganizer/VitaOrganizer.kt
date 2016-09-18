@@ -2,17 +2,13 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.OS
 import com.soywiz.util.open2
-import com.soywiz.vitaorganizer.ext.action
-import com.soywiz.vitaorganizer.ext.getResourceString
-import com.soywiz.vitaorganizer.ext.getResourceURL
-import com.soywiz.vitaorganizer.ext.showDialog
+import com.soywiz.vitaorganizer.ext.*
+import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import com.soywiz.vitaorganizer.tasks.*
 import java.awt.*
 import java.awt.event.*
 import java.io.File
-import java.net.URI
-import java.net.URISyntaxException
 import java.net.URL
 import java.util.*
 import javax.imageio.ImageIO
@@ -305,7 +301,6 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 
 
-
 			val connectButton = object : JButton(connectText) {
 				val button = this
 
@@ -445,28 +440,8 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		//frame.focusOwner = filterTextField
 	}
 
-	fun openWebpage(uri: URI) {
-		val desktop = if (Desktop.isDesktopSupported()) Desktop.getDesktop() else null
-		if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
-			try {
-				desktop.browse(uri)
-			} catch (e: Exception) {
-				e.printStackTrace()
-			}
-
-		}
-	}
-
-	fun openWebpage(url: URL) {
-		try {
-			openWebpage(url.toURI())
-		} catch (e: URISyntaxException) {
-			e.printStackTrace()
-		}
-	}
-
 	fun openAbout() {
-
+		frame.showDialog(AboutFrame())
 	}
 
 	fun checkForUpdates() {

@@ -2,6 +2,7 @@ package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.vitaorganizer.Texts
 import com.soywiz.vitaorganizer.VitaOrganizer
+import com.soywiz.vitaorganizer.ext.openWebpage
 import java.net.URL
 import javax.swing.JOptionPane
 
@@ -26,7 +27,7 @@ class CheckForUpdatesTask : VitaTask() {
 				JOptionPane.YES_NO_OPTION
 			);
 			if (result == JOptionPane.OK_OPTION) {
-				VitaOrganizer.openWebpage(URL(lastVersionUrl))
+				openWebpage(URL(lastVersionUrl))
 			}
 		}
 		println(parts)
