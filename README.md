@@ -1,6 +1,6 @@
-## VitaOrganizer 0.4
+## VitaOrganizer 0.5
 
-![](extra/screenshot-0.4.png)
+![](extra/screenshot-0.5.png)
 
 Desktop tool for listing and uploading games and homebrew applications to PSVITA without the size requirements
 of uploading the whole VPK and extracting it later.
@@ -10,10 +10,10 @@ It is written in Kotlin/Java.
 It should work on Windows, Linux and MacOS. It is a Java desktop application, packed in an executable .JAR, that
 can be executed directly with double click on most cases.
 
-In other cases, you can run it with `java -jar vitaorganizer-0.4.jar`
+In other cases, you can run it with `java -jar vitaorganizer-0.5.jar`
 
 You can download a prebuild binary here, or just build from source:
-[Download VitaOrganizer 0.4 here](https://github.com/soywiz/vitaorganizer/releases/download/0.4/vitaorganizer-0.4.jar)
+[Download VitaOrganizer 0.5 here](https://github.com/soywiz/vitaorganizer/releases/download/0.5/vitaorganizer-0.5.jar)
 
 ## CHANGELOG
 
