@@ -2,7 +2,10 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.OS
 import com.soywiz.util.open2
-import com.soywiz.vitaorganizer.ext.*
+import com.soywiz.vitaorganizer.ext.action
+import com.soywiz.vitaorganizer.ext.getResourceURL
+import com.soywiz.vitaorganizer.ext.openWebpage
+import com.soywiz.vitaorganizer.ext.showDialog
 import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import com.soywiz.vitaorganizer.tasks.*
@@ -14,20 +17,22 @@ import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.*
 
-object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
-	@JvmStatic fun main(args: Array<String>) {
-		VitaOrganizer.start()
+class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
+	companion object {
+		@JvmStatic fun main(args: Array<String>) {
+			VitaOrganizer().start()
+		}
 	}
 
-	val localTasks = VitaTaskQueue()
-	val remoteTasks = VitaTaskQueue()
+	val localTasks = VitaTaskQueue(this)
+	val remoteTasks = VitaTaskQueue(this)
 
 	init {
+		Texts.setLanguage(VitaOrganizerSettings.LANGUAGE_LOCALE)
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-		println("Locale.getDefault():" + Locale.getDefault())
 	}
 
-	val frame = JFrame("VitaOrganizer $currentVersion").apply {
+	val frame = JFrame("VitaOrganizer ${VitaOrganizerVersion.currentVersion}").apply {
 		defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 		iconImage = ImageIO.read(getResourceURL("com/soywiz/vitaorganizer/icon.png"))
 	}
@@ -40,7 +45,7 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 	init {
 		//Create and set up the content pane.
-		val newContentPane = VitaOrganizer
+		val newContentPane = this
 		newContentPane.isOpaque = true //content panes must be opaque
 		frame.contentPane = newContentPane
 
@@ -48,8 +53,6 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		//}
 	}
-
-	val currentVersion: String get() = getResourceString("com/soywiz/vitaorganizer/currentVersion.txt") ?: "unknown"
 
 	val VPK_GAME_IDS = hashSetOf<String>()
 	val VITA_GAME_IDS = hashSetOf<String>()
@@ -222,8 +225,19 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		//}
 	}
 
-	init {
+	fun setLanguageText(name: String) {
+		VitaOrganizerSettings.LANGUAGE = name
+		restart()
+	}
 
+	fun restart() {
+		this.frame.isVisible = false
+		this.frame.dispose()
+		VitaOrganizer().start()
+	}
+
+	init {
+		val vitaOrganizer = this
 
 		frame.jMenuBar = JMenuBar().apply {
 			add(JMenu(Texts.format("MENU_FILE")).apply {
@@ -236,6 +250,34 @@ object VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				add(JSeparator())
 				add(JMenuItem(Texts.format("MENU_EXIT")).action {
 					System.exit(0)
+				})
+			})
+			add(JMenu(Texts.format("MENU_SETTINGS")).apply {
+				add(JMenu(Texts.format("MENU_LANGUAGES")).apply {
+					//val language = VitaOrganizerSettings.LANGUAGE
+
+					//val languageList = LinkedHashMap<String, JRadioButtonMenuItem>()
+
+
+
+					//languageList["auto"] = autodetect
+
+					add(JRadioButtonMenuItem(Texts.format("MENU_LANGUAGE_AUTODETECT")).apply {
+						this.isSelected = VitaOrganizerSettings.isLanguageAutodetect
+					}.action {
+						setLanguageText("auto")
+					})
+					add(JSeparator())
+					for (l in Texts.SUPPORTED_LOCALES) {
+						val lrb = JRadioButtonMenuItem(l.getDisplayLanguage(l)).apply {
+							this.isSelected = VitaOrganizerSettings.LANGUAGE_LOCALE == l
+						}
+						//languageList[l.language] = lrb
+						add(lrb).action {
+							setLanguageText(l.language)
+						}
+					}
+					Unit
 				})
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {

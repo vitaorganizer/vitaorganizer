@@ -8,6 +8,10 @@ object VitaOrganizerSettings {
 	val CHARSET = Charsets.UTF_8
 	var vpkFolder: String by PropDelegate(".")
 	var lastDeviceIp: String by PropDelegate("192.168.1.100")
+	var LANGUAGE: String by PropDelegate("auto")
+
+	val isLanguageAutodetect: Boolean get() = (LANGUAGE == "auto")
+	val LANGUAGE_LOCALE: Locale get() = if (isLanguageAutodetect) Locale.getDefault() else Locale(LANGUAGE)
 
 	private var initialized = false
 	private val properties = Properties()

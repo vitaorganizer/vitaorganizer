@@ -2,6 +2,7 @@ package com.soywiz.vitaorganizer.popups
 
 import com.soywiz.vitaorganizer.Texts
 import com.soywiz.vitaorganizer.VitaOrganizer
+import com.soywiz.vitaorganizer.VitaOrganizerVersion
 import com.soywiz.vitaorganizer.ext.onClick
 import com.soywiz.vitaorganizer.ext.openWebpage
 import java.awt.*
@@ -23,7 +24,7 @@ class AboutFrame() : JFrame(Texts.format("ABOUT_TITLE")) {
 	init {
 		isResizable = false
 		add(JPanel(BorderLayout()).apply {
-			add(JLabel("VitaOrganizer ${VitaOrganizer.currentVersion}", SwingConstants.CENTER).apply {
+			add(JLabel("VitaOrganizer ${VitaOrganizerVersion.currentVersion}", SwingConstants.CENTER).apply {
 				font = Font("Arial", Font.BOLD, 24)
 			}, BorderLayout.NORTH)
 			add(object : JPanel() {
@@ -46,6 +47,7 @@ class AboutFrame() : JFrame(Texts.format("ABOUT_TITLE")) {
 					add(Contibutor("charlyzard", "https://github.com/charlyzard", "Spanish"))
 					add(Contibutor("anthologist", "https://github.com/anthologist", "Italian"))
 					add(Contibutor("adeldk", "https://github.com/adeldk", "French"))
+					add(Contibutor("kavid", "https://github.com/kavid", "Chinese"))
 				}
 			})
 			preferredSize = Dimension(500, 400)

@@ -6,6 +6,8 @@ import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 
 open class VitaTask {
+	lateinit var VitaOrganizer: VitaOrganizer
+
 	class Progress(var current: Long, var total: Long) {
 		fun set(current: Long, total: Long) {
 			this.current = current
