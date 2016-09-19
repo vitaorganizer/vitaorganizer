@@ -1,2 +1,2 @@
-0.5
-https://github.com/soywiz/vitaorganizer
+0.5.1
+https://github.com/soywiz/vitaorganizer/releases/tag/0.5.1
