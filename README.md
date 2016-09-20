@@ -17,13 +17,23 @@ You can download a prebuild binary here, or just build from source:
 
 ## CHANGELOG
 
-**0.5.1**
+**0.5.2**
+
+* Added a couple of new texts (MENU_INSTALL_VPK and STEP_SENDING_GAME_UPLOADING)
+* Updated STEP_UPLOADING_VPK_FOR_PROMOTING supporting %speed%
+* Fixed install in 1-step that was broken in 0.5.1
+* Fixed installing vpk without connecting to psvita previously (that was trying to connect to fixed 192.168.1.130)
+* Added File - Install VPK option to be able to install not listed VPK
+* Capitalized languages in menus
+* Small fixes, improvements and cleanups
+
+~~0.5.1~~ (Do not use, it has known issues) (use 0.5.2 instead)
 
 * Added language menu
-* Fixed languages that were displayed wrong
+* Fixed languages that were displayed wrong (use 0.5.2 instead)
 * Small internal improvements
 
-**0.5**
+~0.5~ (Do not use, it has known issues)
 
 * Filtering feature
 * Dumper Version/Compression Level display
