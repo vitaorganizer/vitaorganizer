@@ -9,10 +9,10 @@ import com.soywiz.vitaorganizer.ext.getBytes
 import java.io.File
 import java.util.zip.ZipFile
 
-class UpdateFileListTask : VitaTask() {
+class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer) {
 	override fun perform() {
-		synchronized(VitaOrganizer.VPK_GAME_IDS) {
-			VitaOrganizer.VPK_GAME_IDS.clear()
+		synchronized(vitaOrganizer.VPK_GAME_IDS) {
+			vitaOrganizer.VPK_GAME_IDS.clear()
 		}
 		status(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
 
@@ -33,65 +33,18 @@ class UpdateFileListTask : VitaTask() {
 
 		val vpkFiles = listVpkFiles(File(VitaOrganizerSettings.vpkFolder))
 
-		for ((index, vpkFile) in vpkFiles.withIndex()) {
-			//println(vpkFile)
-			status(Texts.format("STEP_ANALYZING_ITEM", "name" to vpkFile.name, "current" to index + 1, "total" to vpkFiles.size))
-			try {
-				ZipFile(vpkFile).use { zip ->
-					val paramSfoData = zip.getBytes("sce_sys/param.sfo")
-
-					val psf = PSF.read(paramSfoData.open2("r"))
-					val gameId = psf["TITLE_ID"].toString()
-
-					val entry = VitaOrganizerCache.entry(gameId)
-
-					//try to find compressionlevel and vitaminversion or maiversion
-					val paramsfo = zip.getEntry("sce_sys/param.sfo")
-					val compressionLevel = if (paramsfo != null) paramsfo.method.toString() else ""
-
-					var dumper = DumperNames.UNKNOWN
-					for (file in DumperModules.values()) {
-						val suprx = zip.getEntry(file.file)
-						if (suprx != null) {
-							dumper = DumperNamesHelper().findDumperBySize(suprx.size)
-						}
-					}
-
-					println("For file ${vpkFile} Compressionslevel : ${compressionLevel} Dumperversion : ${dumper}")
-					if (!entry.compressionFile.exists()) {
-						entry.compressionFile.writeText(compressionLevel.toString())
-					}
-					if (!entry.dumperVersionFile.exists()) {
-						entry.dumperVersionFile.writeText(dumper.shortName)
-					}
-
-					if (!entry.icon0File.exists()) {
-						entry.icon0File.writeBytes(zip.getInputStream(zip.getEntry("sce_sys/icon0.png")).readBytes())
-					}
-					if (!entry.paramSfoFile.exists()) {
-						entry.paramSfoFile.writeBytes(paramSfoData)
-					}
-					if (!entry.sizeFile.exists()) {
-						val uncompressedSize = ZipFile(vpkFile).entries().toList().map { it.size }.sum()
-						entry.sizeFile.writeText("" + uncompressedSize)
-					}
-					if (!entry.permissionsFile.exists()) {
-						val ebootBinData = zip.getBytes("eboot.bin")
-						entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinData.open2("r")))
-					}
-					entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
-					synchronized(VitaOrganizer.VPK_GAME_IDS) {
-						VitaOrganizer.VPK_GAME_IDS += gameId
-					}
-					//getGameEntryById(gameId).inPC = true
+		for (vpkFile in vpkFiles) {
+			val ff = VpkFile(vpkFile)
+			val gameId = ff.cacheAndGetGameId()
+			if (gameId != null) {
+				synchronized(vitaOrganizer.VPK_GAME_IDS) {
+					vitaOrganizer.VPK_GAME_IDS += gameId
 				}
-			} catch (e: Throwable) {
-				println("Error processing ${vpkFile.name}")
-				e.printStackTrace()
 			}
+
 			//Thread.sleep(200L)
 		}
 		status(Texts.format("STEP_DONE"))
-		VitaOrganizer.updateEntries()
+		vitaOrganizer.updateEntries()
 	}
 }

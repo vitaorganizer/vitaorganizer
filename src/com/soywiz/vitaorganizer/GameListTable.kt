@@ -65,7 +65,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 
 				private fun include(item: Any): Boolean {
 					when (item) {
-						is GameEntry -> {
+						is CachedGameEntry -> {
 							for (value in item.psf.values) {
 								if (matcher.containsMatchIn(value.toString())) return true
 							}
@@ -251,8 +251,12 @@ open class GameListTable : JPanel(BorderLayout()) {
 				super.mouseReleased(e)
 				val row = table.rowAtPoint(Point(e.x, e.y))
 				table.clearSelection()
-				table.addRowSelectionInterval(row, row)
-				if (row >= 0) showMenu()
+				try {
+					table.addRowSelectionInterval(row, row)
+					if (row >= 0) showMenu()
+				} catch (t: Throwable) {
+					t.printStackTrace()
+				}
 			}
 		})
 
@@ -260,16 +264,16 @@ open class GameListTable : JPanel(BorderLayout()) {
 		//filter = "Plant"
 	}
 
-	fun getEntryAtRow(row: Int): GameEntry = model2.getValueAt(table.convertRowIndexToModel(row), 1) as GameEntry
+	fun getEntryAtRow(row: Int): CachedGameEntry = model2.getValueAt(table.convertRowIndexToModel(row), 1) as CachedGameEntry
 
-	val currentEntry: GameEntry get() = getEntryAtRow(table.selectedRow)
+	val currentEntry: CachedGameEntry get() = getEntryAtRow(table.selectedRow)
 
 	fun showMenuForRow(row: Int) {
 		val rect = table.getCellRect(row, 1, true)
 		showMenuAtFor(rect.x, rect.y + rect.height, getEntryAtRow(row))
 	}
 
-	open fun showMenuAtFor(x: Int, y: Int, entry: GameEntry) {
+	open fun showMenuAtFor(x: Int, y: Int, entry: CachedGameEntry) {
 	}
 
 	fun showMenu() {
@@ -283,7 +287,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 		}
 	}
 
-	fun setEntries(games: List<GameEntry>) {
+	fun setEntries(games: List<CachedGameEntry>) {
 		val newRows = arrayListOf<Array<Any>>()
 
 		for (entry in games.sortedBy { it.title }) {

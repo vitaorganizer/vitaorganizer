@@ -1,7 +1,7 @@
 package com.soywiz.vitaorganizer.tasks
 
 import com.soywiz.vitaorganizer.FileSize
-import com.soywiz.vitaorganizer.GameEntry
+import com.soywiz.vitaorganizer.CachedGameEntry
 import com.soywiz.vitaorganizer.Texts
 import com.soywiz.vitaorganizer.VitaOrganizer
 import java.io.File
@@ -11,7 +11,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_COMPRESSION, val setSecure: Boolean? = null) : VitaTask() {
+class RepackVpkTask(vitaOrganizer: VitaOrganizer, val entry: CachedGameEntry, val compression: Int = Deflater.BEST_COMPRESSION, val setSecure: Boolean? = null) : VitaTask(vitaOrganizer) {
 	override fun perform() {
 		status(Texts.format("STEP_REPACKING_VPK"))
 		val file = entry.vpkLocalFile!!
@@ -86,6 +86,6 @@ class RepackVpkTask(val entry: GameEntry, val compression: Int = Deflater.BEST_C
 		println(tempFile2.delete())
 		println(entry.entry.delete()) // flush this info!
 
-		VitaOrganizer.updateFileList()
+		vitaOrganizer.updateFileList()
 	}
 }

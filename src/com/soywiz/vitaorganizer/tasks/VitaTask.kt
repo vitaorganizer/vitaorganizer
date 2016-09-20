@@ -5,9 +5,7 @@ import com.soywiz.vitaorganizer.VitaOrganizer
 import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 
-open class VitaTask {
-	lateinit var VitaOrganizer: VitaOrganizer
-
+open class VitaTask(val vitaOrganizer: VitaOrganizer) {
 	class Progress(var current: Long, var total: Long) {
 		fun set(current: Long, total: Long) {
 			this.current = current
@@ -20,24 +18,27 @@ open class VitaTask {
 
 	fun status(status: String) {
 		SwingUtilities.invokeLater {
-			VitaOrganizer.updateStatus(status)
+			vitaOrganizer.updateStatus(status)
 		}
 	}
 
 	fun info(text: String) {
 		SwingUtilities.invokeLater {
-			JOptionPane.showMessageDialog(VitaOrganizer, text, Texts.format("INFORMATION"), JOptionPane.INFORMATION_MESSAGE)
+			JOptionPane.showMessageDialog(vitaOrganizer, text, Texts.format("INFORMATION"), JOptionPane.INFORMATION_MESSAGE)
 		}
+		status(text)
 	}
 
 	fun error(text: String) {
 		SwingUtilities.invokeLater {
-			JOptionPane.showMessageDialog(VitaOrganizer, text, "Error", JOptionPane.ERROR_MESSAGE)
+			JOptionPane.showMessageDialog(vitaOrganizer, text, "Error", JOptionPane.ERROR_MESSAGE)
 		}
+		status(text)
 	}
 
 	fun warn(title: String, text: String): Boolean {
-		val result = JOptionPane.showConfirmDialog(VitaOrganizer, text, title, JOptionPane.YES_NO_OPTION)
+		val result = JOptionPane.showConfirmDialog(vitaOrganizer, text, title, JOptionPane.YES_NO_OPTION)
+		status(text)
 		return (result == JOptionPane.YES_OPTION)
 	}
 

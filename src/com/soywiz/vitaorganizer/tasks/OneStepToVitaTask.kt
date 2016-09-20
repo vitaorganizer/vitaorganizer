@@ -1,12 +1,10 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.GameEntry
-import com.soywiz.vitaorganizer.PsvitaDevice
-import com.soywiz.vitaorganizer.Texts
+import com.soywiz.vitaorganizer.*
 
-class OneStepToVitaTask(val entry: GameEntry) : VitaTask() {
-	val sendPromotingVpkTask = SendPromotingVpkToVitaTask(entry)
-	val sendDataTask = SendDataToVitaTask(entry)
+class OneStepToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : VitaTask(vitaOrganizer) {
+	val sendPromotingVpkTask = SendPromotingVpkToVitaTask(vitaOrganizer, vpkFile)
+	val sendDataTask = SendDataToVitaTask(vitaOrganizer, vpkFile)
 
 	override fun checkBeforeQueue() {
 		sendPromotingVpkTask.checkBeforeQueue()
@@ -22,6 +20,6 @@ class OneStepToVitaTask(val entry: GameEntry) : VitaTask() {
 
 		sendDataTask.performBase()
 
-		info(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to entry.id))
+		info(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
 	}
 }

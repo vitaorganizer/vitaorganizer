@@ -16,6 +16,7 @@ import java.net.URL
 import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.*
+import javax.swing.filechooser.FileNameExtensionFilter
 
 class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	companion object {
@@ -24,6 +25,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 	}
 
+	val vitaOrganizer = this@VitaOrganizer
 	val localTasks = VitaTaskQueue(this)
 	val remoteTasks = VitaTaskQueue(this)
 
@@ -60,15 +62,16 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	val statusLabel = JLabel(Texts.format("STEP_STARTED"))
 
 	override fun updateStatus(status: String) {
+		//println(status)
 		SwingUtilities.invokeLater {
 			statusLabel.text = status
 		}
 	}
 
 	fun updateEntries() {
-		val ALL_GAME_IDS = LinkedHashMap<String, GameEntry>()
+		val ALL_GAME_IDS = LinkedHashMap<String, CachedGameEntry>()
 
-		fun getGameEntryById(gameId: String) = ALL_GAME_IDS.getOrPut(gameId) { GameEntry(gameId) }
+		fun getGameEntryById(gameId: String) = ALL_GAME_IDS.getOrPut(gameId) { CachedGameEntry(gameId) }
 
 		synchronized(VPK_GAME_IDS) {
 			for (gameId in VPK_GAME_IDS) getGameEntryById(gameId).inPC = true
@@ -101,7 +104,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 
 		val popupMenu = object : JPopupMenu() {
-			var entry: GameEntry? = null
+			var entry: CachedGameEntry? = null
 
 			val deleteFromVita = JMenuItem(Texts.format("DELETE_FROM_PSVITA_ACTION")).action {
 				val entry = entry
@@ -118,15 +121,15 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 
 			val sendVpkToVita = JMenuItem(Texts.format("SEND_PROMOTING_VPK_TO_VITA_ACTION")).action {
-				if (entry != null) remoteTasks.queue(SendPromotingVpkToVitaTask(entry!!))
+				if (entry != null) remoteTasks.queue(SendPromotingVpkToVitaTask(vitaOrganizer, entry!!.vpkLocalVpkFile!!))
 			}
 
 			val sendDataToVita = JMenuItem(Texts.format("SEND_DATA_TO_VITA_ACTION")).action {
-				if (entry != null) remoteTasks.queue(SendDataToVitaTask(entry!!))
+				if (entry != null) remoteTasks.queue(SendDataToVitaTask(vitaOrganizer, entry!!.vpkLocalVpkFile!!))
 			}
 
 			val sendToVita1Step = JMenuItem(Texts.format("SEND_FULL_APP_TO_VITA_ACTION")).action {
-				if (entry != null) remoteTasks.queue(OneStepToVitaTask(entry!!))
+				if (entry != null) remoteTasks.queue(OneStepToVitaTask(vitaOrganizer, entry!!.vpkLocalVpkFile!!))
 			}
 
 			init {
@@ -145,7 +148,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 				})
 				add(JMenuItem(Texts.format("MENU_REPACK")).action {
-					if (entry != null) remoteTasks.queue(RepackVpkTask(entry!!, setSecure = true))
+					if (entry != null) remoteTasks.queue(RepackVpkTask(vitaOrganizer, entry!!, setSecure = true))
 				})
 
 				add(JSeparator())
@@ -185,7 +188,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 		}
 
-		override fun showMenuAtFor(x: Int, y: Int, entry: GameEntry) {
+		override fun showMenuAtFor(x: Int, y: Int, entry: CachedGameEntry) {
 			popupMenu.entry = entry
 			popupMenu.show(this.table, x, y)
 		}
@@ -197,11 +200,11 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 	fun selectFolder() {
 		val chooser = JFileChooser()
-		chooser.currentDirectory = java.io.File(".")
+		chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
 		chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
 		chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
 		chooser.isAcceptAllFileFilterUsed = false
-		chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
+		//chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
 		val result = chooser.showOpenDialog(this@VitaOrganizer)
 		if (result == JFileChooser.APPROVE_OPTION) {
 			VitaOrganizerSettings.vpkFolder = chooser.selectedFile.absolutePath
@@ -241,6 +244,19 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		frame.jMenuBar = JMenuBar().apply {
 			add(JMenu(Texts.format("MENU_FILE")).apply {
+				add(JMenuItem(Texts.format("MENU_INSTALL_VPK")).action {
+					val chooser = JFileChooser()
+					chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
+					chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
+					chooser.fileFilter = FileNameExtensionFilter("VPK files", "vpk")
+					chooser.fileSelectionMode = JFileChooser.FILES_ONLY
+					//chooser.isAcceptAllFileFilterUsed = false
+					//chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
+					val result = chooser.showOpenDialog(this@VitaOrganizer)
+					if (result == JFileChooser.APPROVE_OPTION) {
+						remoteTasks.queue(OneStepToVitaTask(this@VitaOrganizer, VpkFile(chooser.selectedFile)))
+					}
+				})
 				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER")).action {
 					selectFolder()
 				})
@@ -254,14 +270,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			})
 			add(JMenu(Texts.format("MENU_SETTINGS")).apply {
 				add(JMenu(Texts.format("MENU_LANGUAGES")).apply {
-					//val language = VitaOrganizerSettings.LANGUAGE
-
-					//val languageList = LinkedHashMap<String, JRadioButtonMenuItem>()
-
-
-
-					//languageList["auto"] = autodetect
-
 					add(JRadioButtonMenuItem(Texts.format("MENU_LANGUAGE_AUTODETECT")).apply {
 						this.isSelected = VitaOrganizerSettings.isLanguageAutodetect
 					}.action {
@@ -269,7 +277,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					})
 					add(JSeparator())
 					for (l in Texts.SUPPORTED_LOCALES) {
-						val lrb = JRadioButtonMenuItem(l.getDisplayLanguage(l)).apply {
+						val lrb = JRadioButtonMenuItem(l.getDisplayLanguage(l).capitalize()).apply {
 							this.isSelected = VitaOrganizerSettings.LANGUAGE_LOCALE == l
 						}
 						//languageList[l.language] = lrb
@@ -359,7 +367,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				fun connect(ip: String) {
 					connected = true
 					VitaOrganizerSettings.lastDeviceIp = ip
-					PsvitaDevice.setIp(ip, 1337)
 					button.text = Texts.format("DISCONNECT_FROM_IP", "ip" to ip)
 					connectAddress.text = ip
 					synchronized(VITA_GAME_IDS) {
@@ -372,7 +379,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 							var vitaGameCount = 0
 							val vitaGameIds = PsvitaDevice.getGameIds()
 							for (gameId in vitaGameIds) {
-								updateStatus(Texts.format("PROCESSING_GAME", "current" to (vitaGameCount + 1), "total" to vitaGameIds.size, "gameId" to gameId))
+								updateStatus(Texts.format("PROCESSING_GAME", "current" to (vitaGameCount + 1), "total" to vitaGameIds.size, "gameId" to gameId, "id" to gameId))
 								//println(gameId)
 								try {
 									PsvitaDevice.getParamSfoCached(gameId)
@@ -487,11 +494,11 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	fun checkForUpdates() {
-		localTasks.queue(CheckForUpdatesTask())
+		localTasks.queue(CheckForUpdatesTask(vitaOrganizer))
 	}
 
 	fun updateFileList() {
-		localTasks.queue(UpdateFileListTask())
+		localTasks.queue(UpdateFileListTask(vitaOrganizer))
 	}
 
 

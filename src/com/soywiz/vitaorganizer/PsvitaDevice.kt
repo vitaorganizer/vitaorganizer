@@ -79,19 +79,18 @@ object PsvitaDevice {
         //ftp.sendCustomCommand()
     //}
 
-    var ip = "192.168.1.130"
-    var port = 1337
-
-    fun setIp(ip: String, port: Int = 1337) {
-        this.ip = ip
-        this.port = port
-    }
-
     private fun connectedFtp(): FTPClient {
+		val ip = VitaOrganizerSettings.lastDeviceIp
+		val port = try { VitaOrganizerSettings.lastDevicePort.toInt() } catch (t: Throwable) { 1337 }
+
+
+
         retries@for (n in 0 until 5) {
+			println("Connecting to ftp $ip:$port...")
             if (!ftp.isConnected) {
                 ftp.connect(ip, port)
                 ftp.login("", "")
+				println("Connected")
             }
             try {
                 ftp.noop()
@@ -175,14 +174,24 @@ object PsvitaDevice {
     }
 
     class Status() {
+		var startTime: Long = 0L
         var currentFile: Int = 0
         var totalFiles: Int = 0
         var currentSize: Long = 0L
         var totalSize: Long = 0L
+		val elapsedTime: Int get() = (System.currentTimeMillis() - startTime).toInt()
+		val speed: Double get() {
+			return if (elapsedTime == 0) 0.0 else currentSize.toDouble() / (elapsedTime.toDouble() / 1000.0)
+		}
+
+		val currentSizeString: String get() = FileSize.toString(currentSize)
+		val totalSizeString: String get() = FileSize.toString(totalSize)
+
+		val speedString: String get() = FileSize.toString(speed.toLong()) + "/s"
 
         val fileRange: String get() = "$currentFile/$totalFiles"
-        val sizeRange: String get() = "${FileSize.toString(currentSize)}/${FileSize.toString(totalSize)}"
-    }
+        val sizeRange: String get() = "$currentSizeString/$totalSizeString"
+	}
 
     val createDirectoryCache = hashSetOf<String>()
 
@@ -215,6 +224,8 @@ object PsvitaDevice {
         val unfilteredEntries = zip.entries().toList()
 
         val filteredEntries = unfilteredEntries.filter { filter(it.name) }
+
+		status.startTime = System.currentTimeMillis()
 
         status.currentFile = 0
         status.totalFiles = filteredEntries.size
@@ -266,6 +277,7 @@ object PsvitaDevice {
     fun uploadFile(path: String, data: ByteArray, updateStatus: (Status) -> Unit = { }) {
         val status = Status()
         createDirectories(File(path).parent)
+		status.startTime = System.currentTimeMillis()
         status.currentFile = 0
         status.totalFiles = 1
         status.totalSize = data.size.toLong()

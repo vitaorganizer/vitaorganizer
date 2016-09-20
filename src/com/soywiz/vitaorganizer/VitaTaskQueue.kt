@@ -10,7 +10,6 @@ class VitaTaskQueue(val vitaOrganizer: VitaOrganizer) {
 			Thread.sleep(10L)
 			val task = synchronized(tasks) { if (tasks.isNotEmpty()) tasks.remove() else null }
 			if (task != null) {
-				task.VitaOrganizer = vitaOrganizer
 				try {
 					task.perform()
 				} catch (t: Throwable) {
@@ -25,7 +24,6 @@ class VitaTaskQueue(val vitaOrganizer: VitaOrganizer) {
 
 	fun queue(task: VitaTask) {
 		try {
-			task.VitaOrganizer = vitaOrganizer
 			task.checkBeforeQueue()
 			synchronized(tasks) {
 				tasks += task
