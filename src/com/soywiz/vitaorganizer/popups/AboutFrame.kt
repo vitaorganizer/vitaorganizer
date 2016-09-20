@@ -40,7 +40,7 @@ class AboutFrame() : JFrame(Texts.format("ABOUT_TITLE")) {
 					add(Contibutor("luckylucks", "https://github.com/luckylucks/"))
 					add(JLabel(Texts.format("ABOUT_TRANSLATIONS")))
 					add(Contibutor("paweloszu", "https://github.com/paweloszu", "Polish"))
-					add(Contibutor("RijjiResa", "https://github.com/RijjiResa", "Norwegian"))
+					add(Contibutor("Ridge", "https://www.twitter.com/telepathyclub", "Norwegian"))
 					add(Contibutor("pvc1", "https://github.com/pvc1", "Russian"))
 					add(Contibutor("Mdslino", "https://github.com/Mdslino", "Brazilian"))
 					add(Contibutor("gordon0001", "https://github.com/gordon0001", "German"))
