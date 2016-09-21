@@ -248,7 +248,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					val chooser = JFileChooser()
 					chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
 					chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
-					chooser.fileFilter = FileNameExtensionFilter("VPK files", "vpk")
+					chooser.fileFilter = FileNameExtensionFilter(Texts.format("FILEFILTER_DESC_VPK_FILES"), "vpk")
 					chooser.fileSelectionMode = JFileChooser.FILES_ONLY
 					//chooser.isAcceptAllFileFilterUsed = false
 					//chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
