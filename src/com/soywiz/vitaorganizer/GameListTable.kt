@@ -249,11 +249,15 @@ open class GameListTable : JPanel(BorderLayout()) {
 		table.addMouseListener(object : MouseAdapter() {
 			override fun mouseReleased(e: MouseEvent) {
 				super.mouseReleased(e)
-				val row = table.rowAtPoint(Point(e.x, e.y))
 				table.clearSelection()
+
+				val row = table.rowAtPoint(Point(e.x, e.y))
+				if(row < 0 || row > table.rowCount)
+					return;
+
 				try {
 					table.addRowSelectionInterval(row, row)
-					if (row >= 0) showMenu()
+					showMenu()
 				} catch (t: Throwable) {
 					t.printStackTrace()
 				}
