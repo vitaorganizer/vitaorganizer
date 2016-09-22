@@ -355,13 +355,17 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				val button = this
 
 				fun disconnect() {
+                    if(PsvitaDevice.disconnectFromFtp()) {
 					connected = false
 					button.text = connectText
 					synchronized(VITA_GAME_IDS) {
 						VITA_GAME_IDS.clear()
 					}
 					updateEntries()
-					statusLabel.text = Texts.format("DISCONNECTED")
+					    updateStatus(Texts.format("DISCONNECTED"))
+                    }
+                    else
+                        println("Failed to disconnect!")
 				}
 
 				fun connect(ip: String) {

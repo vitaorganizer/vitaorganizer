@@ -86,11 +86,17 @@ object PsvitaDevice {
 
 
         retries@for (n in 0 until 5) {
-			println("Connecting to ftp $ip:$port...")
-            if (!ftp.isConnected) {
+            if (!ftp.isConnected()) {
+                println("Connecting to ftp $ip:$port...")
                 ftp.connect(ip, port)
                 ftp.login("", "")
-				println("Connected")
+                if(ftp.isConnected()) {
+				    println("Connected")
+                }
+                else {
+                    println("Could not connect ($n)");
+                    break@retries
+                }
             }
             try {
                 ftp.noop()
@@ -101,6 +107,11 @@ object PsvitaDevice {
         }
         return ftp
     }
+    
+    fun disconnectFromFtp(): Boolean {
+        ftp.disconnect(true);
+        return !ftp.isConnected();
+    } 
 
     fun getGameIds() = connectedFtp().list("/ux0:/app").filter { i -> i.type == it.sauronsoftware.ftp4j.FTPFile.TYPE_DIRECTORY }.map { File(it.name).name }
 
