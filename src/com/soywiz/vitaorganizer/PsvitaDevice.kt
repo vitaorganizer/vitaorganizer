@@ -18,7 +18,7 @@ object PsvitaDevice {
     fun checkAddress(ip: String, port: Int = 1337): Boolean {
         try {
             val sock = Socket()
-            sock.connect(InetSocketAddress(ip, port), 200)
+            sock.connect(InetSocketAddress(ip, port), 750)
             sock.close()
             return true
         } catch (e: Throwable) {
