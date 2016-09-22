@@ -19,8 +19,7 @@ class SendDataToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : V
 					}
 				}) { status ->
 					//println("$status")
-					Texts.format("STEP_SENDING_GAME_UPLOADING", "id" to vpkFile.id, "fileRange" to status.fileRange, "sizeRange" to status.sizeRange, "speed" to status.speedString)
-					status(Texts.format("STEP_UPLOADING_VPK_FOR_PROMOTING", "current" to status.currentSizeString, "total" to status.totalSizeString, "speed" to status.speedString))
+					status(Texts.format("STEP_SENDING_GAME_UPLOADING", "id" to vpkFile.id, "fileRange" to status.fileRange, "sizeRange" to status.sizeRange, "speed" to status.speedString))
 				}
 			}
 			//statusLabel.text = "Processing game ${vitaGameCount + 1}/${vitaGameIds.size} ($gameId)..."
