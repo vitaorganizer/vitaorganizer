@@ -335,7 +335,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			val connectText = Texts.format("CONNECT_TO_PSVITA")
 			var connected = false
-			val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp) {
+			val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp, 17) {
 				init {
 					font = Font(Font.MONOSPACED, Font.PLAIN, 14)
 				}
@@ -441,6 +441,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 								this@VitaOrganizer.updateStatus(Texts.format("DISCONNECTING"))
 								disconnect()
 							} else {
+                                if(VitaOrganizerSettings.lastDeviceIp == "") {
+                                    println("No ip given")
+                                    JOptionPane.showMessageDialog(frame, "Please type in an ip address!")
+                                    return;
+                                }
+                                
 								this@VitaOrganizer.updateStatus(Texts.format("CONNECTING"))
 								button.button.isEnabled = false
 
