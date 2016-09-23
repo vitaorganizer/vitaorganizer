@@ -109,7 +109,9 @@ object PsvitaDevice {
     }
     
     fun disconnectFromFtp(): Boolean {
-        ftp.disconnect(true);
+        if(ftp.isConnected())
+            ftp.disconnect(false);
+           
         return !ftp.isConnected();
     } 
 

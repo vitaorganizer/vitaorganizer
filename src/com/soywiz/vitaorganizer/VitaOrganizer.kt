@@ -432,7 +432,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 							updateEntries()
 						} while (!done)
 
-
+                        updateEntries()
 					}.start()
 				}
 
