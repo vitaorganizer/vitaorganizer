@@ -4,6 +4,7 @@ import it.sauronsoftware.ftp4j.FTPClient
 import it.sauronsoftware.ftp4j.FTPDataTransferListener
 import it.sauronsoftware.ftp4j.FTPException
 import it.sauronsoftware.ftp4j.FTPFile
+import it.sauronsoftware.ftp4j.FTPReply
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileNotFoundException
@@ -13,6 +14,7 @@ import java.net.NetworkInterface
 import java.net.Socket
 import java.util.*
 import java.util.zip.ZipFile
+import javax.swing.JOptionPane
 
 object PsvitaDevice {
     fun checkAddress(ip: String, port: Int = 1337): Boolean {
@@ -326,10 +328,59 @@ object PsvitaDevice {
         }
     }
 
-    fun promoteVpk(vpkPath: String) {
-        setFtpPromoteTimeouts()
+    fun promoteVpk(vpkPath: String, displayErrors: Boolean = true): Boolean {
+        
+        if(vpkPath.isNullOrEmpty()) {
+            println("NULL or empty promoting vpk path specified!")
+            return false
+        }
+
         println("Promoting: 'PROM $vpkPath'")
-        connectedFtp().sendCustomCommand("PROM $vpkPath")
-        resetFtpTimeouts()
+
+        try {
+            resetFtpTimeouts()
+            val reply: FTPReply = connectedFtp().sendCustomCommand("PROM $vpkPath")
+
+            if(reply.getCode() == 502) {
+                println("PROM command is not supported by the server")
+                if(displayErrors) error("The FTP server does not support promoting/installing VPK files, hence aborting!")
+                return false
+            }
+            else if(reply.getCode() == 500) {
+                println("ERROR PROMOTING $vpkPath")
+                if(displayErrors) error("The FTP server could not promote/install the VPK file due to an install error, hence aborting!")
+                return false
+            }
+            else if(reply.getCode() != 200) {
+                println("Unknown error. Server response: $reply.toString()!")
+                if(displayErrors) error("An unknown error occured. Details:\n$reply.toString()")
+                return false
+            }
+
+             //vitashell replies with code 200 for PROMOTING OK, otherwise 500
+            val isOK: Boolean = reply.getCode() == 200
+            if(isOK)
+                println("FTP server replied: OK PROMOTING")
+           
+            return isOK
+        }
+        catch(e: IllegalStateException) {
+            println("Promoting, exception: Not connected to the server")
+            if(displayErrors) error("It was repliied, that you are not connected to the server, hence aborting!")
+        }
+        catch(e: IOException) {
+            println("Promoting, exception: I/O error")
+            if(displayErrors) error("An I/O error occured while promoting/installing the VPK file, hence aborting!")
+        }
+        catch(e: it.sauronsoftware.ftp4j.FTPIllegalReplyException) {
+            println("Promoting, exception: Server responded in a weird way")
+            if(displayErrors) error("The server replied something unexpected, hence aborting!")
+        }
+
+        return false;
     }
+
+	fun error(text: String) {
+		JOptionPane.showMessageDialog(null, text, "Error", JOptionPane.ERROR_MESSAGE)
+	}
 }

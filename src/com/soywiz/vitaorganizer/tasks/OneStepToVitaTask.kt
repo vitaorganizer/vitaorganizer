@@ -15,7 +15,10 @@ class OneStepToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : Vi
 		sendPromotingVpkTask.performBase()
 
 		status(Texts.format("PROMOTING_VPK"))
-		PsvitaDevice.promoteVpk(sendPromotingVpkTask.vpkPath)
+		if(!PsvitaDevice.promoteVpk(sendPromotingVpkTask.vpkPath)) {
+			status("Promoting failed! Task aborted!")
+			return
+		}
 		PsvitaDevice.removeFile(sendPromotingVpkTask.vpkPath)
 
 		sendDataTask.performBase()
