@@ -335,9 +335,10 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			val connectText = Texts.format("CONNECT_TO_PSVITA")
 			var connected = false
-			val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp, 15) {
+			val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp) {
 				init {
 					font = Font(Font.MONOSPACED, Font.PLAIN, 14)
+					columns = 17;
 				}
 
 				override fun processKeyEvent(e: KeyEvent?) {
