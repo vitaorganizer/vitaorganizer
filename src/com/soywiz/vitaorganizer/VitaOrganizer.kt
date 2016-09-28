@@ -338,11 +338,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp) {
 				init {
 					font = Font(Font.MONOSPACED, Font.PLAIN, 14)
+					columns = 17;
 				}
 
 				override fun processKeyEvent(e: KeyEvent?) {
 					super.processKeyEvent(e)
-					VitaOrganizerSettings.lastDeviceIp = this.text
+					VitaOrganizerSettings.lastDeviceIp = this.getText()
 				}
 			}.apply {
 				addActionListener {
@@ -355,20 +356,23 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				val button = this
 
 				fun disconnect() {
-					connected = false
-					button.text = connectText
-					synchronized(VITA_GAME_IDS) {
-						VITA_GAME_IDS.clear()
-					}
-					updateEntries()
-					statusLabel.text = Texts.format("DISCONNECTED")
+                    if(PsvitaDevice.disconnectFromFtp()) {
+					    connected = false
+					    button.text = connectText
+					    synchronized(VITA_GAME_IDS) {
+						    VITA_GAME_IDS.clear()
+					    }
+					    updateEntries()
+					    updateStatus(Texts.format("DISCONNECTED"))
+                    }
+                    else
+                        println("Failed to disconnect!")
 				}
 
 				fun connect(ip: String) {
 					connected = true
 					VitaOrganizerSettings.lastDeviceIp = ip
 					button.text = Texts.format("DISCONNECT_FROM_IP", "ip" to ip)
-					connectAddress.text = ip
 					synchronized(VITA_GAME_IDS) {
 						VITA_GAME_IDS.clear()
 					}
@@ -429,24 +433,38 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 							updateEntries()
 						} while (!done)
 
-
+                        updateEntries()
 					}.start()
 				}
 
 				init {
 					val button = this
-					addMouseListener(object : MouseAdapter() {
-						override fun mouseClicked(e: MouseEvent?) {
-							if (connected) {
-								this@VitaOrganizer.updateStatus(Texts.format("DISCONNECTING"))
-								disconnect()
-							} else {
-								this@VitaOrganizer.updateStatus(Texts.format("CONNECTING"))
-								button.button.isEnabled = false
+                    
+                    addActionListener al@ {e:ActionEvent ->
+					    if (connected) {
+						    this@VitaOrganizer.updateStatus(Texts.format("DISCONNECTING"))
+						    disconnect()
+					    } else {
+                            var ip = connectAddress.getText()
+                                
+                            if(ip == "") {
+                                println("No ip given")
+                                JOptionPane.showMessageDialog(frame, "Please type in an ip address!")
+                                return@al
+                            }
+                            
+                            if(!PsvitaDevice.checkAddress(ip)) {
+                                println("No connection could be etablished!");
+                                JOptionPane.showMessageDialog(frame, "No connection could be etablished!\nCheck your ip or start the FTP server!")
+                                return@al
+                            }
+                                
+						    this@VitaOrganizer.updateStatus(Texts.format("CONNECTING"))
+						    button.button.isEnabled = false
 
-								connect(VitaOrganizerSettings.lastDeviceIp)
-								button.button.isEnabled = true
-
+						    connect(ip)
+						    button.button.isEnabled = true
+                       
 								/*
 								if (PsvitaDevice.checkAddress(VitaOrganizerSettings.lastDeviceIp)) {
 								} else {
@@ -460,9 +478,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 									}.start()
 								}
 								*/
-							}
-						}
-					})
+					    }
+					}
 				}
 			}
 

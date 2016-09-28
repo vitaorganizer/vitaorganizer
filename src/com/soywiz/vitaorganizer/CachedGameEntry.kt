@@ -22,8 +22,18 @@ class CachedGameEntry(val gameId: String) {
 	}
 	val id by lazy { psf["TITLE_ID"].toString() }
 	val title by lazy { psf["TITLE"].toString() }
-	val dumperVersion by lazy { DumperNamesHelper().findDumperByShortName( entry.dumperVersionFile.readText() ).longName }
-	val compressionLevel by lazy { entry.compressionFile.readText() }
+	val dumperVersion by lazy { 
+        var text = "UNKNOWN";
+        if (entry.dumperVersionFile.exists())
+          text = entry.dumperVersionFile.readText();  
+        DumperNamesHelper().findDumperByShortName(text).longName 
+    }
+	val compressionLevel by lazy { 
+        if(entry.compressionFile.exists()) 
+            entry.compressionFile.readText() 
+        else 
+            "0" 
+    }
 	var inVita = false
 	var inPC = false
 	val vpkLocalPath: String? get() = entry.pathFile.readText(Charsets.UTF_8)

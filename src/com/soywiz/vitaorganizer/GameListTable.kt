@@ -329,11 +329,14 @@ open class GameListTable : JPanel(BorderLayout()) {
 			}
 		}
 
-		while (model2.rowCount > 0) model2.removeRow(model2.rowCount - 1)
-		for (row in newRows) model2.addRow(row)
+		if(newRows.any()) {
+			model2.setRowCount(0)
+			
+			for (row in newRows) 
+				model2.addRow(row)
 
-		model2.fireTableDataChanged()
-
+			model2.fireTableDataChanged()
+		}
 
 		//sorter.sort()
 
