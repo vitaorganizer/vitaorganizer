@@ -20,19 +20,48 @@ class CachedGameEntry(val gameId: String) {
 			true
 		}
 	}
+	val attribute by lazy { psf["ATTRIBUTE"].toString() }
 	val id by lazy { psf["TITLE_ID"].toString() }
 	val title by lazy { psf["TITLE"].toString() }
 	val dumperVersion by lazy { 
         var text = "UNKNOWN";
-        if (entry.dumperVersionFile.exists())
-          text = entry.dumperVersionFile.readText();  
+		if(attribute == "32768")
+			text = "HB"
+    	else if(entry.dumperVersionFile.exists())
+			text = entry.dumperVersionFile.readText(); 
+
         DumperNamesHelper().findDumperByShortName(text).longName 
     }
 	val compressionLevel by lazy { 
-        if(entry.compressionFile.exists()) 
-            entry.compressionFile.readText() 
+        if(entry.compressionFile.exists())  {
+			//see https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+			//4.4.5
+			val method = entry.compressionFile.readText() 
+			if(method == "0")
+				"not compressed"
+			else if(method == "1")
+				"shrunk"
+			else if(method == "2")
+				"compresion factor 1"
+			else if(method == "3")
+				"compresion factor 2"
+			else if(method == "4")
+				"compresion factor 3"
+			else if(method == "5")
+				"compresion factor 4"
+			else if(method == "6")
+				"imploded"
+			else if(method == "7")
+				"reversed"
+			else if(method == "8")
+				"deflate"
+			else if(method == "9")
+				"shrunk64"
+			else
+				method
+		}
         else 
-            "0" 
+			"could not read from param.sfo" 
     }
 	var inVita = false
 	var inPC = false

@@ -59,15 +59,17 @@ class VpkFile(val vpkFile: File) {
 				val paramsfo = zip.getEntry("sce_sys/param.sfo")
 				val compressionLevel = if (paramsfo != null) paramsfo.method.toString() else ""
 
-				var dumper = DumperNames.UNKNOWN
-				for (file in DumperModules.values()) {
-					val suprx = zip.getEntry(file.file)
-					if (suprx != null) {
-						dumper = DumperNamesHelper().findDumperBySize(suprx.size)
+				var dumper = DumperNamesHelper().findDumperByShortName(if(psf["ATTRIBUTE"].toString() == "32768") "HB" else "UNKNOWN")
+				if(dumper == DumperNames.UNKNOWN) {
+					for (file in DumperModules.values()) {
+						val suprx = zip.getEntry(file.file)
+						if (suprx != null) {
+							dumper = DumperNamesHelper().findDumperBySize(suprx.size)
+						}
 					}
 				}
 
-				println("For file ${vpkFile} Compressionslevel : $compressionLevel Dumperversion : ${dumper}")
+				println("For file [${vpkFile}] (Compressmethod : $compressionLevel Dumpver : ${dumper})")
 				if (!entry.compressionFile.exists()) {
 					entry.compressionFile.writeText(compressionLevel.toString())
 				}
