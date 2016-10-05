@@ -84,6 +84,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	fun showFileInExplorerOrFinder(file: File) {
+		if(!file.exists())
+			return
+
 		if (OS.isWindows) {
 			ProcessBuilder("explorer.exe", "/select,", file.absolutePath).start().waitFor()
 		} else {
@@ -132,24 +135,33 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				if (entry != null) remoteTasks.queue(OneStepToVitaTask(vitaOrganizer, entry!!.vpkLocalVpkFile!!))
 			}
 
+			val showInFilebrowser = JMenuItem(if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")).action {
+				if (entry != null) {
+					if(entry!!.inPC || (entry!!.inPC && entry!!.inVita)) {
+						showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
+					}
+				}
+			}
+
+			val repackVpk = JMenuItem(Texts.format("MENU_REPACK")).action {
+				if (entry != null) remoteTasks.queue(RepackVpkTask(vitaOrganizer, entry!!, setSecure = true))
+			}
+
+			val showPSF = JMenuItem(Texts.format("MENU_SHOW_PSF")).action {
+				if (entry != null) {
+					frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
+				}
+			}
+
 			init {
 				add(gameTitlePopup)
+				add(JSeparator())
 				add(gameDumperVersionPopup)
 				add(gameCompressionLevelPopup)
 				add(JSeparator())
-				add(JMenuItem(if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")).action {
-					if (entry != null) {
-						showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
-					}
-				})
-				add(JMenuItem(Texts.format("MENU_SHOW_PSF")).action {
-					if (entry != null) {
-						frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
-					}
-				})
-				add(JMenuItem(Texts.format("MENU_REPACK")).action {
-					if (entry != null) remoteTasks.queue(RepackVpkTask(vitaOrganizer, entry!!, setSecure = true))
-				})
+				add(showInFilebrowser)
+				add(showPSF)
+				add(repackVpk)
 
 				add(JSeparator())
 				add(JMenuItem(Texts.format("METHOD1_INFO")).apply {
@@ -173,15 +185,23 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				sendVpkToVita.isEnabled = false
 				sendDataToVita.isEnabled = false
 				sendToVita1Step.isEnabled = false
+				showInFilebrowser.isEnabled = false
+				repackVpk.isEnabled = false
+				showPSF.isEnabled = false;
 
 				if (entry != null) {
 					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
 					gameCompressionLevelPopup.text = Texts.format("COMPRESSION_LEVEL", "level" to entry.compressionLevel)
 					gameTitlePopup.text = "${entry.id} : ${entry.title}"
+					gameTitlePopup.setForeground(Color(64, 0,255));
+					gameTitlePopup.setFont(gameTitlePopup.getFont().deriveFont(Font.BOLD));
 					deleteFromVita.isEnabled = entry.inVita
 					sendVpkToVita.isEnabled = entry.inPC
 					sendDataToVita.isEnabled = entry.inPC
 					sendToVita1Step.isEnabled = entry.inPC
+					showInFilebrowser.isEnabled = entry.inPC
+					repackVpk.isEnabled = entry.inPC
+					showPSF.isEnabled = true
 				}
 
 				super.show(invoker, x, y)
