@@ -253,19 +253,28 @@ object PsvitaDevice {
             val vname = "$base/$normalizedName"
             val directory = File(vname).parent.replace('\\', '/')
             val startSize = status.currentSize
-            println("Writting $vname...")
             if (!entry.isDirectory) {
                 createDirectories(directory)
+
+                print("Writting $vname...")
                 try {
                     connectedFtp().upload(vname, zip.getInputStream(entry), 0L, 0L, object : FTPDataTransferListener {
                         override fun started() {
+                            print("started...")
                         }
 
                         override fun completed() {
+                            print("completed!")
                             updateStatus(status)
+
+                            //untested
+                            //if(status.currentSize != status.totalSize) {
+                            //    println("$vname mismatch transfered size. $status.currentSize != $status.totalSize")
+                            //
                         }
 
                         override fun aborted() {
+                            print("aborted!")
                         }
 
                         override fun transferred(size: Int) {
@@ -274,12 +283,14 @@ object PsvitaDevice {
                         }
 
                         override fun failed() {
+                            print("failed!")
                         }
                     })
                 }catch (e: FTPException) {
                     e.printStackTrace()
                     throw FileNotFoundException("Can't upload file $vname")
                 }
+                println("")
             }
             status.currentSize = startSize + entry.size
             status.currentFile++
