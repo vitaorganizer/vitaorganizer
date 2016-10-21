@@ -33,11 +33,12 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 
 		val vpkFiles = listVpkFiles(File(VitaOrganizerSettings.vpkFolder))
 
-		for (vpkFile in vpkFiles) {
+		for ((index, vpkFile) in vpkFiles.withIndex()) {
 			val ff = VpkFile(vpkFile)
 			val gameId = ff.cacheAndGetGameId()
 			if (gameId != null) {
 				synchronized(vitaOrganizer.VPK_GAME_IDS) {
+					status(Texts.format("STEP_ANALYZING_ITEM", "name" to gameId, "current" to index + 1, "total" to vpkFiles.size))
 					vitaOrganizer.VPK_GAME_IDS += gameId
 				}
 			}
