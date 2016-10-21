@@ -2,10 +2,7 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.OS
 import com.soywiz.util.open2
-import com.soywiz.vitaorganizer.ext.action
-import com.soywiz.vitaorganizer.ext.getResourceURL
-import com.soywiz.vitaorganizer.ext.openWebpage
-import com.soywiz.vitaorganizer.ext.showDialog
+import com.soywiz.vitaorganizer.ext.*
 import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import com.soywiz.vitaorganizer.tasks.*
@@ -21,6 +18,9 @@ import javax.swing.filechooser.FileNameExtensionFilter
 class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	companion object {
 		@JvmStatic fun main(args: Array<String>) {
+			VitaOrganizerSettings.init()
+			VitaOrganizerSettings.WLAN_SSID
+			VitaOrganizerSettings.WLAN_PASS
 			VitaOrganizer().start()
 		}
 	}
@@ -28,6 +28,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	val vitaOrganizer = this@VitaOrganizer
 	val localTasks = VitaTaskQueue(this)
 	val remoteTasks = VitaTaskQueue(this)
+	val hotspotQueue = VitaTaskQueue(this)
 
 	init {
 		Texts.setLanguage(VitaOrganizerSettings.LANGUAGE_LOCALE)
@@ -327,7 +328,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		//val data = arrayOf(arrayOf(JLabel("Kathy"), "Smith", "Snowboarding", 5, false), arrayOf("John", "Doe", "Rowing", 3, true), arrayOf("Sue", "Black", "Knitting", 2, false), arrayOf("Jane", "White", "Speed reading", 20, true), arrayOf("Joe", "Brown", "Pool", 10, false))
 
 
-		table.table.preferredScrollableViewportSize = Dimension(800, 600)
+		table.table.preferredScrollableViewportSize = Dimension(960, 600)
 		//table.rowSelectionAllowed = false
 		//table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
@@ -503,10 +504,41 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				}
 			}
 
+			//hotspotButton.icon
+
 			add(connectButton)
 			add(connectAddress)
 			add(JLabel(Texts.format("LABEL_FILTER")))
 			add(filterTextField)
+
+			if (OS.isWindows) {
+				// http://superuser.com/questions/804227/how-to-get-assigned-ips-by-hostednetwork
+				val hotspotButton = JButton("Hotspot")
+				hotspotButton.icon = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_unknown.png"))
+				fun updateWlan() {
+					if (WifiNetwork.checkHostedNetwork()) {
+						hotspotButton.icon = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_connected.png"))
+						hotspotButton.text = "Hotspot: " + VitaOrganizerSettings.WLAN_SSID + " -- " + VitaOrganizerSettings.WLAN_PASS
+					} else {
+						hotspotButton.icon = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_disconnected.png"))
+						hotspotButton.text = "Hotspot"
+					}
+				}
+
+				hotspotButton.onClick {
+					if (WifiNetwork.checkHostedNetwork()) {
+						WifiNetwork.stopHostedNetwork()
+					} else {
+						WifiNetwork.startHostedNetwork(VitaOrganizerSettings.WLAN_SSID, VitaOrganizerSettings.WLAN_PASS)
+					}
+					updateWlan()
+				}
+
+				hotspotQueue.queue {
+					updateWlan()
+				}
+				add(hotspotButton)
+			}
 
 			//filterTextField.requestFocus()
 		}
