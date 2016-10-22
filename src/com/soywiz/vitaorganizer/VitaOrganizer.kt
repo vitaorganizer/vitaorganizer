@@ -1,7 +1,6 @@
 package com.soywiz.vitaorganizer
 
-import com.soywiz.util.OS
-import com.soywiz.util.toBitString
+import com.soywiz.util.*
 import com.soywiz.vitaorganizer.ext.*
 import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
@@ -12,6 +11,7 @@ import java.io.File
 import java.net.URL
 import javax.imageio.ImageIO
 import javax.swing.*
+import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
 
 class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
@@ -264,6 +264,29 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				})
 				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER"), Icons.OPEN_FOLDER).action {
 					selectFolder()
+				})
+				add(JMenuItem(Texts.format("MENU_CREATE_VPK_FROM_MAIDUMP_FOLDER"), Icons.MAIDUMP).action {
+					val chooser = JFileChooser()
+					chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
+					chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
+					chooser.fileSelectionMode = JFileChooser.FILES_ONLY
+					chooser.fileFilter = object : FileFilter() {
+						override fun accept(f: File): Boolean = f.isDirectory || f.name.toLowerCase() == "eboot.bin"
+						override fun getDescription(): String = "EBOOT.BIN"
+					}
+					chooser.isAcceptAllFileFilterUsed = false
+					//chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
+					val result = chooser.showOpenDialog(this@VitaOrganizer)
+					if (result == JFileChooser.APPROVE_OPTION) {
+						val root = chooser.selectedFile.parentFile
+						//val ebootBinFile = root["eboot.bin"]
+						val paramSfoFile = root["sce_sys/param.sfo"]
+						val psfInfo = PSF.read(paramSfoFile.readBytes().open2("r"))
+						val TITLE_ID = psfInfo["TITLE_ID"]?.toString() ?: invalidOp("Can't find TITLE_ID")
+						val TITLE_ID_SECURED = File(TITLE_ID).name
+
+						localTasks.queue(CreateVpkFromFolderVitaTask(instance, chooser.selectedFile.parentFile, File(VitaOrganizerSettings.vpkFolder)["$TITLE_ID_SECURED.vpk"]))
+					}
 				})
 				add(JMenuItem(Texts.format("MENU_REFRESH"), Icons.REFRESH).action {
 					updateFileList()

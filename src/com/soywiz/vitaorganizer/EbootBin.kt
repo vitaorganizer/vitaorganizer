@@ -12,4 +12,15 @@ object EbootBin {
             else -> false
         }
     }
+
+	fun setSecureInplace(data: ByteArray, secure: Boolean = true): ByteArray {
+		if (secure) {
+			data[0x80] = (data[0x80].toInt() and 1.inv()).toByte() // Remove bit 0
+			data[0x80] = (data[0x80].toInt() or 2).toByte() // Set bit 1?
+		} else {
+			data[0x80] = (data[0x80].toInt() or 1).toByte() // Set bit 0
+		}
+
+		return data
+	}
 }

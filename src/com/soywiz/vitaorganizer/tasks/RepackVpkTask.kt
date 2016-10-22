@@ -1,9 +1,6 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.FileSize
-import com.soywiz.vitaorganizer.CachedVpkEntry
-import com.soywiz.vitaorganizer.Texts
-import com.soywiz.vitaorganizer.VitaOrganizer
+import com.soywiz.vitaorganizer.*
 import java.io.File
 import java.io.FileOutputStream
 import java.util.zip.Deflater
@@ -45,12 +42,7 @@ class RepackVpkTask(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry, val
 						zout.putNextEntry(ZipEntry(e.name))
 						if (e.name == "eboot.bin" && setSecure != null) {
 							val full = zip.getInputStream(e).readBytes()
-							if (setSecure) {
-								full[0x80] = (full[0x80].toInt() and 1.inv()).toByte() // Remove bit 0
-								full[0x80] = (full[0x80].toInt() or 2).toByte() // Set bit 1?
-							} else {
-								full[0x80] = (full[0x80].toInt() or 1).toByte() // Set bit 0
-							}
+							EbootBin.setSecureInplace(full, setSecure)
 							zout.write(full)
 							currentSize += full.size
 						} else {
