@@ -152,17 +152,17 @@ object PsvitaDevice {
     }
     fun downloadEbootBin(id: String): ByteArray = downloadSmallFile("${getGameFolder(id)}/eboot.bin")
 
-    fun getParamSfoCached(id: String): ByteArray {
-        val file = VitaOrganizerCache.entry(id).paramSfoFile
-        if (!file.exists()) file.writeBytes(getParamSfo(id))
-        return file.readBytes()
-    }
-
-    fun getGameIconCached(id: String): ByteArray {
-        val file = VitaOrganizerCache.entry(id).icon0File
-        if (!file.exists()) file.writeBytes(getGameIcon(id))
-        return file.readBytes()
-    }
+    //fun getParamSfoCached(vpkFile: File): ByteArray {
+    //    val file = VitaOrganizerCache.entry(vpkFile).paramSfoFile
+    //    if (!file.exists()) file.writeBytes(getParamSfo(vpkFile))
+    //    return file.readBytes()
+    //}
+	//
+    //fun getGameIconCached(id: String): ByteArray {
+    //    val file = VitaOrganizerCache.entry(id).icon0File
+    //    if (!file.exists()) file.writeBytes(getGameIcon(id))
+    //    return file.readBytes()
+    //}
 
     fun getFolderSize(path: String, folderSizeCache: HashMap<String, Long> = hashMapOf<String, Long>()): Long {
         return folderSizeCache.getOrPut(path) {

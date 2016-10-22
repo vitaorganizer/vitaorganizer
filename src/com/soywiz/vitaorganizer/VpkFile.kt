@@ -53,7 +53,7 @@ class VpkFile(val vpkFile: File) {
 				val gameId = psf["TITLE_ID"].toString()
 				retGameId = gameId
 
-				val entry = VitaOrganizerCache.entry(gameId)
+				val entry = VitaOrganizerCache.entry(vpkFile)
 
 				//try to find compressionlevel and vitaminversion or maiversion
 				val paramsfo = zip.getEntry("sce_sys/param.sfo")

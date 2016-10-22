@@ -4,8 +4,8 @@ import com.soywiz.util.DumperNamesHelper
 import com.soywiz.util.stream
 import java.io.File
 
-class CachedGameEntry(val gameId: String) {
-	val entry = VitaOrganizerCache.entry(gameId)
+class CachedVpkEntry(val file: File) {
+	val entry = VitaOrganizerCache.entry(file)
 	val psf by lazy {
 		try {
 			PSF.read(entry.paramSfoFile.readBytes().stream)
@@ -13,6 +13,7 @@ class CachedGameEntry(val gameId: String) {
 			mapOf<String, Any>()
 		}
 	}
+	val gameId by lazy { psf["TITLE_ID"]?.toString() ?: "UNKNOWN" }
 	val hasExtendedPermissions by lazy {
 		try {
 			entry.permissionsFile.readText().toBoolean()
@@ -54,8 +55,8 @@ class CachedGameEntry(val gameId: String) {
 		} else
 			"could not read from param.sfo"
 	}
-	var inVita = false
-	var inPC = false
+	//var inVita = false
+	//var inPC = false
 	val vpkLocalPath: String? get() = entry.pathFile.readText(Charsets.UTF_8)
 	val vpkLocalFile: File? get() = if (vpkLocalPath != null) File(vpkLocalPath!!) else null
 	val vpkLocalVpkFile: VpkFile? get() = if (vpkLocalPath != null) VpkFile(File(vpkLocalPath!!)) else null

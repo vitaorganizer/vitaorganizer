@@ -1,6 +1,8 @@
 package com.soywiz.vitaorganizer
 
+import com.soywiz.util.Hash
 import com.soywiz.util.get
+import com.soywiz.util.toHexString
 import java.io.File
 
 object VitaOrganizerCache {
@@ -10,14 +12,15 @@ object VitaOrganizerCache {
         cacheFolder.mkdirs()
     }
 
-    class Entry(val gameId: String) {
-        val icon0File = cacheFolder["$gameId.icon0.png"]
-        val paramSfoFile = cacheFolder["$gameId.param.sfo"]
-        val pathFile = cacheFolder["$gameId.path"]
-        val sizeFile = cacheFolder["$gameId.size"]
-        val permissionsFile = cacheFolder["$gameId.extperm"]
-        val dumperVersionFile = cacheFolder["$gameId.dumperversion"]
-        val compressionFile = cacheFolder["$gameId.compression"]
+    class Entry(val file: File) {
+	    val path = Hash.sha1((file.canonicalPath + "@" + file.length()).toByteArray(Charsets.UTF_8)).toHexString()
+        val icon0File = cacheFolder["$path.icon0.png"]
+        val paramSfoFile = cacheFolder["$path.param.sfo"]
+        val pathFile = cacheFolder["$path.path"]
+        val sizeFile = cacheFolder["$path.size"]
+        val permissionsFile = cacheFolder["$path.extperm"]
+        val dumperVersionFile = cacheFolder["$path.dumperversion"]
+        val compressionFile = cacheFolder["$path.compression"]
 
         fun delete() {
             icon0File.delete()
@@ -30,7 +33,7 @@ object VitaOrganizerCache {
         }
     }
 
-    fun entry(gameId: String) = Entry(gameId)
+    fun entry(file: File) = Entry(file)
 
     /*
     fun setIcon0File(titleId: String, data: ByteArray) {

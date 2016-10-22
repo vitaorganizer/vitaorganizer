@@ -1,18 +1,15 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.util.DumperModules
-import com.soywiz.util.DumperNames
-import com.soywiz.util.DumperNamesHelper
-import com.soywiz.util.open2
-import com.soywiz.vitaorganizer.*
-import com.soywiz.vitaorganizer.ext.getBytes
+import com.soywiz.vitaorganizer.Texts
+import com.soywiz.vitaorganizer.VitaOrganizer
+import com.soywiz.vitaorganizer.VitaOrganizerSettings
+import com.soywiz.vitaorganizer.VpkFile
 import java.io.File
-import java.util.zip.ZipFile
 
 class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer) {
 	override fun perform() {
-		synchronized(vitaOrganizer.VPK_GAME_IDS) {
-			vitaOrganizer.VPK_GAME_IDS.clear()
+		synchronized(vitaOrganizer.VPK_GAME_FILES) {
+			vitaOrganizer.VPK_GAME_FILES.clear()
 		}
 		status(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
 
@@ -37,9 +34,9 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 			val ff = VpkFile(vpkFile)
 			val gameId = ff.cacheAndGetGameId()
 			if (gameId != null) {
-				synchronized(vitaOrganizer.VPK_GAME_IDS) {
+				synchronized(vitaOrganizer.VPK_GAME_FILES) {
 					status(Texts.format("STEP_ANALYZING_ITEM", "name" to gameId, "current" to index + 1, "total" to vpkFiles.size))
-					vitaOrganizer.VPK_GAME_IDS += gameId
+					vitaOrganizer.VPK_GAME_FILES += vpkFile
 				}
 			}
 

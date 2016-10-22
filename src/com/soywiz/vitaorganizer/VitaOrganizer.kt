@@ -1,13 +1,14 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.OS
-import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.*
 import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import com.soywiz.vitaorganizer.tasks.*
 import java.awt.*
-import java.awt.event.*
+import java.awt.event.KeyEvent
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
 import java.io.File
 import java.net.URL
 import java.util.*
@@ -57,8 +58,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		//}
 	}
 
-	val VPK_GAME_IDS = hashSetOf<String>()
-	val VITA_GAME_IDS = hashSetOf<String>()
+	val VPK_GAME_FILES = hashSetOf<File>()
 
 	val statusLabel = JLabel(Texts.format("STEP_STARTED"))
 
@@ -70,22 +70,11 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	fun updateEntries() {
-		val ALL_GAME_IDS = LinkedHashMap<String, CachedGameEntry>()
-
-		fun getGameEntryById(gameId: String) = ALL_GAME_IDS.getOrPut(gameId) { CachedGameEntry(gameId) }
-
-		synchronized(VPK_GAME_IDS) {
-			for (gameId in VPK_GAME_IDS) getGameEntryById(gameId).inPC = true
-		}
-		synchronized(VITA_GAME_IDS) {
-			for (gameId in VITA_GAME_IDS) getGameEntryById(gameId).inVita = true
-		}
-
-		table.setEntries(ALL_GAME_IDS.values.toList())
+		table.setEntries(synchronized(VPK_GAME_FILES) { VPK_GAME_FILES.map { CachedVpkEntry(it) } })
 	}
 
 	fun showFileInExplorerOrFinder(file: File) {
-		if(!file.exists())
+		if (!file.exists())
 			return
 
 		if (OS.isWindows) {
@@ -108,21 +97,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 
 		val popupMenu = object : JPopupMenu() {
-			var entry: CachedGameEntry? = null
-
-			val deleteFromVita = JMenuItem(Texts.format("DELETE_FROM_PSVITA_ACTION")).action {
-				val entry = entry
-				if (entry != null) {
-					val info = mapOf("title" to entry.title)
-					JOptionPane.showConfirmDialog(
-						dialog,
-						Texts.formatMap("DELETE_FROM_PSVITA_MESSAGE", info),
-						Texts.formatMap("DELETE_FROM_PSVITA_TITLE", info),
-						JOptionPane.OK_CANCEL_OPTION, JOptionPane.OK_OPTION
-					)
-				}
-				//this.isEnabled = false
-			}
+			var entry: CachedVpkEntry? = null
 
 			val sendVpkToVita = JMenuItem(Texts.format("SEND_PROMOTING_VPK_TO_VITA_ACTION")).action {
 				if (entry != null) remoteTasks.queue(SendPromotingVpkToVitaTask(vitaOrganizer, entry!!.vpkLocalVpkFile!!))
@@ -138,9 +113,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			val showInFilebrowser = JMenuItem(if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")).action {
 				if (entry != null) {
-					if(entry!!.inPC || (entry!!.inPC && entry!!.inVita)) {
-						showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
-					}
+					//if(entry!!.inPC || (entry!!.inPC && entry!!.inVita)) {
+					showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
+					//}
 				}
 			}
 
@@ -182,34 +157,20 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				gameTitlePopup.text = Texts.format("UNKNOWN_VERSION")
 				gameDumperVersionPopup.text = Texts.format("UNKNOWN_VERSION")
 				gameCompressionLevelPopup.text = Texts.format("UNKNOWN_VERSION")
-				deleteFromVita.isEnabled = false
-				sendVpkToVita.isEnabled = false
-				sendDataToVita.isEnabled = false
-				sendToVita1Step.isEnabled = false
-				showInFilebrowser.isEnabled = false
-				repackVpk.isEnabled = false
-				showPSF.isEnabled = false;
 
 				if (entry != null) {
 					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
 					gameCompressionLevelPopup.text = Texts.format("COMPRESSION_LEVEL", "level" to entry.compressionLevel)
 					gameTitlePopup.text = "${entry.id} : ${entry.title}"
-					gameTitlePopup.setForeground(Color(64, 0,255));
+					gameTitlePopup.setForeground(Color(64, 0, 255));
 					gameTitlePopup.setFont(gameTitlePopup.getFont().deriveFont(Font.BOLD));
-					deleteFromVita.isEnabled = entry.inVita
-					sendVpkToVita.isEnabled = entry.inPC
-					sendDataToVita.isEnabled = entry.inPC
-					sendToVita1Step.isEnabled = entry.inPC
-					showInFilebrowser.isEnabled = entry.inPC
-					repackVpk.isEnabled = entry.inPC
-					showPSF.isEnabled = true
 				}
 
 				super.show(invoker, x, y)
 			}
 		}
 
-		override fun showMenuAtFor(x: Int, y: Int, entry: CachedGameEntry) {
+		override fun showMenuAtFor(x: Int, y: Int, entry: CachedVpkEntry) {
 			popupMenu.entry = entry
 			popupMenu.show(this.table, x, y)
 		}
@@ -265,7 +226,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		frame.jMenuBar = JMenuBar().apply {
 			add(JMenu(Texts.format("MENU_FILE")).apply {
-				add(JMenuItem(Texts.format("MENU_INSTALL_VPK")).action {
+				add(JMenuItem(Texts.format("MENU_INSTALL_VPK"), Icons.INSTALL).action {
 					val chooser = JFileChooser()
 					chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
 					chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
@@ -278,10 +239,10 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						remoteTasks.queue(OneStepToVitaTask(this@VitaOrganizer, VpkFile(chooser.selectedFile)))
 					}
 				})
-				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER")).action {
+				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER"), Icons.OPEN_FOLDER).action {
 					selectFolder()
 				})
-				add(JMenuItem(Texts.format("MENU_REFRESH")).action {
+				add(JMenuItem(Texts.format("MENU_REFRESH"), Icons.REFRESH).action {
 					updateFileList()
 				})
 				add(JSeparator())
@@ -346,15 +307,15 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		val header = JPanel(FlowLayout(FlowLayout.LEFT)).apply {
 
-			add(JButton(Texts.format("MENU_SELECT_FOLDER")).action {
+			add(JButton(Texts.format("MENU_SELECT_FOLDER"), Icons.OPEN_FOLDER).action {
 				selectFolder()
 			})
 
-			add(JButton(Texts.format("MENU_REFRESH")).action {
+			add(JButton(Texts.format("MENU_REFRESH"), Icons.REFRESH).action {
 				updateFileList()
 			})
 
-			val connectText = Texts.format("CONNECT_TO_PSVITA")
+			//val connectText = Texts.format("CONNECT_TO_PSVITA")
 			var connected = false
 			val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp) {
 				init {
@@ -372,7 +333,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				}
 			}
 
-
+			/*
 			val connectButton = object : JButton(connectText) {
 				val button = this
 
@@ -407,8 +368,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 								updateStatus(Texts.format("PROCESSING_GAME", "current" to (vitaGameCount + 1), "total" to vitaGameIds.size, "gameId" to gameId, "id" to gameId))
 								//println(gameId)
 								try {
-									PsvitaDevice.getParamSfoCached(gameId)
-									PsvitaDevice.getGameIconCached(gameId)
+									//PsvitaDevice.getParamSfoCached(gameId)
+									//PsvitaDevice.getGameIconCached(gameId)
 									val entry2 = VitaOrganizerCache.entry(gameId)
 									val sizeFile = entry2.sizeFile
 									if (!sizeFile.exists()) {
@@ -503,10 +464,11 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 				}
 			}
+			*/
 
 			//hotspotButton.icon
 
-			add(connectButton)
+			//add(connectButton)
 			add(connectAddress)
 			add(JLabel(Texts.format("LABEL_FILTER")))
 			add(filterTextField)
@@ -514,21 +476,21 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			if (OS.isWindows) {
 				// http://superuser.com/questions/804227/how-to-get-assigned-ips-by-hostednetwork
 				val hotspotButton = JButton("Hotspot")
-				hotspotButton.icon = ConnectionIcons.UNKNOWN
+				hotspotButton.icon = Icons.UNKNOWN
 				fun updateWlanAsync() {
 					hotspotQueue.queue {
 						if (WifiNetwork.checkHostedNetwork()) {
-							hotspotButton.icon = ConnectionIcons.CONNECTED
+							hotspotButton.icon = Icons.CONNECTED
 							hotspotButton.text = "Hotspot: " + VitaOrganizerSettings.WLAN_SSID + " -- " + VitaOrganizerSettings.WLAN_PASS
 						} else {
-							hotspotButton.icon = ConnectionIcons.DISCONNECTED
+							hotspotButton.icon = Icons.DISCONNECTED
 							hotspotButton.text = "Hotspot"
 						}
 					}
 				}
 
 				hotspotButton.onClick {
-					hotspotButton.icon = ConnectionIcons.UNKNOWN
+					hotspotButton.icon = Icons.UNKNOWN
 					hotspotQueue.queue {
 						if (WifiNetwork.checkHostedNetwork()) {
 							WifiNetwork.stopHostedNetwork()
@@ -561,12 +523,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		//frame.focusOwner = filterTextField
 	}
 
-	object ConnectionIcons {
-		val UNKNOWN = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_unknown.png"))
-		val CONNECTED = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_connected.png"))
-		val DISCONNECTED = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_disconnected.png"))
-	}
-
 	fun openAbout() {
 		frame.showDialog(AboutFrame())
 	}
@@ -578,7 +534,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	fun updateFileList() {
 		localTasks.queue(UpdateFileListTask(vitaOrganizer))
 	}
-
 
 	//fun fileWatchFolder(path: String) {
 	//	val watcher = FileSystems.getDefault().newWatchService()
