@@ -13,7 +13,7 @@ can be executed directly with double click on most cases.
 In other cases, you can run it with `java -jar vitaorganizer-0.5.2.jar`
 
 You can download a prebuild binary here, or just build from source:
-[Download VitaOrganizer 0.5.2 here](https://github.com/soywiz/vitaorganizer/releases/download/0.5.2/)
+[Download VitaOrganizer 0.5.2 here](https://github.com/soywiz/vitaorganizer/releases/download/0.5.2/vitaorganizer-0.5.2.jar)
 
 ## CHANGELOG
 
