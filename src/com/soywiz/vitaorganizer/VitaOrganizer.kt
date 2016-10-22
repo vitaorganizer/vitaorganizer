@@ -217,7 +217,16 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		//}
 	}
 
-	fun setLanguageText(name: String) {
+	fun setLanguageTextCheckingRunning(name: String) {
+		if (runningTasks) {
+			val confirmed = JOptionPane.showConfirmDialog(null, Texts.format("CONFIRM_EXIT_TEXT"), Texts.format("CONFIRM_EXIT_TITLE"), JOptionPane.YES_NO_OPTION)
+
+			if (confirmed != JOptionPane.YES_OPTION) {
+				frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
+				return
+			}
+		}
+
 		VitaOrganizerSettings.LANGUAGE = name
 		restart()
 	}
@@ -263,7 +272,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					add(JRadioButtonMenuItem(Texts.format("MENU_LANGUAGE_AUTODETECT")).apply {
 						this.isSelected = VitaOrganizerSettings.isLanguageAutodetect
 					}.action {
-						setLanguageText("auto")
+						setLanguageTextCheckingRunning("auto")
 					})
 					add(JSeparator())
 					for (l in Texts.SUPPORTED_LOCALES) {
@@ -272,7 +281,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						}
 						//languageList[l.language] = lrb
 						add(lrb).action {
-							setLanguageText(l.language)
+							setLanguageTextCheckingRunning(l.language)
 						}
 					}
 					Unit
