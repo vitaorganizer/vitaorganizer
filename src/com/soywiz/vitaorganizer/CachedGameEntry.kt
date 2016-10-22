@@ -1,7 +1,7 @@
 package com.soywiz.vitaorganizer
 
-import com.soywiz.util.stream
 import com.soywiz.util.DumperNamesHelper
+import com.soywiz.util.stream
 import java.io.File
 
 class CachedGameEntry(val gameId: String) {
@@ -23,46 +23,37 @@ class CachedGameEntry(val gameId: String) {
 	val attribute by lazy { psf["ATTRIBUTE"].toString() }
 	val id by lazy { psf["TITLE_ID"].toString() }
 	val title by lazy { psf["TITLE"].toString() }
-	val dumperVersion by lazy { 
-        var text = "UNKNOWN";
-		if(attribute == "32768")
-			text = "HB"
-    	else if(entry.dumperVersionFile.exists())
-			text = entry.dumperVersionFile.readText(); 
+	val dumperVersion by lazy {
+		val text = if (attribute == "32768")
+			"HB"
+		else if (entry.dumperVersionFile.exists())
+			entry.dumperVersionFile.readText();
+		else
+			"UNKNOWN"
 
-        DumperNamesHelper().findDumperByShortName(text).longName 
-    }
-	val compressionLevel by lazy { 
-        if(entry.compressionFile.exists())  {
+		DumperNamesHelper().findDumperByShortName(text).longName
+	}
+	val compressionLevel by lazy {
+		if (entry.compressionFile.exists()) {
 			//see https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 			//4.4.5
-			val method = entry.compressionFile.readText() 
-			if(method == "0")
-				"not compressed"
-			else if(method == "1")
-				"shrunk"
-			else if(method == "2")
-				"compresion factor 1"
-			else if(method == "3")
-				"compresion factor 2"
-			else if(method == "4")
-				"compresion factor 3"
-			else if(method == "5")
-				"compresion factor 4"
-			else if(method == "6")
-				"imploded"
-			else if(method == "7")
-				"reversed"
-			else if(method == "8")
-				"deflate"
-			else if(method == "9")
-				"shrunk64"
-			else
-				method
-		}
-        else 
-			"could not read from param.sfo" 
-    }
+			val method = entry.compressionFile.readText()
+			when (method) {
+				"0" -> "not compressed"
+				"1" -> "shrunk"
+				"2" -> "compresion factor 1"
+				"3" -> "compresion factor 2"
+				"4" -> "compresion factor 3"
+				"5" -> "compresion factor 4"
+				"6" -> "imploded"
+				"7" -> "reversed"
+				"8" -> "deflate"
+				"9" -> "shrunk64"
+				else -> method
+			}
+		} else
+			"could not read from param.sfo"
+	}
 	var inVita = false
 	var inPC = false
 	val vpkLocalPath: String? get() = entry.pathFile.readText(Charsets.UTF_8)
