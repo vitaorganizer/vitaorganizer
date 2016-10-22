@@ -11,12 +11,14 @@ fun JFrame.showDialog(modal: JFrame) {
 	dialog.setLocationRelativeTo(this)
 	dialog.isResizable = modal.isResizable
 	dialog.isVisible = true
-	//frame.isEnabled = false
+}
 
-	//val frame2 = KeyValueViewerFrame(mapOf("a" to "b"))
-	//frame2.pack()
-	//frame2.setLocationRelativeTo(frame)
-	//frame2.isVisible = true
+fun JFrame.showFrame(modal: JFrame) {
+	val dialog = modal
+	dialog.pack()
+	dialog.setLocationRelativeTo(this)
+	dialog.isResizable = modal.isResizable
+	dialog.isVisible = true
 }
 
 fun JMenuItem.action(callback: () -> Unit): JMenuItem {

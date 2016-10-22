@@ -4,6 +4,7 @@ import com.soywiz.vitaorganizer.tasks.VitaTask
 import java.util.*
 
 class VitaTaskQueue(val vitaOrganizer: VitaOrganizer) {
+	var running = false; private set
 	private val tasks: Queue<() -> Unit> = LinkedList<() -> Unit>()
 	val thread = Thread {
 		while (vitaOrganizer.isVisible) {
@@ -11,9 +12,12 @@ class VitaTaskQueue(val vitaOrganizer: VitaOrganizer) {
 			val task = synchronized(tasks) { if (tasks.isNotEmpty()) tasks.remove() else null }
 			if (task != null) {
 				try {
+					running = true
 					task()
 				} catch (t: Throwable) {
 					t.printStackTrace()
+				} finally {
+					running = false
 				}
 			}
 		}

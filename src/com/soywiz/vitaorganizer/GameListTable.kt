@@ -343,7 +343,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 					))
 				}
 			} catch (e: Throwable) {
-				println("Error processing: ${entry.gameId}")
+				println("Error processing: ${entry.gameId} : ${entry.file}")
 				e.printStackTrace()
 			}
 		}

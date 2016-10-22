@@ -5,6 +5,7 @@ import com.soywiz.util.DumperNames
 import com.soywiz.util.DumperNamesHelper
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.getBytes
+import com.soywiz.vitaorganizer.ext.getResourceBytes
 import java.io.File
 import java.util.zip.ZipFile
 
@@ -79,7 +80,11 @@ class VpkFile(val vpkFile: File) {
 				}
 
 				if (!entry.icon0File.exists()) {
-					entry.icon0File.writeBytes(zip.getInputStream(zip.getEntry("sce_sys/icon0.png")).readBytes())
+					try {
+						entry.icon0File.writeBytes(zip.getInputStream(zip.getEntry("sce_sys/icon0.png")).readBytes())
+					} catch (e: Throwable){
+						entry.icon0File.writeBytes(getResourceBytes("com/soywiz/vitaorganizer/dummy128.png") ?: byteArrayOf())
+					}
 				}
 				if (!entry.paramSfoFile.exists()) {
 					entry.paramSfoFile.writeBytes(paramSfoData)

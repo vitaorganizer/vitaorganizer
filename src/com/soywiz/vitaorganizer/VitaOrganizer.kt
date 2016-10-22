@@ -30,12 +30,30 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	val remoteTasks = VitaTaskQueue(this)
 	val hotspotQueue = VitaTaskQueue(this)
 
+	val runningTasks: Boolean get() = localTasks.running || remoteTasks.running || hotspotQueue.running
+
 	init {
 		Texts.setLanguage(VitaOrganizerSettings.LANGUAGE_LOCALE)
 		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
 	}
 
 	val frame = JFrame("VitaOrganizer ${VitaOrganizerVersion.currentVersion}").apply {
+		addWindowListener(object : WindowAdapter() {
+			override fun windowClosing(e: WindowEvent?) {
+				if (runningTasks) {
+					val confirmed = JOptionPane.showConfirmDialog(null, Texts.format("CONFIRM_EXIT_TEXT"), Texts.format("CONFIRM_EXIT_TITLE"), JOptionPane.YES_NO_OPTION)
+
+					if (confirmed != JOptionPane.YES_OPTION) {
+						defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
+						return
+					}
+				}
+
+				// If not cancelled
+				defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+				dispose()
+			}
+		})
 		defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 		iconImage = ImageIO.read(getResourceURL("com/soywiz/vitaorganizer/icon.png"))
 	}
@@ -123,7 +141,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 
 			val showPSF = JMenuItem(Texts.format("MENU_SHOW_PSF")).action {
-				if (entry != null) frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
+				if (entry != null) {
+					frame.showFrame(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
+				}
 			}
 
 			init {
