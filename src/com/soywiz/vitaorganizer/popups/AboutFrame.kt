@@ -37,6 +37,7 @@ class AboutFrame() : JFrame(Texts.format("ABOUT_TITLE")) {
 
 					add(JLabel(Texts.format("ABOUT_PROGRAMMING")))
 					add(Contibutor("soywiz", "http://soywiz.com/"))
+					add(Contibutor("gordon0001", "https://github.com/gordon0001"))
 					add(Contibutor("luckylucks", "https://github.com/luckylucks/"))
 					add(JLabel(Texts.format("ABOUT_TRANSLATIONS")))
 					add(Contibutor("paweloszu", "https://github.com/paweloszu", "Polish"))

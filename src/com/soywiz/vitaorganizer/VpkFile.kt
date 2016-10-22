@@ -70,6 +70,7 @@ class VpkFile(val vpkFile: File) {
 				}
 
 				println("For file [${vpkFile}] (Compressmethod : $compressionLevel Dumpver : ${dumper})")
+				entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
 				if (!entry.compressionFile.exists()) {
 					entry.compressionFile.writeText(compressionLevel.toString())
 				}
@@ -91,7 +92,6 @@ class VpkFile(val vpkFile: File) {
 					val ebootBinData = zip.getBytes("eboot.bin")
 					entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinData.open2("r")))
 				}
-				entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
 				//getGameEntryById(gameId).inPC = true
 			}
 		} catch (e: Throwable) {

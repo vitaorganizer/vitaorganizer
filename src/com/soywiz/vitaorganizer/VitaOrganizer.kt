@@ -514,29 +514,32 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			if (OS.isWindows) {
 				// http://superuser.com/questions/804227/how-to-get-assigned-ips-by-hostednetwork
 				val hotspotButton = JButton("Hotspot")
-				hotspotButton.icon = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_unknown.png"))
-				fun updateWlan() {
-					if (WifiNetwork.checkHostedNetwork()) {
-						hotspotButton.icon = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_connected.png"))
-						hotspotButton.text = "Hotspot: " + VitaOrganizerSettings.WLAN_SSID + " -- " + VitaOrganizerSettings.WLAN_PASS
-					} else {
-						hotspotButton.icon = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_disconnected.png"))
-						hotspotButton.text = "Hotspot"
+				hotspotButton.icon = ConnectionIcons.UNKNOWN
+				fun updateWlanAsync() {
+					hotspotQueue.queue {
+						if (WifiNetwork.checkHostedNetwork()) {
+							hotspotButton.icon = ConnectionIcons.CONNECTED
+							hotspotButton.text = "Hotspot: " + VitaOrganizerSettings.WLAN_SSID + " -- " + VitaOrganizerSettings.WLAN_PASS
+						} else {
+							hotspotButton.icon = ConnectionIcons.DISCONNECTED
+							hotspotButton.text = "Hotspot"
+						}
 					}
 				}
 
 				hotspotButton.onClick {
-					if (WifiNetwork.checkHostedNetwork()) {
-						WifiNetwork.stopHostedNetwork()
-					} else {
-						WifiNetwork.startHostedNetwork(VitaOrganizerSettings.WLAN_SSID, VitaOrganizerSettings.WLAN_PASS)
+					hotspotButton.icon = ConnectionIcons.UNKNOWN
+					hotspotQueue.queue {
+						if (WifiNetwork.checkHostedNetwork()) {
+							WifiNetwork.stopHostedNetwork()
+						} else {
+							WifiNetwork.startHostedNetwork(VitaOrganizerSettings.WLAN_SSID, VitaOrganizerSettings.WLAN_PASS)
+						}
+						updateWlanAsync()
 					}
-					updateWlan()
 				}
 
-				hotspotQueue.queue {
-					updateWlan()
-				}
+				updateWlanAsync()
 				add(hotspotButton)
 			}
 
@@ -556,6 +559,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		})
 
 		//frame.focusOwner = filterTextField
+	}
+
+	object ConnectionIcons {
+		val UNKNOWN = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_unknown.png"))
+		val CONNECTED = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_connected.png"))
+		val DISCONNECTED = ImageIcon(VitaOrganizer::class.java.classLoader.getResource("com/soywiz/vitaorganizer/icons/icon_disconnected.png"))
 	}
 
 	fun openAbout() {
