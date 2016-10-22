@@ -2,21 +2,26 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.HEX_DIGITS
 import com.soywiz.vitaorganizer.ext.nextString
+import com.soywiz.vitaorganizer.ext.parseInt
 import java.io.*
 import java.security.SecureRandom
 import java.util.*
 import kotlin.reflect.KProperty
 
 object VitaOrganizerSettings {
-	val CHARSET = Charsets.UTF_8
-	var vpkFolder: String by PropDelegate { "." }
-	var lastDeviceIp: String by PropDelegate { "192.168.1.100" }
-	var lastDevicePort: String by PropDelegate { "1337" }
-	var LANGUAGE: String by PropDelegate { "auto" }
-	var WLAN_SSID: String by PropDelegate {
+	private val queue = ThreadQueue()
+	private val CHARSET = Charsets.UTF_8
+	var WINDOW_WIDTH: Int by PropDelegateInt { 960 }
+	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }
+	var WINDOW_STATE: Int by PropDelegateInt { 0 }
+	var vpkFolder: String by PropDelegateStr { "." }
+	var lastDeviceIp: String by PropDelegateStr { "192.168.1.100" }
+	var lastDevicePort: String by PropDelegateStr { "1337" }
+	var LANGUAGE: String by PropDelegateStr { "auto" }
+	var WLAN_SSID: String by PropDelegateStr {
 		"VORG-" + SecureRandom().nextString(HEX_DIGITS, 4)
 	}
-	var WLAN_PASS: String by PropDelegate {
+	var WLAN_PASS: String by PropDelegateStr {
 		SecureRandom().nextString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8)
 	}
 
@@ -32,7 +37,12 @@ object VitaOrganizerSettings {
 		writeProperties()
 	}
 
-	private class PropDelegate(val default: () -> String) {
+	fun ensureWriteSync() {
+		writeProperties()
+		queue.waitCompleted()
+	}
+
+	private class PropDelegateStr(val default: () -> String) {
 		operator fun getValue(thisRef: Any?, property: KProperty<*>): String {
 			val props = VitaOrganizerSettings.ensureProperties()
 			val key = property.name
@@ -45,7 +55,24 @@ object VitaOrganizerSettings {
 
 		operator fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
 			VitaOrganizerSettings.ensureProperties().setProperty(property.name, value)
-			VitaOrganizerSettings.writeProperties()
+			VitaOrganizerSettings.writePropertiesAsync()
+		}
+	}
+
+	private class PropDelegateInt(val default: () -> Int) {
+		operator fun getValue(thisRef: Any?, property: KProperty<*>): Int {
+			val props = VitaOrganizerSettings.ensureProperties()
+			val key = property.name
+			if (props.getProperty(key) == null) {
+				props.setProperty(key, "" + default())
+				writeProperties()
+			}
+			return props.getProperty(key).parseInt()
+		}
+
+		operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
+			VitaOrganizerSettings.ensureProperties().setProperty(property.name, "$value")
+			VitaOrganizerSettings.writePropertiesAsync()
 		}
 	}
 
@@ -55,8 +82,16 @@ object VitaOrganizerSettings {
 	}
 
 	private fun readProperties() {
+		queue.waitCompleted()
 		if (file.exists()) properties.load(InputStreamReader(ByteArrayInputStream(file.readBytes()), CHARSET))
 		initialized = true
+	}
+
+	private fun writePropertiesAsync() {
+		queue.clear()
+		queue.queueAfter(100) {
+			writeProperties()
+		}
 	}
 
 	private fun writeProperties() {
@@ -66,5 +101,7 @@ object VitaOrganizerSettings {
 				properties.store(writer, "")
 			}
 		}
+		println("properties written!")
+		//println(Thread.currentThread().stackTrace.toList().joinToString("\n"))
 	}
 }

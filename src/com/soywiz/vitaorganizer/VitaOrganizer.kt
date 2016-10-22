@@ -1,14 +1,13 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.OS
+import com.soywiz.util.toBitString
 import com.soywiz.vitaorganizer.ext.*
 import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import com.soywiz.vitaorganizer.tasks.*
 import java.awt.*
-import java.awt.event.KeyEvent
-import java.awt.event.WindowAdapter
-import java.awt.event.WindowEvent
+import java.awt.event.*
 import java.io.File
 import java.net.URL
 import javax.imageio.ImageIO
@@ -38,22 +37,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	val frame = JFrame("VitaOrganizer ${VitaOrganizerVersion.currentVersion}").apply {
-		addWindowListener(object : WindowAdapter() {
-			override fun windowClosing(e: WindowEvent?) {
-				if (runningTasks) {
-					val confirmed = JOptionPane.showConfirmDialog(null, Texts.format("CONFIRM_EXIT_TEXT"), Texts.format("CONFIRM_EXIT_TITLE"), JOptionPane.YES_NO_OPTION)
-
-					if (confirmed != JOptionPane.YES_OPTION) {
-						defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
-						return
-					}
-				}
-
-				// If not cancelled
-				defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-				dispose()
-			}
-		})
 		defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 		iconImage = ImageIO.read(getResourceURL("com/soywiz/vitaorganizer/icon.png"))
 	}
@@ -142,7 +125,14 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			val showPSF = JMenuItem(Texts.format("MENU_SHOW_PSF")).action {
 				if (entry != null) {
-					frame.showFrame(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
+					frame.showFrame(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf, formatter = { key, value ->
+						when (key) {
+							"ATTRIBUTE", "ATTRIBUTE2", "ATTRIBUTE_MINOR" -> {
+								value.toString().toInt().toBitString(32)
+							}
+							else -> "$value"
+						}
+					}))
 				}
 			}
 
@@ -351,139 +341,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				}
 			}
 
-			/*
-			val connectButton = object : JButton(connectText) {
-				val button = this
-
-				fun disconnect() {
-                    if(PsvitaDevice.disconnectFromFtp()) {
-					    connected = false
-					    button.text = connectText
-					    synchronized(VITA_GAME_IDS) {
-						    VITA_GAME_IDS.clear()
-					    }
-					    updateEntries()
-					    updateStatus(Texts.format("DISCONNECTED"))
-                    }
-                    else
-                        println("Failed to disconnect!")
-				}
-
-				fun connect(ip: String) {
-					connected = true
-					VitaOrganizerSettings.lastDeviceIp = ip
-					button.text = Texts.format("DISCONNECT_FROM_IP", "ip" to ip)
-					synchronized(VITA_GAME_IDS) {
-						VITA_GAME_IDS.clear()
-					}
-					var done = false
-					var updated = false
-					Thread {
-						try {
-							var vitaGameCount = 0
-							val vitaGameIds = PsvitaDevice.getGameIds()
-							for (gameId in vitaGameIds) {
-								updateStatus(Texts.format("PROCESSING_GAME", "current" to (vitaGameCount + 1), "total" to vitaGameIds.size, "gameId" to gameId, "id" to gameId))
-								//println(gameId)
-								try {
-									//PsvitaDevice.getParamSfoCached(gameId)
-									//PsvitaDevice.getGameIconCached(gameId)
-									val entry2 = VitaOrganizerCache.entry(gameId)
-									val sizeFile = entry2.sizeFile
-									if (!sizeFile.exists()) {
-										sizeFile.writeText("" + PsvitaDevice.getGameSize(gameId))
-									}
-
-									if (!entry2.permissionsFile.exists()) {
-										val ebootBin = PsvitaDevice.downloadEbootBin(gameId)
-										try {
-											entry2.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBin.open2("r")))
-										} catch (e: Throwable) {
-											entry2.permissionsFile.writeText("true")
-										}
-									}
-
-									synchronized(VITA_GAME_IDS) {
-										VITA_GAME_IDS += gameId
-									}
-									updated = true
-									//val entry = getGameEntryById(gameId)
-									//entry.inVita = true
-								} catch (e: Throwable) {
-									e.printStackTrace()
-								}
-								vitaGameCount++
-							}
-						} finally {
-							done = true
-							updated = true
-						}
-
-						updateStatus(Texts.format("CONNECTED"))
-					}.start()
-
-					Thread {
-						do {
-							//println("a")
-							while (!updated) {
-								//println("b")
-								Thread.sleep(100L)
-							}
-							updated = false
-							updateEntries()
-						} while (!done)
-
-                        updateEntries()
-					}.start()
-				}
-
-				init {
-					val button = this
-                    
-                    addActionListener al@ {e:ActionEvent ->
-					    if (connected) {
-						    this@VitaOrganizer.updateStatus(Texts.format("DISCONNECTING"))
-						    disconnect()
-					    } else {
-                            var ip = connectAddress.getText()
-                                
-                            if(ip == "") {
-                                println("No ip given")
-                                JOptionPane.showMessageDialog(frame, "Please type in an ip address!")
-                                return@al
-                            }
-                            
-                            if(!PsvitaDevice.checkAddress(ip)) {
-                                println("No connection could be etablished!");
-                                JOptionPane.showMessageDialog(frame, "No connection could be etablished!\nCheck your ip or start the FTP server!")
-                                return@al
-                            }
-                                
-						    this@VitaOrganizer.updateStatus(Texts.format("CONNECTING"))
-						    button.button.isEnabled = false
-
-						    connect(ip)
-						    button.button.isEnabled = true
-                       
-								/*
-								if (PsvitaDevice.checkAddress(VitaOrganizerSettings.lastDeviceIp)) {
-								} else {
-									Thread {
-										val ips = PsvitaDevice.discoverIp()
-										println("Discovered ips: $ips")
-										if (ips.size >= 1) {
-											connect(ips.first())
-										}
-										button.button.isEnabled = true
-									}.start()
-								}
-								*/
-					    }
-					}
-				}
-			}
-			*/
-
 			//hotspotButton.icon
 
 			//add(connectButton)
@@ -535,6 +392,38 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		frame.addWindowListener(object : WindowAdapter() {
 			override fun windowOpened(e: WindowEvent) {
 				filterTextField.requestFocus()
+			}
+			override fun windowClosing(e: WindowEvent?) {
+				if (runningTasks) {
+					val confirmed = JOptionPane.showConfirmDialog(null, Texts.format("CONFIRM_EXIT_TEXT"), Texts.format("CONFIRM_EXIT_TITLE"), JOptionPane.YES_NO_OPTION)
+
+					if (confirmed != JOptionPane.YES_OPTION) {
+						frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
+						return
+					}
+				}
+
+				// If not cancelled
+				VitaOrganizerSettings.ensureWriteSync()
+				frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+				VitaOrganizerSettings.LANGUAGE_LOCALE
+				frame.dispose()
+				System.exit(0)
+			}
+		})
+
+		frame.setSize(VitaOrganizerSettings.WINDOW_WIDTH, VitaOrganizerSettings.WINDOW_HEIGHT)
+
+		frame.addComponentListener(object : ComponentAdapter() {
+			override fun componentResized(e: ComponentEvent?) {
+				super.componentResized(e)
+				if (frame.getExtendedState() == JFrame.NORMAL) {
+					VitaOrganizerSettings.WINDOW_WIDTH = frame.width
+					VitaOrganizerSettings.WINDOW_HEIGHT = frame.height
+					println("Updated size ${frame.width}x${frame.height}")
+				} else{
+					println("maximixed or minimized!")
+				}
 			}
 		})
 

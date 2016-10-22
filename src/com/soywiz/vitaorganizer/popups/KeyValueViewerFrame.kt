@@ -9,7 +9,7 @@ import javax.swing.JScrollPane
 import javax.swing.JTable
 import javax.swing.table.DefaultTableModel
 
-class KeyValueViewerFrame(title: String, val map: Map<String, Any>) : JFrame(title) {
+class KeyValueViewerFrame(title: String, val map: Map<String, Any>, formatter: (key: String, value: Any) -> String = { key, value -> "$value" }) : JFrame(title) {
 	init {
 		add(JPanel(BorderLayout()).apply {
 			setSize(640, 480)
@@ -17,7 +17,7 @@ class KeyValueViewerFrame(title: String, val map: Map<String, Any>) : JFrame(tit
 			//val keys = pairs.map { it.key }
 			//val values = pairs.map { it.value }
 
-			val arrayPairs = pairs.map { arrayOf(it.key, it.value) }.toTypedArray()
+			val arrayPairs = pairs.map { arrayOf(it.key, formatter(it.key, it.value)) }.toTypedArray()
 
 			val model = DefaultTableModel()
 			val table = JTable(model)
