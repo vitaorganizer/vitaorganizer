@@ -1,0 +1,125 @@
+//------------------------------------------------
+//--- 010 Editor v7.0.2 Binary Template
+//
+//      File: ps_psf.bt
+//   Authors: soywiz
+//   Version: 1.0
+//   Purpose: Read sony psp psf files
+//  Category: Archive
+// File Mask: param.sfo
+//  ID Bytes: 00 50 53 46
+//   History: 
+//------------------------------------------------
+
+// Reference: http://www.vitadevwiki.com/index.php?title=System_File_Object_(SFO)_(PSF)#ATTRIBUTE
+
+struct Header {
+    char magic[4] <format=hex>;     //0x02014b50
+    byte version[4] <format=hex>;
+    int keyTable;
+    int valueTable;
+    int numberOfPairs;
+};
+
+typedef enum <byte> {
+    BINARY_0 = 0,
+    TEXT_2 = 2,
+    INT_4 = 4
+} DataType;
+
+LittleEndian();
+
+Header header <fgcolor=0xee3333>;
+
+struct Entry {
+    short keyOffset;
+    byte unknown;
+    DataType dataType;
+    int valueSize;
+    int valueSizePath;
+    int valueOffset;
+
+    /*
+    if (keyOffset >= 0) {
+        local long oldpos = FTell();
+        SetForeColor(0x007700);
+        FSeek(header.keyTable + keyOffset);
+        string key;
+    
+        //local string s;
+        //SPrintf(s, "hello %d", keyOffset); 
+        //Printf(s);
+    
+        SetForeColor(0x000077);
+        FSeek(header.valueTable + valueOffset);
+        if (dataType == INT_4) {
+            int value;
+        } else if (dataType == TEXT_2) {
+            string value;
+        }
+    
+        FSeek(oldpos);
+    }
+    */
+} entries[header.numberOfPairs] <fgcolor=0x7777ee, comment=GetEntryValue>;
+
+
+string keyOffsetComment(short offset) {
+    return ReadString(header.keyTable + offset);
+}
+
+int GetKeyPos(Entry &entry) {
+    return header.keyTable + entry.keyOffset;
+}
+
+string GetKeyString(Entry &entry) {
+    return ReadString(GetKeyPos(entry));
+}
+
+int GetValuePos(Entry &entry) {
+    return header.valueTable + entry.valueOffset;
+}
+
+string GetEntryValue(Entry &entry) {
+    local int keyPos = GetKeyPos(entry);
+    local int valuePos = GetValuePos(entry);
+    local string key = ReadString(keyPos);
+    local string s = "";
+    if (entry.dataType == INT_4) {
+        SPrintf(s, "%s = %d", key, ReadInt(valuePos));
+    } else if (entry.dataType == TEXT_2) {
+        SPrintf(s, "%s = %s", key, ReadString(valuePos));
+    }
+    return s;
+}
+
+struct EntryPair(Entry &entry) {
+    SetForeColor(0x007700);
+    FSeek(GetKeyPos(entry));
+    string key;
+
+    SetForeColor(0x000077);
+    FSeek(GetValuePos(entry));
+    if (entry.dataType == INT_4) {
+        if (key == "ATTRIBUTE" || key == "ATTRIBUTE2" || key == "ATTRIBUTE_MINOR") {
+            int value<format=binary>;
+        } else {
+            int value;
+        }
+    } else if (entry.dataType == TEXT_2) {
+        string value;
+    }
+};
+
+string GetEntryPairComment(EntryPair &entryPair) {
+    return entryPair.key + ":";
+}
+
+struct EntryPairs {
+    local int n;
+    for (n = 0; n < header.numberOfPairs; n++) {
+        EntryPair pair(entries[n]) <comment=GetEntryPairComment>;
+    }
+};
+
+EntryPairs pairs;
