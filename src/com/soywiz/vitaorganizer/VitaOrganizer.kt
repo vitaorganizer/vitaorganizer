@@ -11,7 +11,6 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.File
 import java.net.URL
-import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.*
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -87,7 +86,11 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	val table = object : GameListTable() {
 		val dialog = this@VitaOrganizer
 		val gameTitlePopup = JMenuItem("").apply {
-			this.isEnabled = false
+			isEnabled = false
+			foreground = Color(64, 0, 255);
+			font = font.deriveFont(Font.BOLD);
+		}
+		val gamePathMenuItem = JMenuItem("").apply {
 		}
 		val gameDumperVersionPopup = JMenuItem("").apply {
 			this.isEnabled = false
@@ -112,11 +115,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 
 			val showInFilebrowser = JMenuItem(if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")).action {
-				if (entry != null) {
-					//if(entry!!.inPC || (entry!!.inPC && entry!!.inVita)) {
-					showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
-					//}
-				}
+				if (entry != null) showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
 			}
 
 			val repackVpk = JMenuItem(Texts.format("MENU_REPACK")).action {
@@ -124,13 +123,14 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 
 			val showPSF = JMenuItem(Texts.format("MENU_SHOW_PSF")).action {
-				if (entry != null) {
-					frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
-				}
+				if (entry != null) frame.showDialog(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf))
 			}
 
 			init {
 				add(gameTitlePopup)
+				add(gamePathMenuItem.action {
+					if (entry != null) showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
+				})
 				add(JSeparator())
 				add(gameDumperVersionPopup)
 				add(gameCompressionLevelPopup)
@@ -138,17 +138,15 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				add(showInFilebrowser)
 				add(showPSF)
 				add(repackVpk)
-
-				add(JSeparator())
-				add(JMenuItem(Texts.format("METHOD1_INFO")).apply {
-					isEnabled = false
+				add(JMenu(Texts.format("METHOD1_INFO")).apply {
+					//isEnabled = false
+					add(sendVpkToVita)
+					add(sendDataToVita)
 				})
-				add(sendVpkToVita)
-				add(sendDataToVita)
 				add(JSeparator())
-				add(JMenuItem(Texts.format("METHOD2_INFO")).apply {
-					isEnabled = false
-				})
+				//add(JMenuItem(Texts.format("METHOD2_INFO")).apply {
+				//	isEnabled = false
+				//})
 				add(sendToVita1Step)
 			}
 
@@ -159,11 +157,10 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				gameCompressionLevelPopup.text = Texts.format("UNKNOWN_VERSION")
 
 				if (entry != null) {
+					gamePathMenuItem.text = entry.file.canonicalPath
 					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
 					gameCompressionLevelPopup.text = Texts.format("COMPRESSION_LEVEL", "level" to entry.compressionLevel)
 					gameTitlePopup.text = "${entry.id} : ${entry.title}"
-					gameTitlePopup.setForeground(Color(64, 0, 255));
-					gameTitlePopup.setFont(gameTitlePopup.getFont().deriveFont(Font.BOLD));
 				}
 
 				super.show(invoker, x, y)
@@ -252,6 +249,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			})
 			add(JMenu(Texts.format("MENU_SETTINGS")).apply {
 				add(JMenu(Texts.format("MENU_LANGUAGES")).apply {
+					icon = Icons.TRANSLATIONS
 					add(JRadioButtonMenuItem(Texts.format("MENU_LANGUAGE_AUTODETECT")).apply {
 						this.isSelected = VitaOrganizerSettings.isLanguageAutodetect
 					}.action {
