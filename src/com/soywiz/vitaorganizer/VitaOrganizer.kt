@@ -16,12 +16,19 @@ import javax.swing.filechooser.FileNameExtensionFilter
 
 class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	companion object {
+		lateinit var instance: VitaOrganizer
+
 		@JvmStatic fun main(args: Array<String>) {
+			VitaOrganizer()
 			VitaOrganizerSettings.init()
 			VitaOrganizerSettings.WLAN_SSID
 			VitaOrganizerSettings.WLAN_PASS
-			VitaOrganizer().start()
+			instance.start()
 		}
+	}
+
+	init {
+		VitaOrganizer.instance = this@VitaOrganizer
 	}
 
 	val vitaOrganizer = this@VitaOrganizer

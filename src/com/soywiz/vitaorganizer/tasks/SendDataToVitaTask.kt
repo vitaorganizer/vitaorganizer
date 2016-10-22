@@ -10,14 +10,7 @@ class SendDataToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : V
 		//val zip = ZipFile(entry.vpkFile)
 		try {
 			ZipFile(vpkFile.vpkFile).use { zip ->
-				PsvitaDevice.uploadGame(vpkFile.id, zip, filter = { path ->
-					// Skip files already installed in the VPK
-					if (path == "eboot.bin" || path.startsWith("sce_sys/")) {
-						false
-					} else {
-						true
-					}
-				}) { status ->
+				PsvitaDevice.uploadGame(vpkFile.id, zip, filter = { path -> FileRules.includeInData(path) }) { status ->
 					//println("$status")
 					status(Texts.format("STEP_SENDING_GAME_UPLOADING", "id" to vpkFile.id, "fileRange" to status.fileRange, "sizeRange" to status.sizeRange, "speed" to status.speedString))
 				}

@@ -20,7 +20,7 @@ class ThreadQueue {
 	}
 
 	val thread = Thread {
-		while (true) {
+		while (VitaOrganizer.instance.isVisible) {
 			Thread.sleep(10L)
 			val task = readTaskAndMarkRunning()
 			if (task != null) {
