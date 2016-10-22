@@ -318,14 +318,14 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				})
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {
-				add(JMenuItem(Texts.format("MENU_WEBSITE")).action {
+				add(JMenuItem(Texts.format("MENU_WEBSITE"), Icons.WEBSITE).action {
 					openWebpage(URL("http://github.com/soywiz/vitaorganizer"))
 				})
 				add(JSeparator())
-				add(JMenuItem(Texts.format("MENU_CHECK_FOR_UPDATES")).action {
+				add(JMenuItem(Texts.format("MENU_CHECK_FOR_UPDATES"), Icons.DOWNLOAD).action {
 					checkForUpdates()
 				})
-				add(JMenuItem(Texts.format("MENU_ABOUT")).action {
+				add(JMenuItem(Texts.format("MENU_ABOUT"), Icons.ABOUT).action {
 					openAbout()
 				})
 			})

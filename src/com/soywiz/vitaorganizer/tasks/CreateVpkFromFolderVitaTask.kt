@@ -14,10 +14,10 @@ class CreateVpkFromFolderVitaTask(vitaOrganizer: VitaOrganizer, val folder: File
 	}
 
 	override fun perform() {
-		status("CreateVpkFromFolderVitaTask[0]")
+		status("CreateVpkFromFolderVitaTask started")
 		createBigVpk(folder, outVpk, level = level) { currentSize, totalSize, currentFile, totalFile, file ->
 			status("CreateVpkFromFolderVitaTask: $file : $currentFile/$totalFile - ${FileSize.toString(currentSize)}/${FileSize.toString(totalSize)}")
 		}
-		status("CreateVpkFromFolderVitaTask[1]")
+		status("CreateVpkFromFolderVitaTask done")
 	}
 }

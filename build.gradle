@@ -69,18 +69,19 @@ task minimizedJar(type: proguard.gradle.ProGuardTask) {
     printmapping "build/libs/vitaorganizer-${version}.map"
     ignorewarnings
     //dontobfuscate
-    keep access: 'public',
-            name: 'com.soywiz.vitaorganizer.VitaOrganizer', {
-        method access: 'public static',
-                type: 'void',
-                name: 'main',
-                parameters: 'java.lang.String[]'
-    }
-    keep access: 'public',
-            name: 'kotlin.text.RegexOption', {
-        method access: 'public'
-        method access: 'private'
-    }
+    keep access:
+		'public',
+		name: 'com.soywiz.vitaorganizer.VitaOrganizer', {
+        	method access: 'public static',
+			type: 'void',
+			name: 'main',
+			parameters: 'java.lang.String[]'
+    	}
+    	keep access: 'public',
+        name: 'kotlin.text.RegexOption', {
+			method access: 'public'
+			method access: 'private'
+		}
 }
 
 minimizedJar.dependsOn jar
@@ -88,6 +89,7 @@ minimizedJar.dependsOn jar
 copyL4jLib.dependsOn minimizedJar
 
 launch4j {
+	opt = "-Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true"
     print "version: $version"
     outfile = "../../build/libs/vitaorganizer-${ext.version}.exe"
     icon = "../../extra/icon.ico"
@@ -97,3 +99,7 @@ launch4j {
     maxHeapSize = 1024
     jar = "../../build/libs/vitaorganizer-${ext.version}.min.jar"
 }
+
+//task release(dependsOn: ['clean', 'minimizedJar', 'launch4j']) << {
+//	println 'release'
+//}

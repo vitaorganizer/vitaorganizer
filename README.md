@@ -1,6 +1,6 @@
-## VitaOrganizer 0.5.2
+## VitaOrganizer 0.6.0
 
-![](extra/screenshot-0.5.png)
+![](extra/screenshot-0.6.png)
 
 Desktop tool for listing and uploading games and homebrew applications to PSVITA without the size requirements
 of uploading the whole VPK and extracting it later.
@@ -10,12 +10,36 @@ It is written in Kotlin/Java.
 It should work on Windows, Linux and MacOS. It is a Java desktop application, packed in an executable .JAR, that
 can be executed directly with double click on most cases.
 
-In other cases, you can run it with `java -jar vitaorganizer-0.5.2.jar`
+In other cases, you can run it with `java -jar vitaorganizer-0.6.0.jar`
 
 You can download a prebuild binary here, or just build from source:
-[Download VitaOrganizer 0.5.2 here](https://github.com/soywiz/vitaorganizer/releases/download/0.5.2/vitaorganizer-0.5.2.jar)
+[Download VitaOrganizer 0.6.0 here](https://github.com/soywiz/vitaorganizer/releases/tag/0.6.0)
 
 ## CHANGELOG
+
+**0.6.0**
+
+* [new] Hotspot feature (just for windows) [quickly create a unique wifi hostednetwork with a SSID and PASS directly from the app for direct sending without Internet connection]
+* [new] Added support for converting maidumptool backups into vpk
+* [new] Added support for installing some maidumptool backups that were not working previously
+* [new] Support update vpks + several versions with the same TITLE_ID
+* [new] Display path in context menu
+* [new] New icons
+* [new] New cache system
+* [fixed] Show vpks without icons
+* [fixed] Deleting vpk after installing
+* [fixed] Fixed compression level that was compression method
+* [fixed] Not reporting progress when indexing vpks
+* [removed] Temporarily deleted display device games
+* [improved] Notice when closing if there is a task running
+* [improved] Allow opening several PSF files at once
+* [improved] Moved old two-pass installation method into a submenu so it is harder to access
+* [improved] Improved popup context menu
+* Some refactorings
+* Some reliability fixes
+* Some translation updates
+
+Thanks to gordon0001 for continuing the work these weeks!
 
 **0.5.2**
 
@@ -27,7 +51,7 @@ You can download a prebuild binary here, or just build from source:
 * Capitalized languages in menus
 * Small fixes, improvements and cleanups
 
-~~0.5.1~~ (Do not use, it has known issues) (use 0.5.2 instead)
+~0.5.1~ (Do not use, it has known issues) (use 0.5.2 instead)
 
 * Added language menu
 * Fixed languages that were displayed wrong (use 0.5.2 instead)
