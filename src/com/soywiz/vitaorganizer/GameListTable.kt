@@ -163,16 +163,13 @@ open class GameListTable : JPanel(BorderLayout()) {
 
 		COLUMN_ICON.apply {
 			//headerValue = Texts2.COLUMN_ICON
-			width = 64
 			minWidth = 64
 			maxWidth = 64
 			preferredWidth = 64
 			resizable = false
 		}
 		COLUMN_ID.apply {
-			width = 96
 			minWidth = 96
-			maxWidth = 96
 			preferredWidth = 96
 			resizable = false
 			cellRenderer = DefaultTableCellRenderer().apply {
@@ -180,9 +177,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 			}
 		}
 		COLUMN_TYPE.apply {
-			width = 80
 			minWidth = 80
-			maxWidth = 80
 			preferredWidth = 80
 			resizable = false
 			cellRenderer = DefaultTableCellRenderer().apply {
@@ -200,9 +195,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 		//	}
 		//}
 		COLUMN_VERSION.apply {
-			width = 64
 			minWidth = 64
-			maxWidth = 64
 			preferredWidth = 64
 			resizable = false
 			cellRenderer = DefaultTableCellRenderer().apply {
@@ -210,9 +203,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 			}
 		}
 		COLUMN_PERMISSIONS.apply {
-			width = 96
 			minWidth = 96
-			maxWidth = 96
 			preferredWidth = 96
 			resizable = false
 			cellRenderer = DefaultTableCellRenderer().apply {
@@ -220,9 +211,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 			}
 		}
 		COLUMN_SIZE.apply {
-			width = 96
 			minWidth = 96
-			maxWidth = 96
 			preferredWidth = 96
 			resizable = false
 			cellRenderer = DefaultTableCellRenderer().apply {

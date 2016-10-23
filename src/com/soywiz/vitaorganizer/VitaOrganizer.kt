@@ -49,7 +49,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	fun start() {
-		frame.pack()
+		//frame.pack()
+		frame.setSize(VitaOrganizerSettings.WINDOW_WIDTH, VitaOrganizerSettings.WINDOW_HEIGHT)
 		frame.setLocationRelativeTo(null)
 		frame.isVisible = true
 	}
@@ -339,9 +340,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		//val columnNames = arrayOf("Icon", "ID", "Title")
 
 		//val data = arrayOf(arrayOf(JLabel("Kathy"), "Smith", "Snowboarding", 5, false), arrayOf("John", "Doe", "Rowing", 3, true), arrayOf("Sue", "Black", "Knitting", 2, false), arrayOf("Jane", "White", "Speed reading", 20, true), arrayOf("Joe", "Brown", "Pool", 10, false))
-
-
-		table.table.preferredScrollableViewportSize = Dimension(960, 600)
 		//table.rowSelectionAllowed = false
 		//table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
 
@@ -456,11 +454,10 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 		})
 
-		frame.setSize(VitaOrganizerSettings.WINDOW_WIDTH, VitaOrganizerSettings.WINDOW_HEIGHT)
-
 		frame.addComponentListener(object : ComponentAdapter() {
 			override fun componentResized(e: ComponentEvent?) {
 				super.componentResized(e)
+				table.table.preferredScrollableViewportSize = Dimension(frame.width, frame.height)
 				if (frame.getExtendedState() == JFrame.NORMAL) {
 					VitaOrganizerSettings.WINDOW_WIDTH = frame.width
 					VitaOrganizerSettings.WINDOW_HEIGHT = frame.height
