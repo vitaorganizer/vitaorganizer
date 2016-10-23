@@ -3,7 +3,7 @@ version new File('resources/com/soywiz/vitaorganizer/currentVersion.txt').text
 
 buildscript {
     ext.version = new File('resources/com/soywiz/vitaorganizer/currentVersion.txt').text
-    ext.kotlin_version = '1.0.3'
+    ext.kotlin_version = '1.0.4'
     ext.proguard_version = '5.2.1'
     ext.launch4j_version = '1.6.2'
 
@@ -29,8 +29,14 @@ apply plugin: 'edu.sc.seis.launch4j'
 mainClassName = 'com.soywiz.vitaorganizer.VitaOrganizer'
 compileJava.options.encoding = 'UTF-8'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
+allprojects {
+	apply plugin: 'java'
+	sourceCompatibility = 1.7
+	targetCompatibility = 1.7
+}
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 repositories {
     mavenLocal()
@@ -88,6 +94,7 @@ minimizedJar.dependsOn jar
 
 copyL4jLib.dependsOn minimizedJar
 
+// https://github.com/TheBoegl/gradle-launch4j
 launch4j {
 	opt = "-Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true"
     print "version: $version"

@@ -1,13 +1,21 @@
 package com.soywiz.vitaorganizer.ext
 
-import java.io.BufferedReader
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.nio.charset.Charset
 
 fun runCmd(vararg args: String): ProcessResult = runCmd(args.toList())
 fun runCmd(args: List<String>): ProcessResult = Runtime.getRuntime().exec(args.toTypedArray()).waitAndGetOutput()
+
+val Process.isAliveJava6: Boolean get() {
+	try {
+		exitValue()
+		return false
+	} catch (e: IllegalThreadStateException) {
+		return true
+	}
+
+}
 
 fun Process.waitAndGetOutput(): ProcessResult {
 	val outArray = ByteArrayOutputStream()
@@ -16,13 +24,16 @@ fun Process.waitAndGetOutput(): ProcessResult {
 	val out = this.inputStream
 	val err = this.errorStream
 
-	while (this.isAlive) {
+	while (this.isAliveJava6) {
 		outArray.write(out.readAvailable())
 		errArray.write(err.readAvailable())
 		Thread.sleep(1L)
 	}
 
 	val exitCode = this.waitFor()
+	// Probably these two lines are not needed!
+	outArray.write(out.readAvailable())
+	errArray.write(err.readAvailable())
 	return ProcessResult(outArray.toByteArray(), errArray.toByteArray(), exitCode)
 }
 

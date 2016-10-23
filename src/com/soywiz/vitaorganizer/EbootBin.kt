@@ -1,8 +1,13 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.Stream2
+import com.soywiz.util.open2
 
 object EbootBin {
+	fun isSafe(s: ByteArray): Boolean = !hasExtendedPermissions(s.open2("r"))
+
+	fun isSafe(s: Stream2): Boolean = !hasExtendedPermissions(s)
+
     fun hasExtendedPermissions(s: Stream2): Boolean {
         val s2 = s.slice()
         s2.position = 0x80

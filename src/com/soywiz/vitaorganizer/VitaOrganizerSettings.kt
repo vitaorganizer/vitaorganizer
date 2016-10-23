@@ -9,7 +9,7 @@ import java.util.*
 import kotlin.reflect.KProperty
 
 object VitaOrganizerSettings {
-	private val queue = ThreadQueue()
+	private val queue by lazy { ThreadQueue() }
 	private val CHARSET = Charsets.UTF_8
 	var WINDOW_WIDTH: Int by PropDelegateInt { 960 }
 	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }
@@ -30,7 +30,7 @@ object VitaOrganizerSettings {
 
 	private var initialized = false
 	private val properties = Properties()
-	private val file = File("vitaorganizer/settings.properties")
+	internal val file = File("vitaorganizer/settings.properties")
 
 	fun init() {
 		ensureProperties()

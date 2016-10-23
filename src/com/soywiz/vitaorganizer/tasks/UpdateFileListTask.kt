@@ -11,6 +11,12 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 		synchronized(vitaOrganizer.VPK_GAME_FILES) {
 			vitaOrganizer.VPK_GAME_FILES.clear()
 		}
+
+		if(VitaOrganizerSettings.vpkFolder.isEmpty()
+			|| !File(VitaOrganizerSettings.vpkFolder).exists()) {
+			error("Invalid path! Please choose a valid directory!")
+			return
+		}
 		status(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
 
 		val MAX_SUBDIRECTORY_LEVELS = 2
@@ -34,6 +40,12 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 			val ff = VpkFile(vpkFile)
 			val gameId = ff.cacheAndGetGameId()
 			if (gameId != null) {
+				if(gameId.length != 9) {
+					//gameId has to be a length of 9 characters or it will not be installable
+					//either fix gameId automatically or skip
+					println("Skipped ${vpkFile.canonicalPath} because of malformed TITLE_ID: ${gameId}")
+					continue;
+				}
 				synchronized(vitaOrganizer.VPK_GAME_FILES) {
 					status(Texts.format("STEP_ANALYZING_ITEM", "name" to gameId, "current" to index + 1, "total" to vpkFiles.size))
 					vitaOrganizer.VPK_GAME_FILES += vpkFile
@@ -42,7 +54,7 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 
 			//Thread.sleep(200L)
 		}
-		status(Texts.format("STEP_DONE"))
 		vitaOrganizer.updateEntries()
+		status(Texts.format("STEP_DONE"))
 	}
 }

@@ -19,7 +19,7 @@ class SendPromotingVpkToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkF
 		}
 	}
 
-	fun performBase() {
+	fun performBase() : Boolean {
 		status(Texts.format("STEP_GENERATING_SMALL_VPK_FOR_PROMOTING"))
 
 		//val zip = ZipFile(entry.vpkFile)
@@ -35,12 +35,18 @@ class SendPromotingVpkToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkF
 		} catch (e: Throwable) {
 			e.printStackTrace()
 			JOptionPane.showMessageDialog(vitaOrganizer, "${e.toString()}", "${e.message}", JOptionPane.ERROR_MESSAGE);
+			return false
 		}
+		return true
 	}
 
 	override fun perform() {
-		performBase()
-		status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
-		info(Texts.format("VITASHELL_INSTALL", "vpkPath" to vpkPath))
+		if(performBase()) {
+			status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
+			info(Texts.format("VITASHELL_INSTALL", "vpkPath" to vpkPath))
+		}
+		else {
+			status("Failed to send ${vpkFile.id}")
+		}
 	}
 }

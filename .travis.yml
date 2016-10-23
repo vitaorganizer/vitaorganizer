@@ -1,0 +1,11 @@
+# Headless testing: http://ecmendenhall.github.io/blog/blog/2013/05/28/two-travis-ci-solutions/
+language: java
+before_install:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+jdk:
+  - oraclejdk8
+  - openjdk7
+#  - openjdk6 # gradle 3.0 do not support java6. Required java7 or greater
+after_script:
+  - ./gradlew minimizedJar launch4j

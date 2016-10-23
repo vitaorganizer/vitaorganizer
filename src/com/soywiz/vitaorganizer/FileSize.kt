@@ -1,7 +1,12 @@
 package com.soywiz.vitaorganizer
 
+import java.util.*
+
 class FileSize(val value: Long) : Comparable<FileSize> {
 	companion object {
+		val locale = Locale.ENGLISH
+		//val locale = Locale.getDefault()
+
 		private val BYTES = 1L
 		private val KB = 1024 * BYTES
 		private val MB = 1024 * KB
@@ -11,11 +16,11 @@ class FileSize(val value: Long) : Comparable<FileSize> {
 		fun getPrecissionFromSize(size: Long) = if (size < KB) 0 else if (size < MB) 0 else if (size < GB) 1 else if (size < TB) 3 else 6
 
 		fun toString(size: Long, precission: Int = getPrecissionFromSize(size)): String {
-			if (size < KB) return "%.${precission}f B".format(size.toDouble() / BYTES.toDouble())
-			if (size < MB) return "%.${precission}f KB".format(size.toDouble() / KB.toDouble())
-			if (size < GB) return "%.${precission}f MB".format(size.toDouble() / MB.toDouble())
-			if (size < TB) return "%.${precission}f GB".format(size.toDouble() / GB.toDouble())
-			return "%.${precission}f TB".format(size.toDouble() / TB.toDouble())
+			if (size < KB) return "%.${precission}f B".format(locale, size.toDouble() / BYTES.toDouble())
+			if (size < MB) return "%.${precission}f KB".format(locale, size.toDouble() / KB.toDouble())
+			if (size < GB) return "%.${precission}f MB".format(locale, size.toDouble() / MB.toDouble())
+			if (size < TB) return "%.${precission}f GB".format(locale, size.toDouble() / GB.toDouble())
+			return "%.${precission}f TB".format(locale, size.toDouble() / TB.toDouble())
 		}
 	}
 
