@@ -217,8 +217,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 
 		override fun processKeyEvent(e: KeyEvent?) {
-			super.processKeyEvent(e)
-			table.filter = this.text
+			if (e?.keyCode == KeyEvent.VK_ENTER) {
+				table.table.requestFocus()
+			} else {
+				super.processKeyEvent(e)
+				table.filter = this.text
+			}
 		}
 	}.apply {
 		//addActionListener {
