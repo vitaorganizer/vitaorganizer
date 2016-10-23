@@ -1,8 +1,7 @@
 language: java
 jdk:
-  - oraclejdk7
-  - openjdk8
+  - oraclejdk8
   - openjdk7
-  - openjdk6
+#  - openjdk6 # gradle 3.0 do not support java6. Required java7 or greater
 after_script:
   - gradle minimizedJar launch4j
