@@ -11,5 +11,6 @@ class TextFormatterTest {
 			"hello 1 %a% hello",
 			TextFormatter.format("hello %test% %a% %b%", mapOf("test" to 1, "b" to "hello"))
 		)
+		//Assert.assertEquals(1, 2)
 	}
 }

@@ -2,6 +2,8 @@
 
 ![](extra/screenshot-0.6.png)
 
+[![Build Status](https://travis-ci.org/soywiz/vitaorganizer.svg?branch=master)](https://travis-ci.org/soywiz/vitaorganizer)
+
 Desktop tool for listing and uploading games and homebrew applications to PSVITA without the size requirements
 of uploading the whole VPK and extracting it later.
 
