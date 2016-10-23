@@ -24,9 +24,7 @@ class VpkFile(val vpkFile: File) {
 
 	val psf by lazy {
 		try {
-			ZipFile(vpkFile).use { zip ->
-				PSF.read(paramSfoData.open2("r"))
-			}
+			PSF.read(paramSfoData.open2("r"))
 		} catch (e: Throwable) {
 			hashMapOf<String, Any>()
 		}

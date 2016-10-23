@@ -12,7 +12,11 @@ class OneStepToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : Vi
 	}
 
 	override fun perform() {
-		sendPromotingVpkTask.performBase()
+		if(!sendPromotingVpkTask.performBase()) {
+			println("Uploading promoting VPK failed!")
+			status("Uploading promoting VPK failed! Task aborted!")
+			return
+		}
 
 		status(Texts.format("PROMOTING_VPK"))
 		if(!PsvitaDevice.promoteVpk(sendPromotingVpkTask.vpkPath)) {
@@ -21,8 +25,9 @@ class OneStepToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : Vi
 		}
 		PsvitaDevice.removeFile("/" + sendPromotingVpkTask.vpkPath)
 
-		sendDataTask.performBase()
-
-		info(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
+		if(sendDataTask.performBase())
+			info(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
+		else
+			status("Failed to send data from ${vpkFile.id}")
 	}
 }

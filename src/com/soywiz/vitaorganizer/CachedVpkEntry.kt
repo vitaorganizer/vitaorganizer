@@ -42,14 +42,14 @@ class CachedVpkEntry(val file: File) {
 			when (method) {
 				"0" -> "not compressed"
 				"1" -> "shrunk"
-				"2" -> "compresion factor 1"
-				"3" -> "compresion factor 2"
-				"4" -> "compresion factor 3"
-				"5" -> "compresion factor 4"
+				"2" -> "compression factor 1"
+				"3" -> "compression factor 2"
+				"4" -> "compresison factor 3"
+				"5" -> "compression factor 4"
 				"6" -> "imploded"
 				"7" -> "reversed"
 				"8" -> "deflate"
-				"9" -> "shrunk64"
+				"9" -> "deflate64"
 				else -> method
 			}
 		} else
@@ -58,8 +58,8 @@ class CachedVpkEntry(val file: File) {
 	//var inVita = false
 	//var inPC = false
 	val vpkLocalPath: String? get() = entry.pathFile.readText(Charsets.UTF_8)
-	val vpkLocalFile: File? get() = if (vpkLocalPath != null) File(vpkLocalPath!!) else null
-	val vpkLocalVpkFile: VpkFile? get() = if (vpkLocalPath != null) VpkFile(File(vpkLocalPath!!)) else null
+	val vpkLocalFile: File? get() = if (vpkLocalPath != null) File(vpkLocalPath) else null
+	val vpkLocalVpkFile: VpkFile? get() = if (vpkLocalPath != null) VpkFile(File(vpkLocalPath)) else null
 	val size: Long by lazy {
 		try {
 			entry.sizeFile.readText().toLong()

@@ -135,8 +135,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					frame.showFrame(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf, formatter = { key, value ->
 						when (key) {
 							"ATTRIBUTE", "ATTRIBUTE2", "ATTRIBUTE_MINOR" -> {
-								value.toString().toInt().toBitString(32)
-							}
+								//show as hex
+								String.format("0x%X", value.toString().toInt())
+                            }
 							else -> "$value"
 						}
 					}))
@@ -249,6 +250,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		frame.jMenuBar = JMenuBar().apply {
 			add(JMenu(Texts.format("MENU_FILE")).apply {
+				add(JMenuItem(Texts.format("MENU_REFRESH"), Icons.REFRESH).action {
+					updateFileList()
+				})
+				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER"), Icons.OPEN_FOLDER).action {
+					selectFolder()
+				})
 				add(JMenuItem(Texts.format("MENU_INSTALL_VPK"), Icons.INSTALL).action {
 					val chooser = JFileChooser()
 					chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
@@ -261,9 +268,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					if (result == JFileChooser.APPROVE_OPTION) {
 						remoteTasks.queue(OneStepToVitaTask(this@VitaOrganizer, VpkFile(chooser.selectedFile)))
 					}
-				})
-				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER"), Icons.OPEN_FOLDER).action {
-					selectFolder()
 				})
 				add(JMenuItem(Texts.format("MENU_CREATE_VPK_FROM_MAIDUMP_FOLDER"), Icons.MAIDUMP).action {
 					val chooser = JFileChooser()
@@ -287,9 +291,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 						localTasks.queue(CreateVpkFromFolderVitaTask(instance, chooser.selectedFile.parentFile, File(VitaOrganizerSettings.vpkFolder)["$TITLE_ID_SECURED.vpk"]))
 					}
-				})
-				add(JMenuItem(Texts.format("MENU_REFRESH"), Icons.REFRESH).action {
-					updateFileList()
 				})
 				add(JSeparator())
 				add(JMenuItem(Texts.format("MENU_EXIT")).action {
@@ -315,6 +316,10 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						}
 					}
 					Unit
+				})
+				add(JMenuItem("Reindex").action {
+					VitaOrganizerCache.deleteAll()
+					updateFileList();
 				})
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {
