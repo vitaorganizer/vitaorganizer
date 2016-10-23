@@ -4,6 +4,8 @@ import com.soywiz.util.Hash
 import com.soywiz.util.get
 import com.soywiz.util.toHexString
 import java.io.File
+import java.io.IOException
+import javax.swing.JOptionPane
 
 object VitaOrganizerCache {
     val cacheFolder = File("vitaorganizer/cache")
@@ -22,6 +24,20 @@ object VitaOrganizerCache {
         val dumperVersionFile = cacheFolder["$path.dumperversion"]
         val compressionFile = cacheFolder["$path.compression"]
 
+		init {
+			try {
+				if(!cacheFolder.exists()) {
+					println("There should be a cache folder, but someone has deleted it. Recreating...")
+					cacheFolder.mkdirs()
+				}
+			}
+			catch(e: Throwable) {
+				//this could go soooo wrong, possible in a never ending loop
+				JOptionPane.showMessageDialog(null, "Couuld not create cache directory. Trying to restart..", "Error", JOptionPane.ERROR_MESSAGE)
+				VitaOrganizer.instance.restart()
+			}
+		}
+
         fun delete() {
             icon0File.delete()
             paramSfoFile.delete()
@@ -34,6 +50,18 @@ object VitaOrganizerCache {
     }
 
     fun entry(file: File) = Entry(file)
+
+	fun deleteAll() {
+		try {
+			if(cacheFolder.exists()) {
+				cacheFolder.deleteRecursively()
+				cacheFolder.mkdirs();
+            }
+		}
+		catch(e: Throwable) {
+
+		}
+	}
 
     /*
     fun setIcon0File(titleId: String, data: ByteArray) {

@@ -316,6 +316,10 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 					Unit
 				})
+				add(JMenuItem("Reindex").action {
+					VitaOrganizerCache.deleteAll()
+					updateFileList();
+				})
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {
 				add(JMenuItem(Texts.format("MENU_WEBSITE"), Icons.WEBSITE).action {
