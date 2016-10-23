@@ -2,6 +2,7 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.getResourceBytes
+import com.soywiz.vitaorganizer.ext.getResourceStream2
 import org.junit.Assert
 import org.junit.Test
 
@@ -30,7 +31,7 @@ class PSFTest {
 				"TITLE_ID" to "VITASHELL",
 				"VERSION" to "00.00"
 			),
-			PSF.read(getResourceBytes("vitashell.param.sfo")!!.open2("r"))
+			PSF.read(getResourceStream2("vitashell.param.sfo")!!)
 		)
 	}
 }
