@@ -354,10 +354,15 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 					Unit
 				})
-				add(JMenuItem("Reindex").action {
+				add(JMenuItem(Texts.format("MENU_REINDEX"))
+					.apply {
+						accelerator = getKeyStroke(if (OS.isMac) "shift meta R" else "shift ctrl R")
+					}
+					.action {
 					VitaOrganizerCache.deleteAll()
 					updateFileList();
-				})
+				}
+				)
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {
 				add(JMenuItem(Texts.format("MENU_WEBSITE"), Icons.WEBSITE).action {
