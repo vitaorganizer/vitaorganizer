@@ -180,10 +180,10 @@ open class GameListTable : JPanel(BorderLayout()) {
 			}
 		}
 		COLUMN_TYPE.apply {
-			width = 64
-			minWidth = 64
-			maxWidth = 64
-			preferredWidth = 64
+			width = 80
+			minWidth = 80
+			maxWidth = 80
+			preferredWidth = 80
 			resizable = false
 			cellRenderer = DefaultTableCellRenderer().apply {
 				horizontalAlignment = JLabel.CENTER;
@@ -314,11 +314,15 @@ open class GameListTable : JPanel(BorderLayout()) {
 				val psf = PSF.read(entry2.paramSfoFile.readBytes().stream)
 				val extendedPermissions = entry.hasExtendedPermissions
 
-				val type = when (psf["CATEGORY"]) {
-					"gd" -> Texts.format("TYPE_GAME")
-					"gp" -> Texts.format("TYPE_UPDATE")
-					else -> psf["CATEGORY"]?.toString() ?: Texts.format("TYPE_UNKNOWN")
-				}
+				val type = when {
+                    psf["CATEGORY"] == "gd" -> when {
+                        psf["ATTRIBUTE"].toString().toInt() == 32768 -> "HOMEBREW"
+                        else -> Texts.format("TYPE_GAME")
+                    }
+                    psf["CATEGORY"] == "gda" -> "SYSTEM"
+					psf["CATEGORY"] == "gp" -> Texts.format("TYPE_UPDATE")
+                    else -> psf["CATEGORY"]?.toString() ?: Texts.format("TYPE_UNKNOWN")
+                }
 
 				//if (entry.inVita && entry.inPC) {
 				//	Texts.format("LOCATION_BOTH")
