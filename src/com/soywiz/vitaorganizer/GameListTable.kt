@@ -295,7 +295,8 @@ open class GameListTable : JPanel(BorderLayout()) {
 	}
 
 	fun showMenu() {
-		showMenuForRow(table.selectedRow)
+		if (table.selectedRow !== -1)
+			showMenuForRow(table.selectedRow)
 	}
 
 	override fun processKeyEvent(e: KeyEvent) {
