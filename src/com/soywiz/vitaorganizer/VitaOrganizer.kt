@@ -453,7 +453,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		frame.addWindowListener(object : WindowAdapter() {
 			override fun windowOpened(e: WindowEvent) {
-				filterTextField.requestFocus()
+				table.table.requestFocus()
 			}
 			override fun windowClosing(e: WindowEvent?) {
 				if (runningTasks) {
