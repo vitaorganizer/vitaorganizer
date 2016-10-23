@@ -135,8 +135,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					frame.showFrame(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf, formatter = { key, value ->
 						when (key) {
 							"ATTRIBUTE", "ATTRIBUTE2", "ATTRIBUTE_MINOR" -> {
-								value.toString().toInt().toBitString(32)
-							}
+								//show as hex
+								String.format("0x%X", value.toString().toInt())
+                            }
 							else -> "$value"
 						}
 					}))
