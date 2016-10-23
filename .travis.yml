@@ -8,4 +8,4 @@ jdk:
   - openjdk7
 #  - openjdk6 # gradle 3.0 do not support java6. Required java7 or greater
 after_script:
-  - gradle minimizedJar launch4j
+  - ./gradlew minimizedJar launch4j
