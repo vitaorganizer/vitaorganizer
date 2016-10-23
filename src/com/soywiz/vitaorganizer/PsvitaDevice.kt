@@ -217,7 +217,7 @@ object PsvitaDevice {
             createDirectories(parent, createDirectoryCache)
         }
         if (path !in createDirectoryCache) {
-            println("Creating directory $path...")
+            println("[D] $path...")
             createDirectoryCache.add(path)
             try {
                 connectedFtp().createDirectory(path)
@@ -256,7 +256,7 @@ object PsvitaDevice {
             if (!entry.isDirectory) {
                 createDirectories(directory)
 
-                print("Writting $vname...")
+                print("[F] $vname -> ")
                 try {
                     connectedFtp().upload(vname, zip.getInputStream(entry), 0L, 0L, object : FTPDataTransferListener {
                         override fun started() {
