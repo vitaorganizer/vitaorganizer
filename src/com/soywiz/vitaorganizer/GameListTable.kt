@@ -102,6 +102,8 @@ open class GameListTable : JPanel(BorderLayout()) {
 	init {
 		add(scrollPanel, BorderLayout.CENTER)
 
+		table.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("ENTER"), "none")
+
 		//table.rowSorter
 
 		//table.rowSorter = sorter
