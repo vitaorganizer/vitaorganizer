@@ -318,6 +318,15 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 				)
 			})
+			add(JMenu(Texts.format("MENU_EDIT")).apply {
+				add(JMenuItem(Texts.format("MENU_FILTER"))
+					.apply {
+						accelerator = getKeyStroke(if (OS.isMac) "meta F" else "ctrl F")
+					}
+					.action {
+						filterTextField.requestFocus()
+					}
+				)
 			})
 			add(JMenu(Texts.format("MENU_SETTINGS")).apply {
 				add(JMenu(Texts.format("MENU_LANGUAGES")).apply {
