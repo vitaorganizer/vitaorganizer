@@ -5,6 +5,7 @@ import com.soywiz.util.DumperNames
 import com.soywiz.util.DumperNamesHelper
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.getBytes
+import com.soywiz.vitaorganizer.ext.getInputStream
 import com.soywiz.vitaorganizer.ext.getResourceBytes
 import java.io.File
 import java.util.zip.ZipFile
@@ -35,8 +36,10 @@ class VpkFile(val vpkFile: File) {
 	val hasExtendedPermissions: Boolean by lazy {
 		try {
 			ZipFile(vpkFile).use { zip ->
-				val ebootBinData = zip.getBytes("eboot.bin")
-				EbootBin.hasExtendedPermissions(ebootBinData.open2("r"))
+				val stream = zip.getInputStream("eboot.bin")
+				val ret = EbootBin.hasExtendedPermissions(stream)
+				stream.close()
+				ret
 			}
 		} catch (e: Throwable) {
 			true
@@ -92,8 +95,9 @@ class VpkFile(val vpkFile: File) {
 					entry.sizeFile.writeText("" + uncompressedSize)
 				}
 				if (!entry.permissionsFile.exists()) {
-					val ebootBinData = zip.getBytes("eboot.bin")
-					entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinData.open2("r")))
+					val ebootBinStream = zip.getInputStream("eboot.bin")
+					entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinStream))
+					ebootBinStream.close()
 				}
 				//getGameEntryById(gameId).inPC = true
 			}

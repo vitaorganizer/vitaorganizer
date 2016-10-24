@@ -2,6 +2,7 @@ package com.soywiz.vitaorganizer
 
 import com.soywiz.util.Stream2
 import com.soywiz.util.open2
+import java.io.InputStream
 
 object EbootBin {
 	fun isSafe(s: ByteArray): Boolean = !hasExtendedPermissions(s.open2("r"))
@@ -17,6 +18,30 @@ object EbootBin {
             else -> false
         }
     }
+
+	fun hasExtendedPermissions(s: InputStream): Boolean {
+		try {
+			val authid = ByteArray(1)
+
+			s.skip(0x80)
+			val ret = s.read(authid)
+
+			if (ret != 1) {
+				println("hasExtendedPermissions::read failed")
+				return true
+			}
+			if (authid[0].toInt() == 2) {
+				return false
+			}
+			else
+				return true
+		}
+		catch (e: Throwable) {
+			println("hasExtendedPermissions, exception arised")
+			e.printStackTrace()
+			return true
+		}
+	}
 
 	fun setSecureInplace(data: ByteArray, secure: Boolean = true): ByteArray {
 		if (secure) {
