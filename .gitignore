@@ -11,3 +11,5 @@
 *.iml
 launch4j.log
 vitaorganizer.exe
+.DS_Store
+._.DS_Store
