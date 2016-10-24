@@ -102,6 +102,8 @@ open class GameListTable : JPanel(BorderLayout()) {
 	init {
 		add(scrollPanel, BorderLayout.CENTER)
 
+		table.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke("ENTER"), "none")
+
 		//table.rowSorter
 
 		//table.rowSorter = sorter
@@ -282,7 +284,8 @@ open class GameListTable : JPanel(BorderLayout()) {
 	}
 
 	fun showMenu() {
-		showMenuForRow(table.selectedRow)
+		if (table.selectedRow !== -1)
+			showMenuForRow(table.selectedRow)
 	}
 
 	override fun processKeyEvent(e: KeyEvent) {

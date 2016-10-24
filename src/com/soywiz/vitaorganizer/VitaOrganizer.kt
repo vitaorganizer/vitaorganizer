@@ -5,10 +5,12 @@ import com.soywiz.vitaorganizer.ext.*
 import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
 import com.soywiz.vitaorganizer.tasks.*
+import javax.swing.KeyStroke.getKeyStroke
 import java.awt.*
 import java.awt.event.*
 import java.io.File
 import java.net.URL
+import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.*
 import javax.swing.filechooser.FileFilter
@@ -217,8 +219,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 
 		override fun processKeyEvent(e: KeyEvent?) {
-			super.processKeyEvent(e)
-			table.filter = this.text
+			if (e?.keyCode == KeyEvent.VK_ENTER) {
+				table.table.requestFocus()
+			} else {
+				super.processKeyEvent(e)
+				table.filter = this.text
+			}
 		}
 	}.apply {
 		//addActionListener {
@@ -251,25 +257,40 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		frame.jMenuBar = JMenuBar().apply {
 			add(JMenu(Texts.format("MENU_FILE")).apply {
-				add(JMenuItem(Texts.format("MENU_REFRESH"), Icons.REFRESH).action {
-					updateFileList()
-				})
-				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER"), Icons.OPEN_FOLDER).action {
-					selectFolder()
-				})
-				add(JMenuItem(Texts.format("MENU_INSTALL_VPK"), Icons.INSTALL).action {
-					val chooser = JFileChooser()
-					chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
-					chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
-					chooser.fileFilter = FileNameExtensionFilter(Texts.format("FILEFILTER_DESC_VPK_FILES"), "vpk")
-					chooser.fileSelectionMode = JFileChooser.FILES_ONLY
-					//chooser.isAcceptAllFileFilterUsed = false
-					//chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
-					val result = chooser.showOpenDialog(this@VitaOrganizer)
-					if (result == JFileChooser.APPROVE_OPTION) {
-						remoteTasks.queue(OneStepToVitaTask(this@VitaOrganizer, VpkFile(chooser.selectedFile)))
+				add(JMenuItem(Texts.format("MENU_REFRESH"), Icons.REFRESH)
+					.apply {
+						accelerator = getKeyStroke(if (OS.isMac) "meta R" else "ctrl R")
 					}
-				})
+					.action {
+						updateFileList()
+					}
+				)
+				add(JMenuItem(Texts.format("MENU_SELECT_FOLDER"), Icons.OPEN_FOLDER)
+					.apply {
+						accelerator = getKeyStroke(if (OS.isMac) "meta O" else "ctrl O")
+					}
+					.action {
+						selectFolder()
+					}
+				)
+				add(JMenuItem(Texts.format("MENU_INSTALL_VPK"), Icons.INSTALL)
+					.apply {
+						accelerator = getKeyStroke(if (OS.isMac) "meta I" else "ctrl I")
+					}
+					.action {
+						val chooser = JFileChooser()
+						chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
+						chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
+						chooser.fileFilter = FileNameExtensionFilter(Texts.format("FILEFILTER_DESC_VPK_FILES"), "vpk")
+						chooser.fileSelectionMode = JFileChooser.FILES_ONLY
+						//chooser.isAcceptAllFileFilterUsed = false
+						//chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
+						val result = chooser.showOpenDialog(this@VitaOrganizer)
+						if (result == JFileChooser.APPROVE_OPTION) {
+							remoteTasks.queue(OneStepToVitaTask(this@VitaOrganizer, VpkFile(chooser.selectedFile)))
+						}
+					}
+				)
 				add(JMenuItem(Texts.format("MENU_CREATE_VPK_FROM_MAIDUMP_FOLDER"), Icons.MAIDUMP).action {
 					val chooser = JFileChooser()
 					chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
@@ -293,10 +314,26 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						localTasks.queue(CreateVpkFromFolderVitaTask(instance, chooser.selectedFile.parentFile, File(VitaOrganizerSettings.vpkFolder)["$TITLE_ID_SECURED.vpk"]))
 					}
 				})
+
 				add(JSeparator())
-				add(JMenuItem(Texts.format("MENU_EXIT")).action {
-					System.exit(0)
-				})
+				add(JMenuItem(Texts.format("MENU_EXIT"))
+					.apply {
+						accelerator = getKeyStroke(if (OS.isMac) "meta Q" else "alt F4")
+					}
+					.action {
+						System.exit(0)
+					}
+				)
+			})
+			add(JMenu(Texts.format("MENU_EDIT")).apply {
+				add(JMenuItem(Texts.format("MENU_FILTER"))
+					.apply {
+						accelerator = getKeyStroke(if (OS.isMac) "meta F" else "ctrl F")
+					}
+					.action {
+						filterTextField.requestFocus()
+					}
+				)
 			})
 			add(JMenu(Texts.format("MENU_SETTINGS")).apply {
 				add(JMenu(Texts.format("MENU_LANGUAGES")).apply {
@@ -318,10 +355,15 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 					Unit
 				})
-				add(JMenuItem("Reindex").action {
+				add(JMenuItem(Texts.format("MENU_REINDEX"))
+					.apply {
+						accelerator = getKeyStroke(if (OS.isMac) "shift meta R" else "shift ctrl R")
+					}
+					.action {
 					VitaOrganizerCache.deleteAll()
 					updateFileList();
-				})
+				}
+				)
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {
 				add(JMenuItem(Texts.format("MENU_WEBSITE"), Icons.WEBSITE).action {
@@ -433,7 +475,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 		frame.addWindowListener(object : WindowAdapter() {
 			override fun windowOpened(e: WindowEvent) {
-				filterTextField.requestFocus()
+				table.table.requestFocus()
 			}
 			override fun windowClosing(e: WindowEvent?) {
 				if (runningTasks) {
