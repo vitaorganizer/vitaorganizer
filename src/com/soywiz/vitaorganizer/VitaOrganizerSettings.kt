@@ -3,6 +3,7 @@ package com.soywiz.vitaorganizer
 import com.soywiz.util.HEX_DIGITS
 import com.soywiz.vitaorganizer.ext.nextString
 import com.soywiz.vitaorganizer.ext.parseInt
+import com.soywiz.vitaorganizer.ext.parseLong
 import java.io.*
 import java.security.SecureRandom
 import java.util.*
@@ -11,6 +12,7 @@ import kotlin.reflect.KProperty
 object VitaOrganizerSettings {
 	private val queue by lazy { ThreadQueue() }
 	private val CHARSET = Charsets.UTF_8
+	var lastUpdateCheckTime: Long by PropDelegateLong { 0L }
 	var WINDOW_WIDTH: Int by PropDelegateInt { 960 }
 	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }
 	var WINDOW_STATE: Int by PropDelegateInt { 0 }
@@ -71,6 +73,23 @@ object VitaOrganizerSettings {
 		}
 
 		operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
+			VitaOrganizerSettings.ensureProperties().setProperty(property.name, "$value")
+			VitaOrganizerSettings.writePropertiesAsync()
+		}
+	}
+
+	private class PropDelegateLong(val default: () -> Long) {
+		operator fun getValue(thisRef: Any?, property: KProperty<*>): Long {
+			val props = ensureProperties()
+			val key = property.name
+			if (props.getProperty(key) == null) {
+				props.setProperty(key, "" + default())
+				writeProperties()
+			}
+			return props.getProperty(key).parseLong()
+		}
+
+		operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Long) {
 			VitaOrganizerSettings.ensureProperties().setProperty(property.name, "$value")
 			VitaOrganizerSettings.writePropertiesAsync()
 		}

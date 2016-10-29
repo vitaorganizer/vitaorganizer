@@ -7,3 +7,11 @@ inline fun String.parseInt(default: (() -> Int)): Int = try {
 } catch (e: Throwable) {
 	default()
 }
+
+fun String.parseLong(): Long = this.parseLong { 0L }
+
+inline fun String.parseLong(default: (() -> Long)): Long = try {
+	this.toLong()
+} catch (e: Throwable) {
+	default()
+}

@@ -471,6 +471,14 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		add(scrollPane)
 		add(footer, SpringLayout.SOUTH)
 
+		val oneWeekInMilliSeconds: Long = 60 * 60 * 24 * 7 * 1000
+		val now = Calendar.getInstance().time.time
+		if((VitaOrganizerSettings.lastUpdateCheckTime + oneWeekInMilliSeconds) < now) {
+			checkForUpdates(false)
+			updateStatus(Texts.format("CHECKING_FOR_UPDATE"))
+			println("Checking for updates")
+        }
+
 		updateFileList()
 
 		frame.addWindowListener(object : WindowAdapter() {
@@ -517,8 +525,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		frame.showDialog(AboutFrame())
 	}
 
-	fun checkForUpdates() {
-		localTasks.queue(CheckForUpdatesTask(vitaOrganizer))
+	fun checkForUpdates(showCurrentVersionDialog: Boolean = true) {
+		VitaOrganizerSettings.lastUpdateCheckTime = Calendar.getInstance().time.time
+		localTasks.queue(CheckForUpdatesTask(vitaOrganizer, showCurrentVersionDialog))
 	}
 
 	fun updateFileList() {

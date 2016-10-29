@@ -17,14 +17,15 @@ open class VitaTask(val vitaOrganizer: VitaOrganizer) {
 	val localProgress = Progress(0L, 0L)
 
 	fun status(status: String) {
+		val _status = status.replace("\n", ". ")
 		SwingUtilities.invokeLater {
-			vitaOrganizer.updateStatus(status)
+			vitaOrganizer.updateStatus(_status)
 		}
 	}
 
-	fun info(text: String) {
+	fun info(text: String, title: String = Texts.format("INFORMATION")) {
 		SwingUtilities.invokeLater {
-			JOptionPane.showMessageDialog(vitaOrganizer, text, Texts.format("INFORMATION"), JOptionPane.INFORMATION_MESSAGE)
+			JOptionPane.showMessageDialog(vitaOrganizer, text, title, JOptionPane.INFORMATION_MESSAGE)
 		}
 		status(text)
 	}
