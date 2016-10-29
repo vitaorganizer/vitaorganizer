@@ -83,7 +83,7 @@ class CheckForUpdatesTask(vitaOrganizer: VitaOrganizer, val showCurrentVersionDi
 			} else if(lastSoftwareVersion.didIncrement(currentSoftwareVersion)) {
 				val result = warn(
 					Texts.format("ACTIONS_TITLE"),
-					Texts.format("NEW_VERSION_AVAILABLE", "lastVersion" to lastSoftwareVersion.toString(), "currentVersion" to VitaOrganizerVersion.currentVersion)
+					Texts.format("NEW_VERSION_AVAILABLE", "lastVersion" to lastSoftwareVersion.toString(), "currentVersion" to currentSoftwareVersion.toString())
 				)
 				if (result)
 					openWebpage(URL(lastVersionUrl))
