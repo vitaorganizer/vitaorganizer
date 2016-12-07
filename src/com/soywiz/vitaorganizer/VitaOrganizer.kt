@@ -4,6 +4,7 @@ import com.soywiz.util.*
 import com.soywiz.vitaorganizer.ext.*
 import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
+import com.soywiz.vitaorganizer.popups.SettingsDialog
 import com.soywiz.vitaorganizer.tasks.*
 import javax.swing.KeyStroke.getKeyStroke
 import java.awt.*
@@ -364,6 +365,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					updateFileList();
 				}
 				)
+				add(JMenuItem(Texts.format("MENU_OPTIONS")).action {
+					frame.showDialog(SettingsDialog())
+				})
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {
 				add(JMenuItem(Texts.format("MENU_WEBSITE"), Icons.WEBSITE).action {
