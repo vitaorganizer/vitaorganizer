@@ -26,7 +26,7 @@ class FileSize(val value: Long) : Comparable<FileSize> {
 
 		fun toString10(size: Long, precission: Int = getPrecissionFromSize10(size)): String {
 			if (size < kB) return "%.${precission}f B".format(locale, size.toDouble() / BYTES.toDouble())
-			if (size < MB) return "%.${precission}f KB".format(locale, size.toDouble() / kB.toDouble())
+			if (size < MB) return "%.${precission}f kB".format(locale, size.toDouble() / kB.toDouble())
 			if (size < GB) return "%.${precission}f MB".format(locale, size.toDouble() / MB.toDouble())
 			if (size < TB) return "%.${precission}f GB".format(locale, size.toDouble() / GB.toDouble())
 			return "%.${precission}f TB".format(locale, size.toDouble() / TB.toDouble())
