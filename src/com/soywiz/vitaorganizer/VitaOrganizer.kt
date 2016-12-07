@@ -134,6 +134,30 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				if (entry != null) remoteTasks.queue(RepackVpkTask(vitaOrganizer, entry!!, setSecure = true))
 			}
 
+			val deleteVpk = JMenuItem(Texts.format("DELETE_VPK")).action {
+				if(entry != null) {
+					if(entry!!.vpkLocalFile != null && entry!!.vpkLocalFile!!.safe_canDelete()){
+						if(MsgMgr.warn("Are you sure you want to delete ${entry!!.vpkLocalFile}?\nThis operation cannot be undone!", "Confirm deletion")) {
+							if(entry!!.vpkLocalFile!!.safe_delete()) {
+								synchronized(VPK_GAME_FILES) {
+									VPK_GAME_FILES.remove(entry!!.vpkLocalFile)
+								}
+								val filepath = entry!!.vpkLocalFile
+								entry!!.entry.delete()
+								updateEntries()
+								updateStatus("$filepath was successfully deleted!")
+							}
+							else {
+								MsgMgr.error("Could not delete ${entry!!.vpkLocalFile!!}!")
+							}
+						}
+					}
+					else {
+						MsgMgr.error("Not deletable!")
+					}
+				}
+			}
+
 			val showPSF = JMenuItem(Texts.format("MENU_SHOW_PSF")).action {
 				if (entry != null) {
 					frame.showFrame(KeyValueViewerFrame(Texts.format("PSF_VIEWER_TITLE", "id" to entry!!.id, "title" to entry!!.title), entry!!.psf, formatter = { key, value ->
@@ -159,6 +183,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				add(JSeparator())
 				add(showInFilebrowser)
 				add(showPSF)
+				add(deleteVpk)
 				add(repackVpk)
 				add(JMenu(Texts.format("METHOD1_INFO")).apply {
 					//isEnabled = false
