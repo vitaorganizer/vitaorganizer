@@ -15,7 +15,7 @@ class FileSizeTest {
 			Assert.assertEquals("121 kB", FileSize.toString(121000L))
 			Assert.assertEquals("11.8 MB", FileSize.toString(11800000L))
 			Assert.assertEquals("11.498 GB", FileSize.toString(11498000000L))
-			Assert.assertEquals("1.122833 TB", FileSize.toString(112283300000L))
+			Assert.assertEquals("1.122833 TB", FileSize.toString(1122833000000L))
 		}
 		else if(VitaOrganizerSettings.unitBase == 2){
 			Assert.assertEquals("0 B", FileSize.toString(0L))
