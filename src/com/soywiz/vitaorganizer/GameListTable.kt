@@ -305,16 +305,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 				val image = ImageIO.read(ByteArrayInputStream(icon.readBytes()))
 				val psf = PSF.read(entry2.paramSfoFile.readBytes().stream)
 				val extendedPermissions = entry.hasExtendedPermissions
-
-				val type = when {
-                    psf["CATEGORY"] == "gd" -> when {
-                        psf["ATTRIBUTE"].toString().toInt() == 32768 -> "HOMEBREW"
-                        else -> Texts.format("TYPE_GAME")
-                    }
-                    psf["CATEGORY"] == "gda" -> "SYSTEM"
-					psf["CATEGORY"] == "gp" -> Texts.format("TYPE_UPDATE")
-                    else -> psf["CATEGORY"]?.toString() ?: Texts.format("TYPE_UNKNOWN")
-                }
+				val type = entry.type
 
 				//if (entry.inVita && entry.inPC) {
 				//	Texts.format("LOCATION_BOTH")

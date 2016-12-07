@@ -53,7 +53,17 @@ class CachedVpkEntry(val file: File) {
 				else -> method
 			}
 		} else
-			"could not read from param.sfo"
+			"could not read from zip method member"
+	}
+
+	val type = when {
+		psf["CATEGORY"] == "gd" -> when {
+			psf["ATTRIBUTE"].toString().toInt() == 32768 -> "HOMEBREW"
+			else -> Texts.format("TYPE_GAME")
+		}
+		psf["CATEGORY"] == "gda" -> "SYSTEM"
+		psf["CATEGORY"] == "gp" -> Texts.format("TYPE_UPDATE")
+		else -> psf["CATEGORY"]?.toString() ?: Texts.format("TYPE_UNKNOWN")
 	}
 	//var inVita = false
 	//var inPC = false
