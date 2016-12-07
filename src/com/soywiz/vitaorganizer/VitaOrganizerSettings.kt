@@ -12,6 +12,7 @@ import kotlin.reflect.KProperty
 object VitaOrganizerSettings {
 	private val queue by lazy { ThreadQueue() }
 	private val CHARSET = Charsets.UTF_8
+	var tableFontSize: Int by PropDelegateInt { 14 }
 	var lastUpdateCheckTime: Long by PropDelegateLong { 0L }
 	var WINDOW_WIDTH: Int by PropDelegateInt { 960 }
 	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }

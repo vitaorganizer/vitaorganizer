@@ -232,7 +232,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 			//resizable = false
 		}
 
-		table.font = Font(Font.MONOSPACED, Font.PLAIN, 14)
+		table.font = Font(Font.MONOSPACED, Font.PLAIN, VitaOrganizerSettings.tableFontSize)
 
 		//table.selectionModel.addListSelectionListener { e -> println(e) };
 
