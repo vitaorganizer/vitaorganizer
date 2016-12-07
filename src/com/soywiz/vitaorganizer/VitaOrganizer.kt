@@ -85,7 +85,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	fun showFileInExplorerOrFinder(file: File) {
-		if (!file.exists())
+		if (!file.safe_exists())
 			return
 
 		if (OS.isWindows) {
@@ -103,6 +103,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			font = font.deriveFont(Font.BOLD);
 		}
 		val gamePathMenuItem = JMenuItem("").apply {
+			font = font.deriveFont(Font.ITALIC)
 		}
 		val gameDumperVersionPopup = JMenuItem("").apply {
 			this.isEnabled = false
@@ -124,10 +125,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			val sendToVita1Step = JMenuItem(Texts.format("SEND_FULL_APP_TO_VITA_ACTION")).action {
 				if (entry != null) remoteTasks.queue(OneStepToVitaTask(vitaOrganizer, entry!!.vpkLocalVpkFile!!))
-			}
-
-			val showInFilebrowser = JMenuItem(if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")).action {
-				if (entry != null) showFileInExplorerOrFinder(entry!!.vpkLocalFile!!)
 			}
 
 			val repackVpk = JMenuItem(Texts.format("MENU_REPACK")).action {
@@ -181,7 +178,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				add(gameDumperVersionPopup)
 				add(gameCompressionLevelPopup)
 				add(JSeparator())
-				add(showInFilebrowser)
 				add(showPSF)
 				add(deleteVpk)
 				add(repackVpk)
@@ -204,7 +200,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				gameCompressionLevelPopup.text = Texts.format("UNKNOWN_VERSION")
 
 				if (entry != null) {
-					gamePathMenuItem.text = entry.file.canonicalPath
+					gamePathMenuItem.text = "${entry.file.canonicalPath} (" + FileSize(entry.file.length()).toString() + ")"
+					gamePathMenuItem.toolTipText = if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")
 					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
 					gameCompressionLevelPopup.text = Texts.format("COMPRESSION_LEVEL", "level" to entry.compressionLevel)
 					gameTitlePopup.text = "${entry.id} : ${entry.title}"
