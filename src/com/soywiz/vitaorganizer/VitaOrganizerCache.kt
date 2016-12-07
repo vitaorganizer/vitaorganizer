@@ -3,6 +3,8 @@ package com.soywiz.vitaorganizer
 import com.soywiz.util.Hash
 import com.soywiz.util.get
 import com.soywiz.util.toHexString
+import com.soywiz.vitaorganizer.ext.safe_delete
+import com.soywiz.vitaorganizer.ext.safe_exists
 import java.io.File
 import java.io.IOException
 import javax.swing.JOptionPane
@@ -26,35 +28,35 @@ object VitaOrganizerCache {
 
 		init {
 			try {
-				if(!cacheFolder.exists()) {
+				if (!cacheFolder.safe_exists()) {
 					println("There should be a cache folder, but someone has deleted it. Recreating...")
 					cacheFolder.mkdirs()
 				}
 			}
 			catch(e: Throwable) {
 				//this could go soooo wrong, possible in a never ending loop
-				JOptionPane.showMessageDialog(null, "Couuld not create cache directory. Trying to restart..", "Error", JOptionPane.ERROR_MESSAGE)
+				MsgMgr.error("Could not create cache directory. Trying to restart..")
 				VitaOrganizer.instance.restart()
 			}
 		}
 
-        fun delete() {
-            icon0File.delete()
-            paramSfoFile.delete()
-            pathFile.delete()
-            sizeFile.delete()
-            permissionsFile.delete()
-            dumperVersionFile.delete()
-            compressionFile.delete()
-        }
+		fun delete() {
+			icon0File.safe_delete()
+			paramSfoFile.safe_delete()
+			pathFile.safe_delete()
+			sizeFile.safe_delete()
+			permissionsFile.safe_delete()
+			dumperVersionFile.safe_delete()
+			compressionFile.safe_delete()
+		}
     }
 
     fun entry(file: File) = Entry(file)
 
 	fun deleteAll() {
 		try {
-			if(cacheFolder.exists()) {
-				cacheFolder.deleteRecursively()
+			if(cacheFolder.safe_exists()) {
+				cacheFolder.safe_delete();
 				cacheFolder.mkdirs();
             }
 		}
