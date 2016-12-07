@@ -17,6 +17,7 @@ object VitaOrganizerSettings {
 	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }
 	var WINDOW_STATE: Int by PropDelegateInt { 0 }
 	var vpkFolder: String by PropDelegateStr { "." }
+	var lastVpkInstallFolder: String by PropDelegateStr{ "." }
 	var lastDeviceIp: String by PropDelegateStr { "192.168.1.100" }
 	var lastDevicePort: Int by PropDelegateInt { 1337 }
 	var LANGUAGE: String by PropDelegateStr { "auto" }

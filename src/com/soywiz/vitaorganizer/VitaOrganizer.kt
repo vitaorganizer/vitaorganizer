@@ -202,6 +202,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	fun selectFolder() {
 		val chooser = JFileChooser()
 		chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
+		if(!chooser.currentDirectory.safe_exists())
+			chooser.currentDirectory = File(".")
 		chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
 		chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
 		chooser.isAcceptAllFileFilterUsed = false
@@ -280,7 +282,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 					.action {
 						val chooser = JFileChooser()
-						chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
+						chooser.currentDirectory = File(VitaOrganizerSettings.lastVpkInstallFolder)
+						if(!chooser.currentDirectory.safe_exists())
+							chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
 						chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
 						chooser.fileFilter = FileNameExtensionFilter(Texts.format("FILEFILTER_DESC_VPK_FILES"), "vpk")
 						chooser.fileSelectionMode = JFileChooser.FILES_ONLY
@@ -288,6 +292,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						//chooser.selectedFile = File(VitaOrganizerSettings.vpkFolder)
 						val result = chooser.showOpenDialog(this@VitaOrganizer)
 						if (result == JFileChooser.APPROVE_OPTION) {
+							VitaOrganizerSettings.lastVpkInstallFolder = chooser.selectedFile.canonicalPath
 							remoteTasks.queue(OneStepToVitaTask(this@VitaOrganizer, VpkFile(chooser.selectedFile)))
 						}
 					}
