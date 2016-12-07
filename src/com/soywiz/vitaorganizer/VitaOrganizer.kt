@@ -123,7 +123,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				if (entry != null) remoteTasks.queue(SendDataToVitaTask(vitaOrganizer, entry!!.vpkLocalVpkFile!!))
 			}
 
-			val sendToVita1Step = JMenuItem(Texts.format("SEND_FULL_APP_TO_VITA_ACTION")).action {
+			val sendToVita1Step = JMenuItem("").action {
 				if (entry != null) remoteTasks.queue(OneStepToVitaTask(vitaOrganizer, entry!!.vpkLocalVpkFile!!))
 			}
 
@@ -181,6 +181,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				add(showPSF)
 				add(deleteVpk)
 				add(repackVpk)
+				add(JSeparator())
 				add(JMenu(Texts.format("METHOD1_INFO")).apply {
 					//isEnabled = false
 					add(sendVpkToVita)
@@ -205,6 +206,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
 					gameCompressionLevelPopup.text = Texts.format("COMPRESSION_LEVEL", "level" to entry.compressionLevel)
 					gameTitlePopup.text = "${entry.id} : ${entry.title}"
+					sendToVita1Step.text = Texts.format("SEND_FULL_APP_TO_VITA_ACTION", "type" to entry.type)
 				}
 
 				super.show(invoker, x, y)
