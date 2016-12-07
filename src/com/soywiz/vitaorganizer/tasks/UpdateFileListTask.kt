@@ -1,9 +1,7 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.Texts
-import com.soywiz.vitaorganizer.VitaOrganizer
-import com.soywiz.vitaorganizer.VitaOrganizerSettings
-import com.soywiz.vitaorganizer.VpkFile
+import com.soywiz.vitaorganizer.*
+import com.soywiz.vitaorganizer.ext.safe_exists
 import java.io.File
 
 class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer) {
@@ -12,9 +10,13 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 			vitaOrganizer.VPK_GAME_FILES.clear()
 		}
 
-		if(VitaOrganizerSettings.vpkFolder.isEmpty()
-			|| !File(VitaOrganizerSettings.vpkFolder).exists()) {
+		if(VitaOrganizerSettings.vpkFolder.isEmpty()) {
 			error("Invalid path! Please choose a valid directory!")
+			return;
+		}
+		val fileVpkFolder = File(VitaOrganizerSettings.vpkFolder)
+		if(!fileVpkFolder.safe_exists()) {
+			error(Texts.format("INVALID_PATH_CHOOSE"));
 			return
 		}
 		status(Texts.format("STEP_ANALYZING_FILES", "folder" to VitaOrganizerSettings.vpkFolder))
@@ -34,7 +36,7 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 			return out
 		}
 
-		val vpkFiles = listVpkFiles(File(VitaOrganizerSettings.vpkFolder))
+		val vpkFiles = listVpkFiles(fileVpkFolder)
 
 		for ((index, vpkFile) in vpkFiles.withIndex()) {
 			val ff = VpkFile(vpkFile)
@@ -44,10 +46,12 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 					//gameId has to be a length of 9 characters or it will not be installable
 					//either fix gameId automatically or skip
 					println("Skipped ${vpkFile.canonicalPath} because of malformed TITLE_ID: ${gameId}")
+					VitaOrganizerCache.entry(vpkFile).delete();
+
 					continue;
 				}
 				synchronized(vitaOrganizer.VPK_GAME_FILES) {
-					status(Texts.format("STEP_ANALYZING_ITEM", "name" to gameId, "current" to index + 1, "total" to vpkFiles.size))
+					status(Texts.format("STEP_ANALYZING_ITEM", "name" to vpkFile.name, "current" to index + 1, "total" to vpkFiles.size))
 					vitaOrganizer.VPK_GAME_FILES += vpkFile
 				}
 			}
