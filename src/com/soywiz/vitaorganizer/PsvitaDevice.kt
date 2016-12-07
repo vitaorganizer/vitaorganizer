@@ -354,17 +354,17 @@ object PsvitaDevice {
 
             if(reply.getCode() == 502) {
                 println("PROM command is not supported by the server")
-                if(displayErrors) error("The FTP server does not support promoting/installing VPK files, hence aborting!")
+                if(displayErrors) MsgMgr.error("The FTP server does not support promoting/installing VPK files, hence aborting!")
                 return false
             }
             else if(reply.getCode() == 500) {
                 println("ERROR PROMOTING $vpkPath")
-                if(displayErrors) error("The FTP server could not promote/install the VPK file due to an install error, hence aborting!")
+                if(displayErrors) MsgMgr.error("The FTP server could not promote/install the VPK file due to an install error, hence aborting!")
                 return false
             }
             else if(reply.getCode() != 200) {
                 println("Unknown error. Server response: $reply.toString()!")
-                if(displayErrors) error("An unknown error occured. Details:\n$reply.toString()")
+                if(displayErrors) MsgMgr.error("An unknown error occured. Details:\n$reply.toString()")
                 return false
             }
 
@@ -377,21 +377,17 @@ object PsvitaDevice {
         }
         catch(e: IllegalStateException) {
             println("Promoting, exception: Not connected to the server")
-            if(displayErrors) error("It was repliied, that you are not connected to the server, hence aborting!")
+            if(displayErrors) MsgMgr.error("It was repliied, that you are not connected to the server, hence aborting!")
         }
         catch(e: IOException) {
             println("Promoting, exception: I/O error")
-            if(displayErrors) error("An I/O error occured while promoting/installing the VPK file, hence aborting!")
+            if(displayErrors) MsgMgr.error("An I/O error occured while promoting/installing the VPK file, hence aborting!")
         }
         catch(e: it.sauronsoftware.ftp4j.FTPIllegalReplyException) {
             println("Promoting, exception: Server responded in a weird way")
-            if(displayErrors) error("The server replied something unexpected, hence aborting!")
+            if(displayErrors) MsgMgr.error("The server replied something unexpected, hence aborting!")
         }
 
-        return false;
+        return false
     }
-
-	fun error(text: String) {
-		JOptionPane.showMessageDialog(null, text, "Error", JOptionPane.ERROR_MESSAGE)
-	}
 }
