@@ -22,19 +22,14 @@ object EbootBin {
 	fun hasExtendedPermissions(s: InputStream): Boolean {
 		try {
 			val authid = ByteArray(1)
-
 			s.skip(0x80)
-			val ret = s.read(authid)
 
-			if (ret != 1) {
-				println("hasExtendedPermissions::read failed")
-				return true
+			val ret = s.read(authid)
+			if (ret == 1) {
+				return authid[0].toInt() != 2
 			}
-			if (authid[0].toInt() == 2) {
-				return false
-			}
-			else
-				return true
+			println("hasExtendedPermissions::read failed")
+			return true
 		}
 		catch (e: Throwable) {
 			println("hasExtendedPermissions, exception arised")
@@ -50,7 +45,6 @@ object EbootBin {
 		} else {
 			data[0x80] = (data[0x80].toInt() or 1).toByte() // Set bit 0
 		}
-
 		return data
 	}
 }
