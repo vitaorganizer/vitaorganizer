@@ -8,20 +8,40 @@ class FileSize(val value: Long) : Comparable<FileSize> {
 		//val locale = Locale.getDefault()
 
 		private val BYTES = 1L
-		private val KB = 1024 * BYTES
-		private val MB = 1024 * KB
-		private val GB = 1024 * MB
-		private val TB = 1024 * GB
+		private val KB = 1000 * BYTES
+		private val MB = 1000 * KB
+		private val GB = 1000 * MB
+		private val TB = 1000 * GB
 
-		fun getPrecissionFromSize(size: Long) = if (size < KB) 0 else if (size < MB) 0 else if (size < GB) 1 else if (size < TB) 3 else 6
+		private val KiB = 1024 * BYTES
+		private val MiB = 1024 * KiB
+		private val GiB = 1024 * MiB
+		private val TiB = 1024 * GiB
 
-		fun toString(size: Long, precission: Int = getPrecissionFromSize(size)): String {
+		val base = VitaOrganizerSettings.unitBase;
+
+		fun getPrecissionFromSize10(size: Long) = if (size < KB) 0 else if (size < MB) 0 else if (size < GB) 1 else if (size < TB) 3 else 6
+		fun getPrecissionFromSize2(size: Long) = if (size < KiB) 0 else if (size < MiB) 0 else if (size < GiB) 1 else if (size < TiB) 3 else 6
+		fun getPrecissionFromSize(size: Long) = if (base == 10) getPrecissionFromSize10(size) else getPrecissionFromSize2(size)
+
+		fun toString10(size: Long, precission: Int = getPrecissionFromSize10(size)): String {
 			if (size < KB) return "%.${precission}f B".format(locale, size.toDouble() / BYTES.toDouble())
 			if (size < MB) return "%.${precission}f KB".format(locale, size.toDouble() / KB.toDouble())
 			if (size < GB) return "%.${precission}f MB".format(locale, size.toDouble() / MB.toDouble())
 			if (size < TB) return "%.${precission}f GB".format(locale, size.toDouble() / GB.toDouble())
 			return "%.${precission}f TB".format(locale, size.toDouble() / TB.toDouble())
 		}
+
+		fun toString2(size: Long, precission: Int = getPrecissionFromSize2(size)): String {
+			if (size < KiB) return "%.${precission}f B".format(locale, size.toDouble() / BYTES.toDouble())
+			if (size < MiB) return "%.${precission}f KiB".format(locale, size.toDouble() / KiB.toDouble())
+			if (size < GiB) return "%.${precission}f MiB".format(locale, size.toDouble() / MiB.toDouble())
+			if (size < TiB) return "%.${precission}f GiB".format(locale, size.toDouble() / GiB.toDouble())
+			return "%.${precission}f TiB".format(locale, size.toDouble() / TiB.toDouble())
+		}
+
+		fun toString(size: Long, precission: Int = getPrecissionFromSize(size)): String = if (base == 10) toString10(size, precission)
+        else toString2(size, precission)
 	}
 
 	override fun compareTo(other: FileSize): Int = this.value.compareTo(other.value)

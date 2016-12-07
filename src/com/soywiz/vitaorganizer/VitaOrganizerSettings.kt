@@ -1,6 +1,7 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.HEX_DIGITS
+import com.soywiz.util.OS
 import com.soywiz.vitaorganizer.ext.nextString
 import com.soywiz.vitaorganizer.ext.parseInt
 import com.soywiz.vitaorganizer.ext.parseLong
@@ -13,6 +14,7 @@ object VitaOrganizerSettings {
 	private val queue by lazy { ThreadQueue() }
 	private val CHARSET = Charsets.UTF_8
 	var tableFontSize: Int by PropDelegateInt { 14 }
+	var unitBase: Int by PropDelegateInt { if(OS.isWindows) 2 else 10 }
 	var lastUpdateCheckTime: Long by PropDelegateLong { 0L }
 	var WINDOW_WIDTH: Int by PropDelegateInt { 960 }
 	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }
