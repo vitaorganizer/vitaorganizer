@@ -95,12 +95,22 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 	}
 
+	fun getRegionCode(titleId: String) : String? {
+		val region = titleId.substring(0, 4)
+		return when {
+            region == "PCSC" || region == "PCSG" -> "JPN"
+			region == "PCSA" || region == "PCSE" -> "USA"
+			region == "PCSB" || region == "PCSF" -> "EUR"
+            else -> "UNK"
+        }
+	}
+
 	val table = object : GameListTable() {
 		val dialog = this@VitaOrganizer
 		val gameTitlePopup = JMenuItem("").apply {
 			isEnabled = false
-			foreground = Color(64, 0, 255);
-			font = font.deriveFont(Font.BOLD);
+			foreground = Color(64, 0, 255)
+			font = font.deriveFont(Font.BOLD)
 		}
 		val gamePathMenuItem = JMenuItem("").apply {
 			font = font.deriveFont(Font.ITALIC)
@@ -205,7 +215,9 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					gamePathMenuItem.toolTipText = if (OS.isWindows) Texts.format("MENU_SHOW_EXPLORER") else Texts.format("MENU_SHOW_FINDER")
 					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
 					gameCompressionLevelPopup.text = Texts.format("COMPRESSION_LEVEL", "level" to entry.compressionLevel)
-					gameTitlePopup.text = "${entry.id} : ${entry.title}"
+					//gameTitlePopup.text = "${entry.id} : ${entry.title}"
+					val region = if(getRegionCode(entry.id) != "UNK") getRegionCode(entry.id) + " -> " else ""
+					gameTitlePopup.text = "$region[${entry.id}] ${entry.title} " + (entry.psf["APP_VER"] ?: entry.psf["VERSION"] ?: "")
 					sendToVita1Step.text = Texts.format("SEND_FULL_APP_TO_VITA_ACTION", "type" to entry.type)
 				}
 
