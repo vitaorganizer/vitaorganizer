@@ -83,7 +83,7 @@ object PsvitaDevice {
 
     private fun connectedFtp(): FTPClient {
 		val ip = VitaOrganizerSettings.lastDeviceIp
-		val port = try { VitaOrganizerSettings.lastDevicePort.toInt() } catch (t: Throwable) { 1337 }
+		val port = VitaOrganizerSettings.lastDevicePort
 
 
 

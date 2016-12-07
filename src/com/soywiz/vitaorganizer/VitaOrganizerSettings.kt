@@ -18,7 +18,7 @@ object VitaOrganizerSettings {
 	var WINDOW_STATE: Int by PropDelegateInt { 0 }
 	var vpkFolder: String by PropDelegateStr { "." }
 	var lastDeviceIp: String by PropDelegateStr { "192.168.1.100" }
-	var lastDevicePort: String by PropDelegateStr { "1337" }
+	var lastDevicePort: Int by PropDelegateInt { 1337 }
 	var LANGUAGE: String by PropDelegateStr { "auto" }
 	var WLAN_SSID: String by PropDelegateStr {
 		"VORG-" + SecureRandom().nextString(HEX_DIGITS, 4)
