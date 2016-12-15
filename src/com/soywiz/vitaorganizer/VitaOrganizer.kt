@@ -98,9 +98,11 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	fun getRegionCode(titleId: String) : String? {
 		val region = titleId.substring(0, 4)
 		return when {
-            region == "PCSC" || region == "PCSG" -> "JPN"
-			region == "PCSA" || region == "PCSE" -> "USA"
-			region == "PCSB" || region == "PCSF" -> "EUR"
+			region == "PCSA" || region == "PCSE" -> "US"
+			region == "PCSB" || region == "PCSF" -> "EU"
+            region == "PCSC" || region == "PCSG" || region == "VCJS" ||region == "VLJS" || region == "VLJM" -> "JP"
+			region == "PCSD" -> "CN"
+			region == "PCSH" || region == "VCAS" -> "ASIA"
             else -> "UNK"
         }
 	}
