@@ -129,12 +129,16 @@ fun File.createAndCheckFile() : Boolean {
 	return false
 }
 
-fun File.listAllFiles(): MutableList<File> {
+fun File.listAllFiles(ext: String? = null): MutableList<File> {
 	val mutableList : MutableList<File> = arrayListOf()
 	for (en in listFiles()) {
-		mutableList.add(en);
+		if(ext != null && en.extension != ext && !en.isDirectory)
+			continue
+		else
+			mutableList.add(en)
+
 		if(en.isDirectory)
-			mutableList.addAll(listAllFiles())
+			mutableList.addAll(listAllFiles(ext))
 	}
 	return mutableList;
 }
