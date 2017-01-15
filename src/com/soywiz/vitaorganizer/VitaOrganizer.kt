@@ -143,6 +143,38 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				if (entry != null) remoteTasks.queue(RepackVpkTask(vitaOrganizer, entry!!, setSecure = true))
 			}
 
+			val extractVpk = JMenuItem("Extract VPK to PS Vita's memory card").action {
+				if(entry != null) {
+					val chooser = JFileChooser()
+					chooser.currentDirectory = File(VitaOrganizerSettings.usbMassStoragePath)
+					if(!chooser.currentDirectory.safe_exists())
+						chooser.currentDirectory = File(".")
+					chooser.dialogTitle = "Please choose the root path to PS Vita's usb mass storage"
+					chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+					chooser.isAcceptAllFileFilterUsed = false
+					val result = chooser.showOpenDialog(this@VitaOrganizer)
+					if (result == JFileChooser.APPROVE_OPTION) {
+						val selectedFile = chooser.selectedFile.canonicalFile
+						if (!selectedFile.safe_exists()) {
+							println("error invalid path")
+						}
+						else {
+							val content = selectedFile.list()
+							val isValid = content.contains("app") && content.contains("data") && content.contains(
+								"user")
+							if (!isValid) {
+								println("could not recognize as vitas memorycard")
+								MsgMgr.error("Could not recognize as vitas memorycard")
+							}
+							else {
+								VitaOrganizerSettings.usbMassStoragePath = chooser.selectedFile.canonicalPath
+								localTasks.queue(ExtractVpkToUMS(vitaOrganizer, entry!!))
+							}
+						}
+					}
+				}
+			}
+
 			val deleteVpk = JMenuItem(Texts.format("DELETE_VPK")).action {
 				if(entry != null) {
 					if(entry!!.vpkLocalFile != null && entry!!.vpkLocalFile!!.safe_canDelete()){
@@ -193,6 +225,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				add(showPSF)
 				add(deleteVpk)
 				add(repackVpk)
+				add(extractVpk)
 				add(JSeparator())
 				add(JMenu(Texts.format("METHOD1_INFO")).apply {
 					//isEnabled = false

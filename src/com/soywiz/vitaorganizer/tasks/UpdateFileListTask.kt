@@ -45,7 +45,7 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 				if(gameId.length != 9) {
 					//gameId has to be a length of 9 characters or it will not be installable
 					//either fix gameId automatically or skip
-					println("Skipped ${vpkFile.canonicalPath} because of malformed TITLE_ID: ${gameId}")
+					println("Skipped ${vpkFile.canonicalPath} because of malformed TITLE_ID: $gameId")
 					VitaOrganizerCache.entry(vpkFile).delete();
 
 					continue;

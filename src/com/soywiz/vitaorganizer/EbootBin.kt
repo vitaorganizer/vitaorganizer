@@ -4,6 +4,8 @@ import com.soywiz.util.Stream2
 import com.soywiz.util.open2
 import java.io.InputStream
 
+//TODO: needs to be updated, see vita toolchain for more. tbey are many many of different authids
+
 object EbootBin {
 	fun isSafe(s: ByteArray): Boolean = !hasExtendedPermissions(s.open2("r"))
 

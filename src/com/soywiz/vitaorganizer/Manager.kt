@@ -6,15 +6,13 @@ import it.sauronsoftware.ftp4j.FTPDataTransferListener
 import it.sauronsoftware.ftp4j.FTPException
 import it.sauronsoftware.ftp4j.FTPFile
 import it.sauronsoftware.ftp4j.FTPReply
+import sun.nio.ch.FileKey
 import java.io.*
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.net.Socket
 import java.util.*
-import java.util.zip.DeflaterInputStream
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipOutputStream
+import java.util.zip.*
 import javax.swing.JOptionPane
 
 /**
@@ -317,6 +315,54 @@ object IOMgr {
 }
 
 object ZipMgr {
+
+	fun extractZip(zipFile: File, directory: File) : Boolean {
+
+		if(!directory.safe_isDirectory())
+			return false
+
+		val dirPath = directory.canonicalPath
+
+		val fis = FileInputStream(zipFile)
+		try {
+			val zis = ZipInputStream(fis)
+			var ze = zis.nextEntry
+
+			while(ze != null) {
+				val outputFile = File(dirPath + File.separator + ze.name)
+				println("Unzipping ${ze.name} to ${outputFile.canonicalPath}")
+
+				if(ze.name.endsWith('/'))
+					outputFile.mkdirs()
+				else {
+					outputFile.parentFile.mkdirs()
+					val fos = FileOutputStream(outputFile)
+
+					val bytes = ByteArray(1024)
+
+					while (true) {
+						val length = zis.read(bytes)
+						if (length < 0)
+							break;
+
+						fos.write(bytes, 0, length)
+					}
+
+					fos.close()
+				}
+				ze = zis.nextEntry
+			}
+
+			zis.close()
+		}
+		catch(e: Throwable) {
+			e.printStackTrace()
+			fis.close();
+			return false;
+		}
+
+		return true
+	}
 
 	fun writeZipFile(dir: File, extension: String = ".zip"): Boolean {
 		if(!dir.safe_isDirectory())
