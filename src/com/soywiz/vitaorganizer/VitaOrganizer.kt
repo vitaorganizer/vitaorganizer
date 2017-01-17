@@ -24,8 +24,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		@JvmStatic fun main(args: Array<String>) {
 			VitaOrganizer()
 			VitaOrganizerSettings.init()
-			VitaOrganizerSettings.WLAN_SSID
-			VitaOrganizerSettings.WLAN_PASS
+			//VitaOrganizerSettings.WLAN_SSID
+			//VitaOrganizerSettings.WLAN_PASS
 			instance.start()
 		}
 	}
@@ -54,7 +54,13 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	fun start() {
 		//frame.pack()
 		frame.setSize(VitaOrganizerSettings.WINDOW_WIDTH, VitaOrganizerSettings.WINDOW_HEIGHT)
-		frame.setLocationRelativeTo(null)
+		frame.extendedState = VitaOrganizerSettings.WINDOW_STATE
+		val x = VitaOrganizerSettings.WINDOW_X
+		val y = VitaOrganizerSettings.WINDOW_Y
+		if(x > 0 && y > 0 && frame.extendedState == JFrame.NORMAL)
+			frame.setLocation(x, y)
+		else
+			frame.setLocationRelativeTo(null)
 		frame.isVisible = true
 	}
 
@@ -110,8 +116,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	val table = object : GameListTable() {
 		val dialog = this@VitaOrganizer
 		val gameTitlePopup = JMenuItem("").apply {
-			isEnabled = false
-			foreground = Color(64, 0, 255)
+			isEnabled = true
+			foreground = Color(0, 64, 255)
 			font = font.deriveFont(Font.BOLD)
 		}
 		val gamePathMenuItem = JMenuItem("").apply {
@@ -145,30 +151,46 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			val extractVpk = JMenuItem("Extract VPK to PS Vita's memory card").action {
 				if(entry != null) {
-					val chooser = JFileChooser()
-					chooser.currentDirectory = File(VitaOrganizerSettings.usbMassStoragePath)
-					if(!chooser.currentDirectory.safe_exists())
-						chooser.currentDirectory = File(".")
-					chooser.dialogTitle = "Please choose the root path to PS Vita's usb mass storage"
-					chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-					chooser.isAcceptAllFileFilterUsed = false
-					val result = chooser.showOpenDialog(this@VitaOrganizer)
-					if (result == JFileChooser.APPROVE_OPTION) {
-						val selectedFile = chooser.selectedFile.canonicalFile
-						if (!selectedFile.safe_exists()) {
-							println("error invalid path")
-						}
-						else {
-							val content = selectedFile.list()
-							val isValid = content.contains("app") && content.contains("data") && content.contains(
-								"user")
-							if (!isValid) {
-								println("could not recognize as vitas memorycard")
-								MsgMgr.error("Could not recognize as vitas memorycard")
+					val umsPathFile = File(VitaOrganizerSettings.usbMassStoragePath)
+					if(UsbStorageMgr.isMemoryCard(umsPathFile) && UsbStorageMgr.hasVitaShell(umsPathFile)) {
+						localTasks.queue(ExtractVpkToUMS(vitaOrganizer, entry!!))
+					}
+					else {
+						val chooser = JFileChooser()
+						chooser.currentDirectory = umsPathFile
+
+						if(!chooser.currentDirectory.safe_exists() || umsPathFile.name == ".") {
+							if(OS.isMac)
+								chooser.currentDirectory = File("/Volumes/")
+							else if(OS.isWindows) {
+								chooser.currentDirectory = File("C:\\").canonicalFile
+								chooser.changeToParentDirectory()
+							}
+							else if(OS.isUnix) {
+								//TODO: dont know the standard mount directories of debian, ubuntu, fedora, mandriva, suse, ..., /mnt/media? figure it out
+							}
+	                    }
+
+						chooser.dialogTitle = "Please choose the root path to PS Vita's usb mass storage"
+						chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+						chooser.isAcceptAllFileFilterUsed = false
+						val result = chooser.showOpenDialog(this@VitaOrganizer)
+						if (result == JFileChooser.APPROVE_OPTION) {
+							val selectedFile = chooser.selectedFile.canonicalFile
+							if (!selectedFile.safe_exists()) {
+								println("error invalid path")
 							}
 							else {
-								VitaOrganizerSettings.usbMassStoragePath = chooser.selectedFile.canonicalPath
-								localTasks.queue(ExtractVpkToUMS(vitaOrganizer, entry!!))
+								if (!UsbStorageMgr.isMemoryCard(selectedFile)) {
+									println("could not recognize as vitas memorycard")
+									MsgMgr.error("Could not recognize as PS Vita's memory card")
+								}
+								else {
+									if (UsbStorageMgr.hasVitaShell(selectedFile)) {
+										VitaOrganizerSettings.usbMassStoragePath = chooser.selectedFile.canonicalPath
+										localTasks.queue(ExtractVpkToUMS(vitaOrganizer, entry!!))
+									}
+								}
 							}
 						}
 					}
@@ -327,8 +349,6 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	}
 
 	init {
-		val vitaOrganizer = this
-
 		frame.jMenuBar = JMenuBar().apply {
 			add(JMenu(Texts.format("MENU_FILE")).apply {
 				add(JMenuItem(Texts.format("MENU_REFRESH"), Icons.REFRESH)
@@ -551,7 +571,10 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		add(scrollPane)
 		add(footer, SpringLayout.SOUTH)
 
-	   preloadCache()
+		if(VitaOrganizerCache.cacheFolder.safe_exists())
+	        preloadCache()
+		else
+			updateFileList()
 
 		val oneWeekInMilliSeconds: Long = 60 * 60 * 24 * 7 * 1000
 		val now = Calendar.getInstance().time.time
@@ -561,7 +584,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			println("Checking for updates")
 		}
 
-		updateFileList()
+
 
 		frame.addWindowListener(object : WindowAdapter() {
 			override fun windowOpened(e: WindowEvent) {
@@ -586,17 +609,32 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 		})
 
+		var oldWindowWidth: Int = 0
+		var oldWindowHeight: Int = 0
 		frame.addComponentListener(object : ComponentAdapter() {
 			override fun componentResized(e: ComponentEvent?) {
 				super.componentResized(e)
 				table.table.preferredScrollableViewportSize = Dimension(frame.width, frame.height)
-				if (frame.getExtendedState() == JFrame.NORMAL) {
-					VitaOrganizerSettings.WINDOW_WIDTH = frame.width
-					VitaOrganizerSettings.WINDOW_HEIGHT = frame.height
-					println("Updated size ${frame.width}x${frame.height}")
+				if (frame.extendedState == JFrame.NORMAL) {
+					if(oldWindowWidth != frame.width || oldWindowHeight != frame.height) {
+						oldWindowWidth = frame.width
+						oldWindowHeight = frame.height
+						VitaOrganizerSettings.WINDOW_WIDTH = frame.width
+						VitaOrganizerSettings.WINDOW_HEIGHT = frame.height
+						VitaOrganizerSettings.WINDOW_STATE = JFrame.NORMAL
+						println("Updated size ${frame.width}x${frame.height}")
+					}
 				} else{
 					println("maximixed or minimized!")
+					VitaOrganizerSettings.WINDOW_STATE = frame.extendedState
 				}
+			}
+
+			override fun componentMoved(e: ComponentEvent?) {
+				super.componentMoved(e)
+				VitaOrganizerSettings.WINDOW_X = frame.x;
+				VitaOrganizerSettings.WINDOW_Y = frame.y;
+				println("window moved!")
 			}
 		})
 

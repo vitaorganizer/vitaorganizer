@@ -24,14 +24,6 @@ class ExtractVpkToUMS(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry) :
 		val dir = File(VitaOrganizerSettings.usbMassStoragePath)
 		val vpk = entry.vpkLocalFile!!
 
-		//i dont knoe how this behaves on unix based systems. freeSpace only returns not 0 when it is a partition
-		//so, will java recognize that mountpoint == partition (mounted from a partition)?
-		//leave 50MB
-		if((dir.freeSpace - 50*1000*1000) < entry.size) {
-			error("Not enough available free space to extract the VPK file!")
-			return false
-		}
-
 		val extractDir = dir.canonicalPath + File.separator + "organizer" + File.separator +  entry.gameId + File.separator
 		val fileExtractDir = File(extractDir)
 		if(fileExtractDir.safe_exists()) {
@@ -45,6 +37,12 @@ class ExtractVpkToUMS(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry) :
 			else {
 				return false
             }
+		}
+
+		//leave 70MB
+		if((dir.freeSpace - 70*1000*1000) < entry.size) {
+			error("Not enough available free space to extract the VPK file!")
+			return false
 		}
 
 		fileExtractDir.mkdirs()

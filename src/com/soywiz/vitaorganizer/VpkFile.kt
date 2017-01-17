@@ -63,7 +63,7 @@ class VpkFile(val vpkFile: File) {
 				val paramsfo = zip.getEntry("sce_sys/param.sfo")
 				val compressionLevel = paramsfo?.method?.toString() ?: ""
 
-				var dumper = DumperNamesHelper().findDumperByShortName(if(psf["ATTRIBUTE"].toString() == "32768") "HB" else "UNKNOWN")
+				var dumper = DumperNamesHelper().findDumperByShortName(if(psf["ATTRIBUTE"].toString().toInt() == 0x8000) "HB" else "UNKNOWN")
 				if(dumper == DumperNames.UNKNOWN) {
 					for (file in DumperModules.values()) {
 						val suprx = zip.getEntry(file.file)
@@ -83,11 +83,10 @@ class VpkFile(val vpkFile: File) {
 				}
 
 				if (!entry.icon0File.safe_exists()) {
-					try {
+					if(zip.getEntry("sce_sys/icon0.png") != null)
 						entry.icon0File.writeBytes(zip.getBytes("sce_sys/icon0.png"))
-					} catch (e: Throwable){
-						entry.icon0File.writeBytes(getResourceBytes("com/soywiz/vitaorganizer/dummy128.png") ?: byteArrayOf())
-					}
+					else
+						entry.icon0File.writeBytes(byteArrayOf())
 				}
 				if (!entry.paramSfoFile.safe_exists()) {
 					entry.paramSfoFile.writeBytes(paramSfoData)

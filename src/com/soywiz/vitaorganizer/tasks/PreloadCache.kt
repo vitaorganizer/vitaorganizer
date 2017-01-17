@@ -21,6 +21,7 @@ class PreloadCache(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer) {
 			}
 			status("Preloading cache")
 			vitaOrganizer.updateEntries()
+			status("Done")
 		}
 	}
 }

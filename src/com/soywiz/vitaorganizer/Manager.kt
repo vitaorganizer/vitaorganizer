@@ -1,5 +1,7 @@
 package com.soywiz.vitaorganizer
 
+import com.soywiz.util.OS
+import com.soywiz.util.stream
 import com.soywiz.vitaorganizer.ext.*
 import it.sauronsoftware.ftp4j.FTPClient
 import it.sauronsoftware.ftp4j.FTPDataTransferListener
@@ -316,6 +318,8 @@ object IOMgr {
 
 object ZipMgr {
 
+	private val multiplier = if(FileSize.base == 10) 1000 else 1024
+
 	fun extractZip(zipFile: File, directory: File) : Boolean {
 
 		if(!directory.safe_isDirectory())
@@ -338,7 +342,7 @@ object ZipMgr {
 					outputFile.parentFile.mkdirs()
 					val fos = FileOutputStream(outputFile)
 
-					val bytes = ByteArray(1024)
+					val bytes = ByteArray(10 * multiplier * multiplier)
 
 					while (true) {
 						val length = zis.read(bytes)
@@ -420,7 +424,7 @@ object ZipMgr {
 			zos.putNextEntry(ZipEntry(filePath))
 
 			val fis = FileInputStream(file)
-			val bytes = ByteArray(1024)
+			val bytes = ByteArray(10 * multiplier * multiplier)
 
 			while(true) {
 				val length = fis.read(bytes)
@@ -456,5 +460,87 @@ object MsgMgr {
 	fun warn(message: String, title: String): Boolean {
 		val result = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_OPTION)
 		return (result == JOptionPane.YES_OPTION)
+	}
+}
+
+object UsbStorageMgr {
+	  fun findUsbStorage() : String? {
+		  if(OS.isWindows) {
+
+		  }
+		  else if(OS.isMac) {
+
+		  }
+		  else if(OS.isUnix) {
+
+		  }
+		  else if(OS.isSolaris) {
+
+		  }
+		  return null
+	  }
+
+	fun isMemoryCard(dirPathFile: File) : Boolean {
+
+		if(!dirPathFile.safe_exists() || !dirPathFile.safe_isDirectory() || !dirPathFile.safe_canReadWrite())
+			return false
+
+		val content = dirPathFile.list()
+		val isValid = content.contains("app") && content.contains("data") && content.contains(
+			"user")
+
+		return isValid
+	}
+
+	fun hasVitaShell(dirPathFile: File) : Boolean {
+		//if(!isMemoryCard(dirPathFile))
+		//	return false
+		val paramSfoPath = dirPathFile.canonicalPath + File.separator + "app" + File.separator + "VITASHELL" + File.separator + "sce_sys" + File.separator + "param.sfo"
+		val paramSfoFile = File(paramSfoPath)
+		if(!paramSfoFile.safe_exists() || !paramSfoFile.safe_canRead())
+			return false;
+
+		val psf = PSF.read(paramSfoFile.readBytes().stream)
+		val APP_VER = psf["APP_VER"].toString().toDouble()
+
+		if(APP_VER < 1.51f) {
+			MsgMgr.error("You must have at least VitaShell 01.51!")
+			return false
+		}
+
+		return true
+	}
+}
+
+//TODO: for future -> support anyrhing we can thru one class, that collects all available data to the pointed entry at location
+class PSP2Entry(location: String) {
+	init {
+		if(location.isEmpty()) {
+			throw Exception("PSP2Entry::init --> location is empty")
+		}
+		//figure out what contains
+		val file = File(location)
+		if(file.safe_exists()) {
+			if(file.safe_isFile()) {
+				if(file.extension.toLowerCase() == "vpk") {
+					//normal installable vpk files
+				}
+				else if(file.extension.toLowerCase() == "zip") {
+					//maybe also a vpk, maybe a maidunp, maidump_patch, maidump_addc
+				}
+			}
+			else if(file.safe_isDirectory()) {
+				//extraced vpk folder; maidump, maidump_patch, maidump_addc folder
+			}
+		}
+		else if(location.startsWith("ux0:app/")) {
+			//on memory card (usb or ftp)
+		}
+		else if(location.startsWith("ur0:app/")) {
+			//or internal flash memory (ftp)
+		}
+		else if(location.startsWith("http://") || location.startsWith("https://")) {
+			//support downloading a game
+		}
 	}
 }

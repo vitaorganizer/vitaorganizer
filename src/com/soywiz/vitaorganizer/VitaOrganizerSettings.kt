@@ -8,6 +8,7 @@ import com.soywiz.vitaorganizer.ext.parseLong
 import java.io.*
 import java.security.SecureRandom
 import java.util.*
+import javax.swing.JFrame
 import kotlin.reflect.KProperty
 
 object VitaOrganizerSettings {
@@ -18,7 +19,9 @@ object VitaOrganizerSettings {
 	var lastUpdateCheckTime: Long by PropDelegateLong { 0L }
 	var WINDOW_WIDTH: Int by PropDelegateInt { 960 }
 	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }
-	var WINDOW_STATE: Int by PropDelegateInt { 0 }
+	var WINDOW_STATE: Int by PropDelegateInt { JFrame.NORMAL }
+	var WINDOW_X: Int by PropDelegateInt { 0 }
+	var WINDOW_Y: Int by PropDelegateInt { 0 }
 	var vpkFolder: String by PropDelegateStr { "." }
 	var usbMassStoragePath: String by PropDelegateStr  { "." }
 	var lastVpkInstallFolder: String by PropDelegateStr{ "." }

@@ -58,6 +58,7 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 
 			//Thread.sleep(200L)
 		}
+		status("Updating entries... Please wait!")
 		vitaOrganizer.updateEntries()
 		status(Texts.format("STEP_DONE"))
 	}
