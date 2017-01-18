@@ -2,7 +2,7 @@
 
 ![](extra/screenshot-0.6.png)
 
-[![Build Status](https://travis-ci.org/soywiz/vitaorganizer.svg?branch=master)](https://travis-ci.org/soywiz/vitaorganizer)
+[![Build Status](https://travis-ci.org/vitaorganizer/vitaorganizer.svg?branch=master)](https://travis-ci.org/vitaorganizer/vitaorganizer)
 
 Desktop tool for listing and uploading games and homebrew applications to PSVITA without the size requirements
 of uploading the whole VPK and extracting it later.
@@ -15,7 +15,7 @@ can be executed directly with double click on most cases.
 In other cases, you can run it with `java -jar vitaorganizer-0.6.0.jar`
 
 You can download a prebuild binary here, or just build from source:
-[Download VitaOrganizer 0.6.0 here](https://github.com/soywiz/vitaorganizer/releases/tag/0.6.0)
+[Download VitaOrganizer 0.6.0 here](https://github.com/vitaorganizer/vitaorganizer/releases/tag/0.6.0)
 
 ## CHANGELOG
 
