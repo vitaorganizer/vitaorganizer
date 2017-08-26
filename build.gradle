@@ -114,5 +114,5 @@ launch4j {
 //}
 
 task buildApp(type:Exec, dependsOn: jar) {
-	commandLine "jar2app", "build/libs/vitaorganizer-${version}.jar", "-i", "assets/icon.icns", "build/libs/vitaorganizer-${version}.app"
+	commandLine "jar2app", "build/libs/vitaorganizer-${version}.jar", "-i", "extra/icon.icns", "build/libs/vitaorganizer-${version}.app"
 }
