@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch4jConfig>
+  <dontWrapJar>false</dontWrapJar>
+  <headerType>gui</headerType>
+  <jar>C:\Users\soywiz\projects\vitaorganizer\build\libs\vitaorganizer-0.6.1.jar</jar>
+  <outfile>C:\Users\soywiz\projects\vitaorganizer\build\libs\vitaorganizer-0.6.1.exe</outfile>
+  <errTitle></errTitle>
+  <cmdLine>-Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true</cmdLine>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <downloadUrl>http://java.com/download</downloadUrl>
+  <supportUrl></supportUrl>
+  <stayAlive>false</stayAlive>
+  <restartOnCrash>false</restartOnCrash>
+  <manifest></manifest>
+  <icon>C:\Users\soywiz\projects\vitaorganizer\extra\icon.ico</icon>
+  <jre>
+    <path></path>
+    <bundledJre64Bit>false</bundledJre64Bit>
+    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <minVersion>1.6.0</minVersion>
+    <maxVersion></maxVersion>
+    <jdkPreference>preferJre</jdkPreference>
+    <runtimeBits>64/32</runtimeBits>
+    <maxHeapSize>1024</maxHeapSize>
+  </jre>
+</launch4jConfig>
