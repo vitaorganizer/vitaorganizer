@@ -1,4 +1,4 @@
-## VitaOrganizer 0.6.0
+## VitaOrganizer 0.6.1
 
 ![](extra/screenshot-0.6.png)
 
@@ -12,12 +12,18 @@ It is written in Kotlin/Java.
 It should work on Windows, Linux and MacOS. It is a Java desktop application, packed in an executable .JAR, that
 can be executed directly with double click on most cases.
 
-In other cases, you can run it with `java -jar vitaorganizer-0.6.0.jar`
+In other cases, you can run it with `java -jar vitaorganizer-0.6.1.jar`
 
 You can download a prebuild binary here, or just build from source:
-[Download VitaOrganizer 0.6.0 here](https://github.com/vitaorganizer/vitaorganizer/releases/tag/0.6.0)
+[Download VitaOrganizer 0.6.1 here](https://github.com/vitaorganizer/vitaorganizer/releases/tag/0.6.1)
 
 ## CHANGELOG
+
+**0.6.1**
+
+* [new] Support copying via usb (gordon0001)
+* [new] Misc improvements (gordon0001)
+* [new] MacOS app support
 
 **0.6.0**
 
