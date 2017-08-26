@@ -112,3 +112,7 @@ launch4j {
 //task release(dependsOn: ['clean', 'minimizedJar', 'launch4j']) << {
 //	println 'release'
 //}
+
+task buildApp(type:Exec, dependsOn: jar) {
+	commandLine "jar2app", "build/libs/vitaorganizer-${version}.jar", "-i", "assets/icon.icns", "build/libs/vitaorganizer-${version}.app"
+}
