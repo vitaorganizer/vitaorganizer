@@ -47,16 +47,11 @@ public class Texts {
 		}
 	}
 
-	// @TODO: Disabled @PropertyKey(resourceBundle) until fixed for kotlin in intelliJ
-	// Please, switch the comment line with the other active when adding new texts so it adds to all the .properties files
-
-	//static public String format(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Pair<String, ?>... pairs) {
-	static public String format(String key, Pair<String, ?>... pairs) {
+	static public String format(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Pair<String, ?>... pairs) {
 		return TextFormatter.format(getString(key), (Pair<String, ?>[]) pairs);
 	}
 
-	//static public String formatMap(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Map<String, ?> map) {
-	static public String formatMap(String key, Map<String, ?> map) {
+	static public String formatMap(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Map<String, ?> map) {
 		return TextFormatter.format(getString(key), map);
 	}
 
