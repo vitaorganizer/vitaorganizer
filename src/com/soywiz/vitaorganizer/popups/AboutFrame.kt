@@ -1,10 +1,13 @@
 package com.soywiz.vitaorganizer.popups
 
 import com.soywiz.vitaorganizer.Texts
+import com.soywiz.vitaorganizer.VitaOrganizerFolders
+import com.soywiz.vitaorganizer.VitaOrganizerSettings
 import com.soywiz.vitaorganizer.VitaOrganizerVersion
 import com.soywiz.vitaorganizer.ext.onClick
 import com.soywiz.vitaorganizer.ext.openWebpage
 import java.awt.*
+import java.io.File
 import javax.swing.*
 
 class AboutFrame() : JFrame(Texts.format("ABOUT_TITLE")) {
@@ -48,9 +51,12 @@ class AboutFrame() : JFrame(Texts.format("ABOUT_TITLE")) {
 					add(Contibutor("anthologist", "https://github.com/anthologist", "Italian"))
 					add(Contibutor("adeldk", "https://github.com/adeldk", "French"))
 					add(Contibutor("kavid", "https://github.com/kavid", "Chinese"))
+					add(JLabel("Paths:"))
+					add(JLabel(VitaOrganizerFolders.CONFIG_ROOT.canonicalPath))
+					add(JLabel(VitaOrganizerSettings.vpkFolderFile.canonicalPath))
 				}
 			})
-			preferredSize = Dimension(500, 400)
+			preferredSize = Dimension(600, 400)
 		})
 	}
 }

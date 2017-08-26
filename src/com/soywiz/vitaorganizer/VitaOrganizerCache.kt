@@ -8,7 +8,7 @@ import com.soywiz.vitaorganizer.ext.safe_exists
 import java.io.File
 
 object VitaOrganizerCache {
-	val cacheFolder = File("vitaorganizer/cache")
+	val cacheFolder = File(VitaOrganizerFolders.CONFIG_ROOT, "cache")
 
 	init {
 		cacheFolder.mkdirs()

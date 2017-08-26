@@ -35,12 +35,15 @@ object VitaOrganizerSettings {
 		SecureRandom().nextString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8)
 	}
 
+	val vpkFolderFile: File get() = File(vpkFolder).canonicalFile
+
 	val isLanguageAutodetect: Boolean get() = (LANGUAGE == "auto")
 	val LANGUAGE_LOCALE: Locale get() = if (isLanguageAutodetect) Locale.getDefault() else Locale(LANGUAGE)
 
 	private var initialized = false
 	private val properties = Properties()
-	internal val file = File("vitaorganizer/settings.properties")
+
+	internal val file = File(VitaOrganizerFolders.CONFIG_ROOT, "settings.properties")
 
 	fun init() {
 		ensureProperties()

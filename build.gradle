@@ -100,13 +100,13 @@ launch4j {
 	//opt = "-Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true"
 	jvmOptions = ["-Dsun.java2d.d3d=false", "-Dsun.java2d.noddraw=true"]
     print "version: $version"
-    outfile = "../../build/libs/vitaorganizer-${version}.exe"
-    icon = "../../extra/icon.ico"
+    outfile = "${project.buildDir}/libs/vitaorganizer-${version}.exe"
+    icon = "${project.rootDir}/extra/icon.ico"
     mainClassName = project.mainClassName
     //copyConfigurable = project.tasks.fatJar.outputs.files
     //jar = "lib/${project.tasks.fatJar.archiveName}"
     maxHeapSize = 1024
-    jar = "../../build/libs/vitaorganizer-${version}.min.jar"
+    jar = "${project.buildDir}/libs/vitaorganizer-${version}.min.jar"
 }
 
 //task release(dependsOn: ['clean', 'minimizedJar', 'launch4j']) << {
@@ -114,5 +114,11 @@ launch4j {
 //}
 
 task buildApp(type:Exec, dependsOn: jar) {
-	commandLine "jar2app", "build/libs/vitaorganizer-${version}.jar", "-i", "extra/icon.icns", "build/libs/vitaorganizer-${version}.app"
+	commandLine "jar2app",
+		"${project.buildDir}/libs/vitaorganizer-${version}.jar",
+		"-i", "${project.rootDir}/extra/icon.icns",
+		"${project.buildDir}/libs/vitaorganizer-${version}.app"
+}
+
+task buildExe(dependsOn: [jar, launch4j]) {
 }
