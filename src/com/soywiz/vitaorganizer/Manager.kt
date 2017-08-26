@@ -7,14 +7,16 @@ import it.sauronsoftware.ftp4j.FTPClient
 import it.sauronsoftware.ftp4j.FTPDataTransferListener
 import it.sauronsoftware.ftp4j.FTPException
 import it.sauronsoftware.ftp4j.FTPFile
-import it.sauronsoftware.ftp4j.FTPReply
-import sun.nio.ch.FileKey
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import java.net.Socket
-import java.util.*
-import java.util.zip.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import javax.swing.JOptionPane
 
 /**
@@ -106,17 +108,17 @@ object ConnectionMgr {
 		return ftp.isAuthenticated() && this.authenticated;
 	}
 
-	fun isDisconnected() : Boolean {
+	fun isDisconnected(): Boolean {
 		//again, not reliable
 		return !ftp.isConnected() && !this.connected;
 	}
 
 	fun connectToFtp(hostname: String, port: Int = 1337, username: String = "", password: String = ""): Boolean {
 
-		if(hostname.isEmpty())
+		if (hostname.isEmpty())
 			return false
 
-		if(isConnected() && isAuthenticated()) {
+		if (isConnected() && isAuthenticated()) {
 			return true
 		}
 
@@ -125,24 +127,21 @@ object ConnectionMgr {
 			val response: Array<String> = ftp.connect(hostname, port)
 			val msg = response.get(0)
 			println("Connected, welcome msg: $msg")
-		}
-		catch(e: IOException) {
+		} catch (e: IOException) {
 			println("IOException: disconnecting")
 			ftp.disconnect(false)
 			setConnectionStatus(false, false)
 			return false
-		}
-		catch(e: FTPException) {
+		} catch (e: FTPException) {
 			println("FTPException: disconnecting")
 			ftp.disconnect(false)
 			setConnectionStatus(false, false)
 			return false
-		}
-		catch(e: IllegalStateException) {
+		} catch (e: IllegalStateException) {
 			println("IllegalStateException: already connected")
 		}
 
-		if(!ftp.isConnected()) {
+		if (!ftp.isConnected()) {
 			println("Connection failed for unknown reason")
 			ftp.abruptlyCloseCommunication()
 			setConnectionStatus(false, false)
@@ -154,21 +153,19 @@ object ConnectionMgr {
 		try {
 			println("Authenticating with username=\'$username\' and password=\'$password\'...")
 			ftp.login(username, password)
-		}
-		catch(e: IOException) {
+		} catch (e: IOException) {
 			println("IOException: I/O Error, disconnecting")
 			ftp.disconnect(true)
 			setConnectionStatus(false, false)
 			return false
-		}
-		catch(e: FTPException) {
+		} catch (e: FTPException) {
 			println("FTPException: Login failed, disconnecting with QUIT message")
 			ftp.disconnect(true)
 			setConnectionStatus(false, false)
 			return false
 		}
 
-		if(!ftp.isAuthenticated) {
+		if (!ftp.isAuthenticated) {
 			println("Login failed, disconnecting with QUIT message")
 			ftp.disconnect(true)
 			setConnectionStatus(false, false)
@@ -183,23 +180,20 @@ object ConnectionMgr {
 
 	fun disconnectFromFtp(): Boolean {
 		try {
-			if(this.isConnected()) {
-				if(this.isAuthenticated()) {
+			if (this.isConnected()) {
+				if (this.isAuthenticated()) {
 					ftp.abortCurrentDataTransfer(true)
 					ftp.setAutoNoopTimeout(0)
 					ftp.logout()
 					ftp.disconnect(true)
-				}
-				else {
+				} else {
 					ftp.abortCurrentDataTransfer(false)
 					ftp.disconnect(true)
 				}
 			}
-		}
-		catch(e: Throwable) {
+		} catch (e: Throwable) {
 
-		}
-		finally {
+		} finally {
 			ftp.abortCurrentDataTransfer(false)
 			ftp.disconnect(false);
 			ftp.abruptlyCloseCommunication()
@@ -214,17 +208,17 @@ object ConnectionMgr {
 		return ftp
 	}
 
-	fun deleteFile(remotePath: String) : Boolean {
-		if(remotePath.isEmpty())
+	fun deleteFile(remotePath: String): Boolean {
+		if (remotePath.isEmpty())
 			return false;
 
-		val tmp = if(remotePath.startsWith('/')) "" else "/" + remotePath
-		if(tmp.endsWith('/')) {
+		val tmp = if (remotePath.startsWith('/')) "" else "/" + remotePath
+		if (tmp.endsWith('/')) {
 			//is this a directory?
 			return false
 		}
 
-		if(!connectToFtp(VitaOrganizerSettings.lastDeviceIp, VitaOrganizerSettings.lastDevicePort))
+		if (!connectToFtp(VitaOrganizerSettings.lastDeviceIp, VitaOrganizerSettings.lastDevicePort))
 			return false;
 
 		try {
@@ -236,12 +230,12 @@ object ConnectionMgr {
 		return true;
 	}
 
-	fun downloadDirectory(remotePath: String, localPath: String) : Boolean {
+	fun downloadDirectory(remotePath: String, localPath: String): Boolean {
 
-		if(remotePath.isEmpty() || localPath.isEmpty())
+		if (remotePath.isEmpty() || localPath.isEmpty())
 			return false
 
-		if(!connectToFtp(VitaOrganizerSettings.lastDeviceIp, VitaOrganizerSettings.lastDevicePort))
+		if (!connectToFtp(VitaOrganizerSettings.lastDeviceIp, VitaOrganizerSettings.lastDevicePort))
 			return false
 
 		var _remotePath = remotePath.replace("//", "/")
@@ -250,21 +244,20 @@ object ConnectionMgr {
 		val ftp = ConnectionMgr.getFtpClient();
 		try {
 			val localFile = File(localPath)
-			if(!localFile.exists())
+			if (!localFile.exists())
 				localFile.mkdirs()
 
-			for(file in ftp.list(remotePath)) {
-				if(file.type == FTPFile.TYPE_DIRECTORY) {
+			for (file in ftp.list(remotePath)) {
+				if (file.type == FTPFile.TYPE_DIRECTORY) {
 					println("[D] $_remotePath/${file.name}/")
 					val ret = downloadDirectory("$_remotePath/${file.name}", "$_localPath/${file.name}");
-					if(!ret) {
+					if (!ret) {
 						println("Could not download subdirectory $_remotePath${file.name}")
 						return false
 					}
-				}
-				else if(file.type == FTPFile.TYPE_FILE) {
+				} else if (file.type == FTPFile.TYPE_FILE) {
 					val f: File = File("$_localPath/${file.name}")
-					if(!f.parentFile.safe_exists()) {
+					if (!f.parentFile.safe_exists()) {
 						val t: String = f.parent
 						println("$t doesnt exsist!")
 						return false
@@ -282,6 +275,7 @@ object ConnectionMgr {
 						override fun aborted() {
 							print("aborted!")
 						}
+
 						override fun transferred(size: Int) {
 							// print(".")
 						}
@@ -293,8 +287,7 @@ object ConnectionMgr {
 					println("")
 				}
 			}
-		}
-		catch(e: Throwable) {
+		} catch (e: Throwable) {
 			e.printStackTrace()
 			return false
 		}
@@ -311,55 +304,72 @@ object IOMgr {
 	fun canReadWrite(path: String): Boolean = File(path).safe_canReadWrite()
 	fun canDelete(path: String, recursive: Boolean = false): Boolean = File(path).safe_canDelete()
 	fun canExecute(path: String): Boolean = File(path).safe_canExecute()
-	fun delete(path: String) : Boolean = File(path).safe_delete()
-	fun createAndCheckFile(path: String) : Boolean = File(path).createAndCheckFile()
-	fun listAllFiles(path: String) : MutableList<File> = File(path).listAllFiles()
+	fun delete(path: String): Boolean = File(path).safe_delete()
+	fun createAndCheckFile(path: String): Boolean = File(path).createAndCheckFile()
+	fun listAllFiles(path: String): MutableList<File> = File(path).listAllFiles()
 }
 
 object ZipMgr {
 
-	private val multiplier = if(FileSize.base == 10) 1000 else 1024
+	private val multiplier = if (FileSize.base == 10) 1000 else 1024
 
-	fun extractZip(zipFile: File, directory: File) : Boolean {
+	data class ExtractStatus(
+		var extractedFiles: Int = 0,
+		var totalFiles: Int = 0,
+		var extractedSize: Long = 0L,
+		var totalSize: Long = 0L
+	) {
+		val progress: Double get() = when {
+			totalSize == 0L -> 0.0
+			else -> extractedSize.toDouble() / totalSize.toDouble()
+		}
+	}
 
-		if(!directory.safe_isDirectory())
+	fun extractZip(zipFile: File, directory: File, notify: (ExtractStatus) -> Unit = {}): Boolean {
+
+		if (!directory.safe_isDirectory())
 			return false
 
 		val dirPath = directory.canonicalPath
 
 		val fis = FileInputStream(zipFile)
+
+		val status = ExtractStatus()
+
 		try {
-			val zis = ZipInputStream(fis)
-			var ze = zis.nextEntry
+			ZipFile(zipFile).use { zip ->
+				val entries = zip.entries().toList().distinctBy { it.name }
 
-			while(ze != null) {
-				val outputFile = File(dirPath + File.separator + ze.name)
-				println("Unzipping ${ze.name} to ${outputFile.canonicalPath}")
+				status.totalFiles = entries.size
+				status.totalSize = entries.map { it.size }.sum()
 
-				if(ze.name.endsWith('/'))
-					outputFile.mkdirs()
-				else {
-					outputFile.parentFile.mkdirs()
-					val fos = FileOutputStream(outputFile)
+				notify(status)
 
-					val bytes = ByteArray(10 * multiplier * multiplier)
+				for ((index, ze) in entries.withIndex()) {
+					val outputFile = File(dirPath + File.separator + ze.name)
+					println("Unzipping ${ze.name} to ${outputFile.canonicalPath}")
 
-					while (true) {
-						val length = zis.read(bytes)
-						if (length < 0)
-							break;
-
-						fos.write(bytes, 0, length)
+					if (ze.name.endsWith('/')) {
+						outputFile.mkdirs()
+					} else {
+						outputFile.parentFile.mkdirs()
+						val startedSize = status.extractedSize
+						FileOutputStream(outputFile).use { fos ->
+							zip.getInputStream(ze).use { zis ->
+								zis.copyToReport(fos) { current, total, chunk ->
+									status.extractedSize = startedSize + current
+									notify(status)
+								}
+							}
+						}
+						status.extractedSize = startedSize + ze.size
 					}
 
-					fos.close()
+					status.extractedFiles = index + 1
+					notify(status)
 				}
-				ze = zis.nextEntry
 			}
-
-			zis.close()
-		}
-		catch(e: Throwable) {
+		} catch (e: Throwable) {
 			e.printStackTrace()
 			fis.close();
 			return false;
@@ -369,11 +379,11 @@ object ZipMgr {
 	}
 
 	fun writeZipFile(dir: File, extension: String = ".zip"): Boolean {
-		if(!dir.safe_isDirectory())
+		if (!dir.safe_isDirectory())
 			return false
 
 		val fileList = dir.listAllFiles()
-		if(fileList.isEmpty())
+		if (fileList.isEmpty())
 			return false
 
 		try {
@@ -382,7 +392,7 @@ object ZipMgr {
 			zos.setMethod(java.util.zip.Deflater.DEFLATED)
 			zos.setLevel(9)
 			for (file in fileList) {
-				if(!addFileFromDirectory(file, dir, zos)) {
+				if (!addFileFromDirectory(file, dir, zos)) {
 					println("failed $file!")
 					return false
 				}
@@ -391,19 +401,18 @@ object ZipMgr {
 			zos.close()
 			fos.close()
 			return true
-		}
-		catch (e: Throwable) {
+		} catch (e: Throwable) {
 			e.printStackTrace()
 			return false
 		}
 	}
 
 	fun addFileFromDirectory(file: File, dir: File, zos: ZipOutputStream): Boolean {
-		if(!file.safe_canRead()) {
+		if (!file.safe_canRead()) {
 			println("cannot read file")
 			return false
 		}
-		if(!file.safe_isDirectory()) {
+		if (!file.safe_isDirectory()) {
 			println("given directory isnt one")
 			return false
 		}
@@ -415,8 +424,8 @@ object ZipMgr {
 			println("Writing $filePath to zip")
 
 			//val deflated = DeflaterInputStream(fis)
-			if(file.isDirectory) {
-				zos.putNextEntry(ZipEntry(filePath + if(!filePath.endsWith('/')) "/" else ""))
+			if (file.isDirectory) {
+				zos.putNextEntry(ZipEntry(filePath + if (!filePath.endsWith('/')) "/" else ""))
 				zos.closeEntry()
 				return true
 			}
@@ -426,9 +435,9 @@ object ZipMgr {
 			val fis = FileInputStream(file)
 			val bytes = ByteArray(10 * multiplier * multiplier)
 
-			while(true) {
+			while (true) {
 				val length = fis.read(bytes)
-				if(length < 0)
+				if (length < 0)
 					break;
 
 				zos.write(bytes, 0, length)
@@ -439,8 +448,7 @@ object ZipMgr {
 			fis.close()
 
 			return true
-		}
-		catch(e: Throwable) {
+		} catch (e: Throwable) {
 			println("exception ZipMgr::addFileFromDirectory")
 			e.printStackTrace()
 			return false;
@@ -464,25 +472,22 @@ object MsgMgr {
 }
 
 object UsbStorageMgr {
-	  fun findUsbStorage() : String? {
-		  if(OS.isWindows) {
+	fun findUsbStorage(): String? {
+		if (OS.isWindows) {
 
-		  }
-		  else if(OS.isMac) {
+		} else if (OS.isMac) {
 
-		  }
-		  else if(OS.isUnix) {
+		} else if (OS.isUnix) {
 
-		  }
-		  else if(OS.isSolaris) {
+		} else if (OS.isSolaris) {
 
-		  }
-		  return null
-	  }
+		}
+		return null
+	}
 
-	fun isMemoryCard(dirPathFile: File) : Boolean {
+	fun isMemoryCard(dirPathFile: File): Boolean {
 
-		if(!dirPathFile.safe_exists() || !dirPathFile.safe_isDirectory() || !dirPathFile.safe_canReadWrite())
+		if (!dirPathFile.safe_exists() || !dirPathFile.safe_isDirectory() || !dirPathFile.safe_canReadWrite())
 			return false
 
 		val content = dirPathFile.list()
@@ -492,18 +497,18 @@ object UsbStorageMgr {
 		return isValid
 	}
 
-	fun hasVitaShell(dirPathFile: File) : Boolean {
+	fun hasVitaShell(dirPathFile: File): Boolean {
 		//if(!isMemoryCard(dirPathFile))
 		//	return false
 		val paramSfoPath = dirPathFile.canonicalPath + File.separator + "app" + File.separator + "VITASHELL" + File.separator + "sce_sys" + File.separator + "param.sfo"
 		val paramSfoFile = File(paramSfoPath)
-		if(!paramSfoFile.safe_exists() || !paramSfoFile.safe_canRead())
+		if (!paramSfoFile.safe_exists() || !paramSfoFile.safe_canRead())
 			return false;
 
 		val psf = PSF.read(paramSfoFile.readBytes().stream)
 		val APP_VER = psf["APP_VER"].toString().toDouble()
 
-		if(APP_VER < 1.51f) {
+		if (APP_VER < 1.51f) {
 			MsgMgr.error("You must have at least VitaShell 01.51!")
 			return false
 		}
@@ -515,31 +520,26 @@ object UsbStorageMgr {
 //TODO: for future -> support anyrhing we can thru one class, that collects all available data to the pointed entry at location
 class PSP2Entry(location: String) {
 	init {
-		if(location.isEmpty()) {
+		if (location.isEmpty()) {
 			throw Exception("PSP2Entry::init --> location is empty")
 		}
 		//figure out what contains
 		val file = File(location)
-		if(file.safe_exists()) {
-			if(file.safe_isFile()) {
-				if(file.extension.toLowerCase() == "vpk") {
+		if (file.safe_exists()) {
+			if (file.safe_isFile()) {
+				if (file.extension.toLowerCase() == "vpk") {
 					//normal installable vpk files
-				}
-				else if(file.extension.toLowerCase() == "zip") {
+				} else if (file.extension.toLowerCase() == "zip") {
 					//maybe also a vpk, maybe a maidunp, maidump_patch, maidump_addc
 				}
-			}
-			else if(file.safe_isDirectory()) {
+			} else if (file.safe_isDirectory()) {
 				//extraced vpk folder; maidump, maidump_patch, maidump_addc folder
 			}
-		}
-		else if(location.startsWith("ux0:app/")) {
+		} else if (location.startsWith("ux0:app/")) {
 			//on memory card (usb or ftp)
-		}
-		else if(location.startsWith("ur0:app/")) {
+		} else if (location.startsWith("ur0:app/")) {
 			//or internal flash memory (ftp)
-		}
-		else if(location.startsWith("http://") || location.startsWith("https://")) {
+		} else if (location.startsWith("http://") || location.startsWith("https://")) {
 			//support downloading a game
 		}
 	}

@@ -49,9 +49,8 @@ class ExtractVpkToUMS(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry) :
 
 		status("Extracting ${entry.title} [${entry.gameId}]... Please wait...")
 
-		if(!ZipMgr.extractZip(vpk, fileExtractDir))
-			return false
-
-		return true
+		return ZipMgr.extractZip(vpk, fileExtractDir) { status ->
+			status("Extracting ${entry.title} [${entry.gameId}]... ${"%.1f".format(status.progress * 100)}% ${status.extractedFiles}/${status.totalFiles}")
+		}
 	}
 }
