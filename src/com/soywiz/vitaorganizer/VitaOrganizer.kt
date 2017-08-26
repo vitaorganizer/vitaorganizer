@@ -458,12 +458,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					}
 					.action {
 					VitaOrganizerCache.deleteAll()
-					updateFileList();
-				}
+					updateFileList()
+					}
 				)
-				add(JMenuItem(Texts.format("MENU_OPTIONS")).action {
-					frame.showDialog(SettingsDialog())
-				})
+				//add(JMenuItem(Texts.format("MENU_OPTIONS")).action {
+				//	frame.showDialog(SettingsDialog())
+				//})
 			})
 			add(JMenu(Texts.format("MENU_HELP")).apply {
 				add(JMenuItem(Texts.format("MENU_WEBSITE"), Icons.WEBSITE).action {
@@ -512,12 +512,12 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			val connectAddress = object : JTextField(VitaOrganizerSettings.lastDeviceIp) {
 				init {
 					font = Font(Font.MONOSPACED, Font.PLAIN, 14)
-					columns = 17;
+					columns = 17
 				}
 
 				override fun processKeyEvent(e: KeyEvent?) {
 					super.processKeyEvent(e)
-					VitaOrganizerSettings.lastDeviceIp = this.getText()
+					VitaOrganizerSettings.lastDeviceIp = this.text
 				}
 			}.apply {
 				addActionListener {
@@ -632,8 +632,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 
 			override fun componentMoved(e: ComponentEvent?) {
 				super.componentMoved(e)
-				VitaOrganizerSettings.WINDOW_X = frame.x;
-				VitaOrganizerSettings.WINDOW_Y = frame.y;
+				VitaOrganizerSettings.WINDOW_X = frame.x
+				VitaOrganizerSettings.WINDOW_Y = frame.y
 				println("window moved!")
 			}
 		})

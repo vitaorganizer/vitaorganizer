@@ -47,11 +47,13 @@ public class Texts {
 		}
 	}
 
-	static public String format(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Pair<String, ?>... pairs) {
+	//static public String format(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Pair<String, ?>... pairs) {
+	static public String format(@NonNls String key, Pair<String, ?>... pairs) {
 		return TextFormatter.format(getString(key), (Pair<String, ?>[]) pairs);
 	}
 
-	static public String formatMap(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Map<String, ?> map) {
+	//static public String formatMap(@NonNls @PropertyKey(resourceBundle = BUNDLE) String key, Map<String, ?> map) {
+	static public String formatMap(@NonNls String key, Map<String, ?> map) {
 		return TextFormatter.format(getString(key), map);
 	}
 
