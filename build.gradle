@@ -3,7 +3,7 @@ version new File('resources/com/soywiz/vitaorganizer/currentVersion.txt').text
 
 buildscript {
     ext.version = new File('resources/com/soywiz/vitaorganizer/currentVersion.txt').text
-    ext.kotlin_version = '1.1.4'
+    ext.kotlin_version = '1.1.4-2'
     ext.proguard_version = '5.2.1'
     ext.launch4j_version = '1.6.2'
 
