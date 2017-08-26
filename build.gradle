@@ -13,7 +13,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "net.sf.proguard:proguard-gradle:$proguard_version"
+        //classpath "net.sf.proguard:proguard-gradle:$proguard_version"
         classpath "gradle.plugin.edu.sc.seis.gradle:launch4j:$launch4j_version"
     }
 }
@@ -67,6 +67,7 @@ jar {
     }
 }
 
+/*
 task minimizedJar(type: proguard.gradle.ProGuardTask) {
     print "build/libs/vitaorganizer-${version}.jar"
     injars "build/libs/vitaorganizer-${version}.jar"
@@ -89,6 +90,7 @@ task minimizedJar(type: proguard.gradle.ProGuardTask) {
 			method access: 'private'
 		}
 }
+*/
 
 //minimizedJar.dependsOn jar
 createExe.dependsOn jar
@@ -99,26 +101,28 @@ createExe.dependsOn jar
 launch4j {
 	//opt = "-Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true"
 	jvmOptions = ["-Dsun.java2d.d3d=false", "-Dsun.java2d.noddraw=true"]
-    print "version: $version"
-    outfile = "${project.buildDir}/libs/vitaorganizer-${version}.exe"
-    icon = "${project.rootDir}/extra/icon.ico"
+    outfile = "build/libs/vitaorganizer-${version}.exe"
+    icon = "extra/icon.ico"
     mainClassName = project.mainClassName
     //copyConfigurable = project.tasks.fatJar.outputs.files
     //jar = "lib/${project.tasks.fatJar.archiveName}"
     maxHeapSize = 1024
-    jar = "${project.buildDir}/libs/vitaorganizer-${version}.min.jar"
+    jar = "build/libs/vitaorganizer-${version}.jar"
 }
 
 //task release(dependsOn: ['clean', 'minimizedJar', 'launch4j']) << {
 //	println 'release'
 //}
 
-task buildApp(type:Exec, dependsOn: jar) {
-	commandLine "jar2app",
-		"${project.buildDir}/libs/vitaorganizer-${version}.jar",
-		"-i", "${project.rootDir}/extra/icon.icns",
-		"${project.buildDir}/libs/vitaorganizer-${version}.app"
-}
-
-task buildExe(dependsOn: [jar, launch4j]) {
+task createApp(dependsOn: jar) {
+	doLast {
+		copy {
+			from('extra/app')
+			into "${project.buildDir}/libs/vitaorganizer-${version}.app"
+		}
+		copy {
+			from("${project.buildDir}/libs/${project.tasks['jar'].archiveName}")
+			into "${project.buildDir}/libs/vitaorganizer-${version}.app/Contents/Java"
+		}
+	}
 }

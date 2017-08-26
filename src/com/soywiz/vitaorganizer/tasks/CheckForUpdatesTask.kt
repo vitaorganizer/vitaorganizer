@@ -15,7 +15,7 @@ class CheckForUpdatesTask(vitaOrganizer: VitaOrganizer, val showCurrentVersionDi
 			lastSoftwareVersion.print("Last")
 			currentSoftwareVersion.print("Current")
 
-			if (lastSoftwareVersion.equals(currentSoftwareVersion)) {
+			if (lastSoftwareVersion == currentSoftwareVersion) {
 				if (showCurrentVersionDialog) {
 					info(
 						Texts.format("YOU_HAVE_LASTEST_VERSION", "version" to currentSoftwareVersion.toString()),
@@ -33,14 +33,12 @@ class CheckForUpdatesTask(vitaOrganizer: VitaOrganizer, val showCurrentVersionDi
 					openWebpage(URL(VitaOrganizerVersion.lastVersionUrl))
 			} else {
 				println("decreased/changed?")
-				throw Exception("Invalid")
+				throw Exception("Have a newer version? current=$currentSoftwareVersion, last=$lastSoftwareVersion")
 			}
 		} catch (e: java.net.UnknownHostException) {
-			error("${Texts.format("UPDATE_CHECK_FAILED")} ${Texts.format("UNKNOWN_REMOTE_HOST")} ${e.message!!}")
-		} catch (e: Exception) {
-			error("${Texts.format("UPDATE_CHECK_FAILED")} ${e.message!!}")
+			error("${Texts.format("UPDATE_CHECK_FAILED")} ${Texts.format("UNKNOWN_REMOTE_HOST")}\n${e.message}")
 		} catch (e: Throwable) {
-			error(Texts.format("UPDATE_CHECK_FAILED"))
+			error("${Texts.format("UPDATE_CHECK_FAILED")}\n${e.message}")
 			e.printStackTrace();
 		}
 	}

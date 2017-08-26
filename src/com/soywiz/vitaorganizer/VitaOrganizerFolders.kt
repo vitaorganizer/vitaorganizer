@@ -8,7 +8,7 @@ object VitaOrganizerFolders {
 
 	val CONFIG_ROOT: File = when {
 		OS.isMac && insideMacApp -> File(System.getenv("HOME") + "/Library/Application Support/vitaorganizer-1") // Format
-		else -> File(".").canonicalFile
+		else -> File("./vitaorganizer").canonicalFile
 	}.canonicalFile
 
 	init {

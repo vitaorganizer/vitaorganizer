@@ -29,38 +29,31 @@ object VitaOrganizerVersion {
 
 		if (matchVersion == null) {
 			println("not matched")
-			throw Exception("Invalid version string");
+			throw Exception("Invalid version string")
 		}
 
-		val versionGroupValues = matchVersion.groupValues;
+		val versionGroupValues = matchVersion.groupValues
+
 		return SoftwareVersion(
-			versionGroupValues[1].toByte(),
-			versionGroupValues[2].toByte(),
-			versionGroupValues[3].toByte())
+			versionGroupValues[1].toInt(),
+			versionGroupValues[2].toInt(),
+			versionGroupValues[3].toInt()
+		)
 	}
 }
 
-class SoftwareVersion(val major: Byte, val minor: Byte, val revision: Byte) {
-
+data class SoftwareVersion(val major: Int, val minor: Int, val revision: Int) {
 	fun print(prefix: String) {
 		println("[$prefix] Major($major) Minor($minor) Revision($revision)")
 	}
 
 	fun didIncrement(version: SoftwareVersion): Boolean {
-		if (version.major < this.major) return true;
-		if (version.minor < this.minor) return true;
-		if (version.revision < this.revision) return true;
-		return false;
-	}
-
-	fun equals(version: SoftwareVersion): Boolean {
-		if (version.major == this.major
-			&& version.minor == this.minor
-			&& version.revision == this.revision)
-			return true
+		if (version.major < this.major) return true
+		if (version.minor < this.minor) return true
+		if (version.revision < this.revision) return true
 		return false
 	}
 
-	override fun toString(): String = "${major}.${minor}.${revision}"
+	override fun toString(): String = "$major.$minor.$revision"
 }
 
