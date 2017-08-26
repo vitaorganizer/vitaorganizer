@@ -1,4 +1,4 @@
-package com.soywiz.util
+package com.soywiz.vitaorganizer
 
 enum class DumperNames(val shortName: String, val longName: String, val file: String, val size: Long) {
 

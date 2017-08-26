@@ -1,8 +1,5 @@
 package com.soywiz.vitaorganizer
 
-import com.soywiz.util.DumperModules
-import com.soywiz.util.DumperNames
-import com.soywiz.util.DumperNamesHelper
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.getBytes
 import com.soywiz.vitaorganizer.ext.getInputStream
