@@ -18,7 +18,9 @@ class RepackVpkTask(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry, val
 		tempFile.delete()
 		tempFile2.delete()
 
-		val temp = ByteArray(10 * 1024 * 1024)
+		val multiplier = if (FileSize.base == 10) 1000 else 1024
+
+		val temp = ByteArray(10 * multiplier * multiplier)
 
 		ZipFile(file).use { zip ->
 			FileOutputStream(tempFile).use { out ->
@@ -54,8 +56,8 @@ class RepackVpkTask(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry, val
 									zout.write(temp, 0, bytes)
 									currentSize += bytes
 									localSize += bytes
-									if (localSize >= 1 * 1024 * 1024) {
-										localSize -= 1 * 1024 * 1024
+									if (localSize >= 1 * multiplier * multiplier) {
+										localSize -= 1 * multiplier * multiplier
 										updateStatus()
 									}
 								}

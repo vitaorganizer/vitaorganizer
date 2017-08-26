@@ -7,7 +7,9 @@ import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.getBytes
 import com.soywiz.vitaorganizer.ext.getInputStream
 import com.soywiz.vitaorganizer.ext.getResourceBytes
+import com.soywiz.vitaorganizer.ext.safe_exists
 import java.io.File
+import java.util.zip.ZipException
 import java.util.zip.ZipFile
 
 class VpkFile(val vpkFile: File) {
@@ -59,9 +61,9 @@ class VpkFile(val vpkFile: File) {
 
 				//try to find compressionlevel and vitaminversion or maiversion
 				val paramsfo = zip.getEntry("sce_sys/param.sfo")
-				val compressionLevel = if (paramsfo != null) paramsfo.method.toString() else ""
+				val compressionLevel = paramsfo?.method?.toString() ?: ""
 
-				var dumper = DumperNamesHelper().findDumperByShortName(if(psf["ATTRIBUTE"].toString() == "32768") "HB" else "UNKNOWN")
+				var dumper = DumperNamesHelper().findDumperByShortName(if(psf["ATTRIBUTE"].toString().toInt() == 0x8000) "HB" else "UNKNOWN")
 				if(dumper == DumperNames.UNKNOWN) {
 					for (file in DumperModules.values()) {
 						val suprx = zip.getEntry(file.file)
@@ -71,38 +73,46 @@ class VpkFile(val vpkFile: File) {
 					}
 				}
 
-				println("For file [${vpkFile}] (Compressmethod : $compressionLevel Dumpver : ${dumper})")
+				println("Processing [$vpkFile]")
 				entry.pathFile.writeBytes(vpkFile.absolutePath.toByteArray(Charsets.UTF_8))
-				if (!entry.compressionFile.exists()) {
+				if (!entry.compressionFile.safe_exists()) {
 					entry.compressionFile.writeText(compressionLevel.toString())
 				}
-				if (!entry.dumperVersionFile.exists()) {
+				if (!entry.dumperVersionFile.safe_exists()) {
 					entry.dumperVersionFile.writeText(dumper.shortName)
 				}
 
-				if (!entry.icon0File.exists()) {
-					try {
-						entry.icon0File.writeBytes(zip.getInputStream(zip.getEntry("sce_sys/icon0.png")).readBytes())
-					} catch (e: Throwable){
-						entry.icon0File.writeBytes(getResourceBytes("com/soywiz/vitaorganizer/dummy128.png") ?: byteArrayOf())
-					}
+				if (!entry.icon0File.safe_exists()) {
+					if(zip.getEntry("sce_sys/icon0.png") != null)
+						entry.icon0File.writeBytes(zip.getBytes("sce_sys/icon0.png"))
+					else
+						entry.icon0File.writeBytes(byteArrayOf())
 				}
-				if (!entry.paramSfoFile.exists()) {
+				if (!entry.paramSfoFile.safe_exists()) {
 					entry.paramSfoFile.writeBytes(paramSfoData)
 				}
-				if (!entry.sizeFile.exists()) {
+				if (!entry.sizeFile.safe_exists()) {
 					val uncompressedSize = zipEntries.toList().map { it.size }.sum()
 					entry.sizeFile.writeText("" + uncompressedSize)
 				}
-				if (!entry.permissionsFile.exists()) {
+				if (!entry.permissionsFile.safe_exists()) {
 					val ebootBinStream = zip.getInputStream("eboot.bin")
 					entry.permissionsFile.writeText("" + EbootBin.hasExtendedPermissions(ebootBinStream))
 					ebootBinStream.close()
 				}
 				//getGameEntryById(gameId).inPC = true
 			}
-		} catch (e: Throwable) {
-			println("Error processing ${vpkFile.name}")
+		}
+		catch (e: ZipException) {
+			if(e.message!!.contains("error in opening zip file"))
+				println("Skipped: Could not open ${vpkFile.name}")
+			else if(e.message!!.contains("invalid LOC header (bad signature)"))
+				println("Skipped: Invalid LOC header in ${vpkFile.name}")
+			else if(e.message!!.contains("invalid CEN header (bad signature)"))
+				println("Skipped: Invalid CEN header in ${vpkFile.name}")
+		}
+		catch (e: Throwable) {
+			println("Skipped: Error processing ${vpkFile.name}")
 			e.printStackTrace()
 		}
 		return retGameId

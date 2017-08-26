@@ -1,24 +1,32 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.HEX_DIGITS
+import com.soywiz.util.OS
 import com.soywiz.vitaorganizer.ext.nextString
 import com.soywiz.vitaorganizer.ext.parseInt
 import com.soywiz.vitaorganizer.ext.parseLong
 import java.io.*
 import java.security.SecureRandom
 import java.util.*
+import javax.swing.JFrame
 import kotlin.reflect.KProperty
 
 object VitaOrganizerSettings {
 	private val queue by lazy { ThreadQueue() }
 	private val CHARSET = Charsets.UTF_8
+	var tableFontSize: Int by PropDelegateInt { 14 }
+	var unitBase: Int by PropDelegateInt { if(OS.isWindows) 2 else 10 }
 	var lastUpdateCheckTime: Long by PropDelegateLong { 0L }
 	var WINDOW_WIDTH: Int by PropDelegateInt { 960 }
 	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }
-	var WINDOW_STATE: Int by PropDelegateInt { 0 }
+	var WINDOW_STATE: Int by PropDelegateInt { JFrame.NORMAL }
+	var WINDOW_X: Int by PropDelegateInt { 0 }
+	var WINDOW_Y: Int by PropDelegateInt { 0 }
 	var vpkFolder: String by PropDelegateStr { "." }
+	var usbMassStoragePath: String by PropDelegateStr  { "." }
+	var lastVpkInstallFolder: String by PropDelegateStr{ "." }
 	var lastDeviceIp: String by PropDelegateStr { "192.168.1.100" }
-	var lastDevicePort: String by PropDelegateStr { "1337" }
+	var lastDevicePort: Int by PropDelegateInt { 1337 }
 	var LANGUAGE: String by PropDelegateStr { "auto" }
 	var WLAN_SSID: String by PropDelegateStr {
 		"VORG-" + SecureRandom().nextString(HEX_DIGITS, 4)

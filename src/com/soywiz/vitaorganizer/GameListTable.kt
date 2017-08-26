@@ -1,6 +1,7 @@
 package com.soywiz.vitaorganizer
 
 import com.soywiz.util.stream
+import com.soywiz.vitaorganizer.ext.getResourceBytes
 import com.soywiz.vitaorganizer.ext.getScaledImage
 import java.awt.BorderLayout
 import java.awt.Font
@@ -232,7 +233,7 @@ open class GameListTable : JPanel(BorderLayout()) {
 			//resizable = false
 		}
 
-		table.font = Font(Font.MONOSPACED, Font.PLAIN, 14)
+		table.font = Font(Font.MONOSPACED, Font.PLAIN, VitaOrganizerSettings.tableFontSize)
 
 		//table.selectionModel.addListSelectionListener { e -> println(e) };
 
@@ -298,23 +299,20 @@ open class GameListTable : JPanel(BorderLayout()) {
 	fun setEntries(games: List<CachedVpkEntry>) {
 		val newRows = arrayListOf<Array<Any>>()
 
+		val dummyIcon = getResourceBytes("com/soywiz/vitaorganizer/dummy128.png")
+
 		for (entry in games.sortedBy { it.title }) {
 			try {
 				val entry2 = entry.entry
 				val icon = entry2.icon0File
-				val image = ImageIO.read(ByteArrayInputStream(icon.readBytes()))
+				val iconBytes = icon.readBytes()
+				val image = ImageIO.read(ByteArrayInputStream(when {
+                    iconBytes.isEmpty() -> dummyIcon
+                    else -> iconBytes
+                }))
 				val psf = PSF.read(entry2.paramSfoFile.readBytes().stream)
 				val extendedPermissions = entry.hasExtendedPermissions
-
-				val type = when {
-                    psf["CATEGORY"] == "gd" -> when {
-                        psf["ATTRIBUTE"].toString().toInt() == 32768 -> "HOMEBREW"
-                        else -> Texts.format("TYPE_GAME")
-                    }
-                    psf["CATEGORY"] == "gda" -> "SYSTEM"
-					psf["CATEGORY"] == "gp" -> Texts.format("TYPE_UPDATE")
-                    else -> psf["CATEGORY"]?.toString() ?: Texts.format("TYPE_UNKNOWN")
-                }
+				val type = entry.type
 
 				//if (entry.inVita && entry.inPC) {
 				//	Texts.format("LOCATION_BOTH")
