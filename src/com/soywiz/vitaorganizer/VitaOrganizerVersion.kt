@@ -5,7 +5,7 @@ import java.net.URL
 
 object VitaOrganizerVersion {
 	val currentVersion: String get() = getResourceString("com/soywiz/vitaorganizer/currentVersion.txt") ?: "unknown"
-	val lastVersion: String get() =  URL("https://raw.githubusercontent.com/soywiz/vitaorganizer/master/lastVersion.txt").readText()
+	val lastVersion: String get() =  URL("https://raw.githubusercontent.com/vitaorganizer/vitaorganizer/master/lastVersion.txt").readText()
 
 	var lastVersionUrl: String? = null
 
