@@ -5,7 +5,7 @@ before_install:
   - "sh -e /etc/init.d/xvfb start"
 jdk:
   - oraclejdk8
-  - openjdk7
+#  - openjdk7 # kotlin 1.1 gradle plugin doesn't support java7 (but runtime should work just fine with java6)
 #  - openjdk6 # gradle 3.0 do not support java6. Required java7 or greater
 after_script:
   - ./gradlew minimizedJar launch4j
