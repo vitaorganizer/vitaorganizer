@@ -1,11 +1,8 @@
-group 'com.soywiz'
-version new File('resources/com/soywiz/vitaorganizer/currentVersion.txt').text
-
 buildscript {
     ext.version = new File('resources/com/soywiz/vitaorganizer/currentVersion.txt').text
     ext.kotlin_version = '1.1.4-2'
-    ext.proguard_version = '5.2.1'
-    ext.launch4j_version = '1.6.2'
+    ext.proguard_version = '5.3.3'
+    ext.launch4j_version = '2.4.1'
 
     repositories {
         maven {
@@ -20,6 +17,9 @@ buildscript {
         classpath "gradle.plugin.edu.sc.seis.gradle:launch4j:$launch4j_version"
     }
 }
+
+group 'com.soywiz'
+version new File('resources/com/soywiz/vitaorganizer/currentVersion.txt').text
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
@@ -90,21 +90,23 @@ task minimizedJar(type: proguard.gradle.ProGuardTask) {
 		}
 }
 
-minimizedJar.dependsOn jar
+//minimizedJar.dependsOn jar
+createExe.dependsOn jar
 
-copyL4jLib.dependsOn minimizedJar
+//copyL4jLib.dependsOn minimizedJar
 
 // https://github.com/TheBoegl/gradle-launch4j
 launch4j {
-	opt = "-Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true"
+	//opt = "-Dsun.java2d.d3d=false -Dsun.java2d.noddraw=true"
+	jvmOptions = ["-Dsun.java2d.d3d=false", "-Dsun.java2d.noddraw=true"]
     print "version: $version"
-    outfile = "../../build/libs/vitaorganizer-${ext.version}.exe"
+    outfile = "../../build/libs/vitaorganizer-${version}.exe"
     icon = "../../extra/icon.ico"
     mainClassName = project.mainClassName
     //copyConfigurable = project.tasks.fatJar.outputs.files
     //jar = "lib/${project.tasks.fatJar.archiveName}"
     maxHeapSize = 1024
-    jar = "../../build/libs/vitaorganizer-${ext.version}.min.jar"
+    jar = "../../build/libs/vitaorganizer-${version}.min.jar"
 }
 
 //task release(dependsOn: ['clean', 'minimizedJar', 'launch4j']) << {
