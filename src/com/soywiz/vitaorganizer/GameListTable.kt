@@ -307,9 +307,9 @@ open class GameListTable : JPanel(BorderLayout()) {
 				val icon = entry2.icon0File
 				val iconBytes = icon.readBytes()
 				val image = ImageIO.read(ByteArrayInputStream(when {
-                    iconBytes.isEmpty() -> dummyIcon
-                    else -> iconBytes
-                }))
+					iconBytes.isEmpty() -> dummyIcon
+					else -> iconBytes
+				}))
 				val psf = PSF.read(entry2.paramSfoFile.readBytes().stream)
 				val extendedPermissions = entry.hasExtendedPermissions
 				val type = entry.type

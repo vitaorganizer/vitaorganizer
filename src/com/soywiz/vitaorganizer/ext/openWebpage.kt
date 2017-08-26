@@ -2,7 +2,6 @@ package com.soywiz.vitaorganizer.ext
 
 import java.awt.Desktop
 import java.net.URI
-import java.net.URISyntaxException
 import java.net.URL
 
 fun openWebpage(uri: URI) {

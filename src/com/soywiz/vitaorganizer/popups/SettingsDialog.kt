@@ -1,9 +1,10 @@
 package com.soywiz.vitaorganizer.popups
 
 import com.soywiz.vitaorganizer.Texts
-import com.soywiz.vitaorganizer.VitaOrganizer
-import java.awt.*
-import javax.swing.*
+import java.awt.BorderLayout
+import java.awt.Dimension
+import javax.swing.JFrame
+import javax.swing.JPanel
 
 class SettingsDialog : JFrame(Texts.format(("MENU_OPTIONS"))) {
 

@@ -1,6 +1,9 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.*
+import com.soywiz.vitaorganizer.PsvitaDevice
+import com.soywiz.vitaorganizer.Texts
+import com.soywiz.vitaorganizer.VitaOrganizer
+import com.soywiz.vitaorganizer.VpkFile
 import java.util.zip.ZipFile
 import javax.swing.JOptionPane
 
@@ -19,7 +22,7 @@ class SendPromotingVpkToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkF
 		}
 	}
 
-	fun performBase() : Boolean {
+	fun performBase(): Boolean {
 		status(Texts.format("STEP_GENERATING_SMALL_VPK_FOR_PROMOTING"))
 
 		//val zip = ZipFile(entry.vpkFile)
@@ -41,11 +44,10 @@ class SendPromotingVpkToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkF
 	}
 
 	override fun perform() {
-		if(performBase()) {
+		if (performBase()) {
 			status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
 			info(Texts.format("VITASHELL_INSTALL", "vpkPath" to vpkPath))
-		}
-		else {
+		} else {
 			status("Failed to send ${vpkFile.id}")
 		}
 	}

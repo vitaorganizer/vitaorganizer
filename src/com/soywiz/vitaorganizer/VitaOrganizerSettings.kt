@@ -15,7 +15,7 @@ object VitaOrganizerSettings {
 	private val queue by lazy { ThreadQueue() }
 	private val CHARSET = Charsets.UTF_8
 	var tableFontSize: Int by PropDelegateInt { 14 }
-	var unitBase: Int by PropDelegateInt { if(OS.isWindows) 2 else 10 }
+	var unitBase: Int by PropDelegateInt { if (OS.isWindows) 2 else 10 }
 	var lastUpdateCheckTime: Long by PropDelegateLong { 0L }
 	var WINDOW_WIDTH: Int by PropDelegateInt { 960 }
 	var WINDOW_HEIGHT: Int by PropDelegateInt { 600 }
@@ -23,8 +23,8 @@ object VitaOrganizerSettings {
 	var WINDOW_X: Int by PropDelegateInt { 0 }
 	var WINDOW_Y: Int by PropDelegateInt { 0 }
 	var vpkFolder: String by PropDelegateStr { "." }
-	var usbMassStoragePath: String by PropDelegateStr  { "." }
-	var lastVpkInstallFolder: String by PropDelegateStr{ "." }
+	var usbMassStoragePath: String by PropDelegateStr { "." }
+	var lastVpkInstallFolder: String by PropDelegateStr { "." }
 	var lastDeviceIp: String by PropDelegateStr { "192.168.1.100" }
 	var lastDevicePort: Int by PropDelegateInt { 1337 }
 	var LANGUAGE: String by PropDelegateStr { "auto" }

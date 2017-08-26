@@ -41,7 +41,7 @@ class FileSize(val value: Long) : Comparable<FileSize> {
 		}
 
 		fun toString(size: Long, precission: Int = getPrecissionFromSize(size)): String = if (base == 10) toString10(size, precission)
-        else toString2(size, precission)
+		else toString2(size, precission)
 	}
 
 	override fun compareTo(other: FileSize): Int = this.value.compareTo(other.value)

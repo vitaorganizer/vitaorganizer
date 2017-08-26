@@ -10,12 +10,12 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 			vitaOrganizer.VPK_GAME_FILES.clear()
 		}
 
-		if(VitaOrganizerSettings.vpkFolder.isEmpty()) {
+		if (VitaOrganizerSettings.vpkFolder.isEmpty()) {
 			error("Invalid path! Please choose a valid directory!")
 			return;
 		}
 		val fileVpkFolder = File(VitaOrganizerSettings.vpkFolder)
-		if(!fileVpkFolder.safe_exists()) {
+		if (!fileVpkFolder.safe_exists()) {
 			error(Texts.format("INVALID_PATH_CHOOSE"));
 			return
 		}
@@ -42,7 +42,7 @@ class UpdateFileListTask(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer)
 			val ff = VpkFile(vpkFile)
 			val gameId = ff.cacheAndGetGameId()
 			if (gameId != null) {
-				if(gameId.length != 9) {
+				if (gameId.length != 9) {
 					//gameId has to be a length of 9 characters or it will not be installable
 					//either fix gameId automatically or skip
 					println("Skipped ${vpkFile.canonicalPath} because of malformed TITLE_ID: $gameId")

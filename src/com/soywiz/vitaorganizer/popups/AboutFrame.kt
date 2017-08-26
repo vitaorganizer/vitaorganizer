@@ -1,7 +1,6 @@
 package com.soywiz.vitaorganizer.popups
 
 import com.soywiz.vitaorganizer.Texts
-import com.soywiz.vitaorganizer.VitaOrganizer
 import com.soywiz.vitaorganizer.VitaOrganizerVersion
 import com.soywiz.vitaorganizer.ext.onClick
 import com.soywiz.vitaorganizer.ext.openWebpage

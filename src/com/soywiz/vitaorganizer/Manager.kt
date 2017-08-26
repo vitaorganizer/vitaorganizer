@@ -319,10 +319,11 @@ object ZipMgr {
 		var extractedSize: Long = 0L,
 		var totalSize: Long = 0L
 	) {
-		val progress: Double get() = when {
-			totalSize == 0L -> 0.0
-			else -> extractedSize.toDouble() / totalSize.toDouble()
-		}
+		val progress: Double
+			get() = when {
+				totalSize == 0L -> 0.0
+				else -> extractedSize.toDouble() / totalSize.toDouble()
+			}
 	}
 
 	fun extractZip(zipFile: File, directory: File, notify: (ExtractStatus) -> Unit = {}): Boolean {

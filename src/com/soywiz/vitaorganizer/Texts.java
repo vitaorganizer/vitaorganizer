@@ -2,7 +2,6 @@ package com.soywiz.vitaorganizer;
 
 import kotlin.Pair;
 import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.PropertyKey;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -10,7 +10,7 @@ object WifiNetwork {
 		return runCmd("netsh", "wlan", "start", "hostednetwork").success
 	}
 
-	fun stopHostedNetwork():Boolean {
+	fun stopHostedNetwork(): Boolean {
 		return runCmd("netsh", "wlan", "stop", "hostednetwork").success
 	}
 

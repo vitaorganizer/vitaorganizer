@@ -1,12 +1,13 @@
 package com.soywiz.vitaorganizer
 
-import com.soywiz.util.*
+import com.soywiz.util.OS
+import com.soywiz.util.get
+import com.soywiz.util.invalidOp
+import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.*
 import com.soywiz.vitaorganizer.popups.AboutFrame
 import com.soywiz.vitaorganizer.popups.KeyValueViewerFrame
-import com.soywiz.vitaorganizer.popups.SettingsDialog
 import com.soywiz.vitaorganizer.tasks.*
-import javax.swing.KeyStroke.getKeyStroke
 import java.awt.*
 import java.awt.event.*
 import java.io.File
@@ -14,6 +15,7 @@ import java.net.URL
 import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.*
+import javax.swing.KeyStroke.getKeyStroke
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
 
@@ -21,7 +23,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	companion object {
 		lateinit var instance: VitaOrganizer
 
-		@JvmStatic fun main(args: Array<String>) {
+		@JvmStatic
+		fun main(args: Array<String>) {
 			VitaOrganizer()
 			VitaOrganizerSettings.init()
 			//VitaOrganizerSettings.WLAN_SSID
@@ -57,7 +60,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		frame.extendedState = VitaOrganizerSettings.WINDOW_STATE
 		val x = VitaOrganizerSettings.WINDOW_X
 		val y = VitaOrganizerSettings.WINDOW_Y
-		if(x > 0 && y > 0 && frame.extendedState == JFrame.NORMAL)
+		if (x > 0 && y > 0 && frame.extendedState == JFrame.NORMAL)
 			frame.setLocation(x, y)
 		else
 			frame.setLocationRelativeTo(null)
@@ -101,16 +104,16 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		}
 	}
 
-	fun getRegionCode(titleId: String) : String? {
+	fun getRegionCode(titleId: String): String? {
 		val region = titleId.substring(0, 4)
 		return when {
 			region == "PCSA" || region == "PCSE" -> "US"
 			region == "PCSB" || region == "PCSF" -> "EU"
-            region == "PCSC" || region == "PCSG" || region == "VCJS" ||region == "VLJS" || region == "VLJM" -> "JP"
+			region == "PCSC" || region == "PCSG" || region == "VCJS" || region == "VLJS" || region == "VLJM" -> "JP"
 			region == "PCSD" -> "CN"
 			region == "PCSH" || region == "VCAS" -> "ASIA"
-            else -> "UNK"
-        }
+			else -> "UNK"
+		}
 	}
 
 	val table = object : GameListTable() {
@@ -150,26 +153,24 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 
 			val extractVpk = JMenuItem("Extract VPK to PS Vita's memory card").action {
-				if(entry != null) {
+				if (entry != null) {
 					val umsPathFile = File(VitaOrganizerSettings.usbMassStoragePath)
-					if(UsbStorageMgr.isMemoryCard(umsPathFile) && UsbStorageMgr.hasVitaShell(umsPathFile)) {
+					if (UsbStorageMgr.isMemoryCard(umsPathFile) && UsbStorageMgr.hasVitaShell(umsPathFile)) {
 						localTasks.queue(ExtractVpkToUMS(vitaOrganizer, entry!!))
-					}
-					else {
+					} else {
 						val chooser = JFileChooser()
 						chooser.currentDirectory = umsPathFile
 
-						if(!chooser.currentDirectory.safe_exists() || umsPathFile.name == ".") {
-							if(OS.isMac)
+						if (!chooser.currentDirectory.safe_exists() || umsPathFile.name == ".") {
+							if (OS.isMac)
 								chooser.currentDirectory = File("/Volumes/")
-							else if(OS.isWindows) {
+							else if (OS.isWindows) {
 								chooser.currentDirectory = File("C:\\").canonicalFile
 								chooser.changeToParentDirectory()
-							}
-							else if(OS.isUnix) {
+							} else if (OS.isUnix) {
 								//TODO: dont know the standard mount directories of debian, ubuntu, fedora, mandriva, suse, ..., /mnt/media? figure it out
 							}
-	                    }
+						}
 
 						chooser.dialogTitle = "Please choose the root path to PS Vita's usb mass storage"
 						chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
@@ -179,13 +180,11 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 							val selectedFile = chooser.selectedFile.canonicalFile
 							if (!selectedFile.safe_exists()) {
 								println("error invalid path")
-							}
-							else {
+							} else {
 								if (!UsbStorageMgr.isMemoryCard(selectedFile)) {
 									println("could not recognize as vitas memorycard")
 									MsgMgr.error("Could not recognize as PS Vita's memory card")
-								}
-								else {
+								} else {
 									if (UsbStorageMgr.hasVitaShell(selectedFile)) {
 										VitaOrganizerSettings.usbMassStoragePath = chooser.selectedFile.canonicalPath
 										localTasks.queue(ExtractVpkToUMS(vitaOrganizer, entry!!))
@@ -198,10 +197,10 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			}
 
 			val deleteVpk = JMenuItem(Texts.format("DELETE_VPK")).action {
-				if(entry != null) {
-					if(entry!!.vpkLocalFile != null && entry!!.vpkLocalFile!!.safe_canDelete()){
-						if(MsgMgr.warn("Are you sure you want to delete ${entry!!.vpkLocalFile}?\nThis operation cannot be undone!", "Confirm deletion")) {
-							if(entry!!.vpkLocalFile!!.safe_delete()) {
+				if (entry != null) {
+					if (entry!!.vpkLocalFile != null && entry!!.vpkLocalFile!!.safe_canDelete()) {
+						if (MsgMgr.warn("Are you sure you want to delete ${entry!!.vpkLocalFile}?\nThis operation cannot be undone!", "Confirm deletion")) {
+							if (entry!!.vpkLocalFile!!.safe_delete()) {
 								synchronized(VPK_GAME_FILES) {
 									VPK_GAME_FILES.remove(entry!!.vpkLocalFile)
 								}
@@ -209,13 +208,11 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 								entry!!.entry.delete()
 								updateEntries()
 								updateStatus("$filepath was successfully deleted!")
-							}
-							else {
+							} else {
 								MsgMgr.error("Could not delete ${entry!!.vpkLocalFile!!}!")
 							}
 						}
-					}
-					else {
+					} else {
 						MsgMgr.error("Not deletable!")
 					}
 				}
@@ -228,7 +225,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 							"ATTRIBUTE", "ATTRIBUTE2", "ATTRIBUTE_MINOR" -> {
 								//show as hex
 								String.format("0x%X", value.toString().toInt())
-                            }
+							}
 							else -> "$value"
 						}
 					}))
@@ -273,7 +270,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					gameDumperVersionPopup.text = Texts.format("DUMPER_VERSION", "version" to entry.dumperVersion)
 					gameCompressionLevelPopup.text = Texts.format("COMPRESSION_LEVEL", "level" to entry.compressionLevel)
 					//gameTitlePopup.text = "${entry.id} : ${entry.title}"
-					val region = if(getRegionCode(entry.id) != "UNK") getRegionCode(entry.id) + " -> " else ""
+					val region = if (getRegionCode(entry.id) != "UNK") getRegionCode(entry.id) + " -> " else ""
 					gameTitlePopup.text = "$region[${entry.id}] ${entry.title} " + (entry.psf["APP_VER"] ?: entry.psf["VERSION"] ?: "")
 					sendToVita1Step.text = Texts.format("SEND_FULL_APP_TO_VITA_ACTION", "type" to entry.type)
 				}
@@ -295,7 +292,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 	fun selectFolder() {
 		val chooser = JFileChooser()
 		chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
-		if(!chooser.currentDirectory.safe_exists())
+		if (!chooser.currentDirectory.safe_exists())
 			chooser.currentDirectory = File(".")
 		chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
 		chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
@@ -374,7 +371,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 					.action {
 						val chooser = JFileChooser()
 						chooser.currentDirectory = File(VitaOrganizerSettings.lastVpkInstallFolder)
-						if(!chooser.currentDirectory.safe_exists())
+						if (!chooser.currentDirectory.safe_exists())
 							chooser.currentDirectory = File(VitaOrganizerSettings.vpkFolder)
 						chooser.dialogTitle = Texts.format("SELECT_PSVITA_VPK_FOLDER")
 						chooser.fileFilter = FileNameExtensionFilter(Texts.format("FILEFILTER_DESC_VPK_FILES"), "vpk")
@@ -457,8 +454,8 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						accelerator = getKeyStroke(if (OS.isMac) "shift meta R" else "shift ctrl R")
 					}
 					.action {
-					VitaOrganizerCache.deleteAll()
-					updateFileList()
+						VitaOrganizerCache.deleteAll()
+						updateFileList()
 					}
 				)
 				//add(JMenuItem(Texts.format("MENU_OPTIONS")).action {
@@ -571,14 +568,14 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		add(scrollPane)
 		add(footer, SpringLayout.SOUTH)
 
-		if(VitaOrganizerCache.cacheFolder.safe_exists())
-	        preloadCache()
+		if (VitaOrganizerCache.cacheFolder.safe_exists())
+			preloadCache()
 		else
 			updateFileList()
 
 		val oneWeekInMilliSeconds: Long = 60 * 60 * 24 * 7 * 1000
 		val now = Calendar.getInstance().time.time
-		if((VitaOrganizerSettings.lastUpdateCheckTime + oneWeekInMilliSeconds) < now) {
+		if ((VitaOrganizerSettings.lastUpdateCheckTime + oneWeekInMilliSeconds) < now) {
 			checkForUpdates(false)
 			updateStatus(Texts.format("CHECKING_FOR_UPDATE"))
 			println("Checking for updates")
@@ -590,6 +587,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 			override fun windowOpened(e: WindowEvent) {
 				table.table.requestFocus()
 			}
+
 			override fun windowClosing(e: WindowEvent?) {
 				if (runningTasks) {
 					val confirmed = JOptionPane.showConfirmDialog(null, Texts.format("CONFIRM_EXIT_TEXT"), Texts.format("CONFIRM_EXIT_TITLE"), JOptionPane.YES_NO_OPTION)
@@ -616,7 +614,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 				super.componentResized(e)
 				table.table.preferredScrollableViewportSize = Dimension(frame.width, frame.height)
 				if (frame.extendedState == JFrame.NORMAL) {
-					if(oldWindowWidth != frame.width || oldWindowHeight != frame.height) {
+					if (oldWindowWidth != frame.width || oldWindowHeight != frame.height) {
 						oldWindowWidth = frame.width
 						oldWindowHeight = frame.height
 						VitaOrganizerSettings.WINDOW_WIDTH = frame.width
@@ -624,7 +622,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 						VitaOrganizerSettings.WINDOW_STATE = JFrame.NORMAL
 						println("Updated size ${frame.width}x${frame.height}")
 					}
-				} else{
+				} else {
 					println("maximixed or minimized!")
 					VitaOrganizerSettings.WINDOW_STATE = frame.extendedState
 				}

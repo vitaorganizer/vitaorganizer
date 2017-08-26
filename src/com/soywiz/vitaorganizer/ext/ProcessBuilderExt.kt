@@ -7,15 +7,16 @@ import java.nio.charset.Charset
 fun runCmd(vararg args: String): ProcessResult = runCmd(args.toList())
 fun runCmd(args: List<String>): ProcessResult = Runtime.getRuntime().exec(args.toTypedArray()).waitAndGetOutput()
 
-val Process.isAliveJava6: Boolean get() {
-	try {
-		exitValue()
-		return false
-	} catch (e: IllegalThreadStateException) {
-		return true
-	}
+val Process.isAliveJava6: Boolean
+	get() {
+		try {
+			exitValue()
+			return false
+		} catch (e: IllegalThreadStateException) {
+			return true
+		}
 
-}
+	}
 
 fun Process.waitAndGetOutput(): ProcessResult {
 	val outArray = ByteArrayOutputStream()

@@ -31,8 +31,8 @@ fun JRadioButtonMenuItem.action(callback: () -> Unit): JRadioButtonMenuItem {
 	return this
 }
 
-fun <T: JComponent> T.onClick(callback: () -> Unit): T {
-	addMouseListener(object: MouseAdapter() {
+fun <T : JComponent> T.onClick(callback: () -> Unit): T {
+	addMouseListener(object : MouseAdapter() {
 		override fun mouseClicked(e: MouseEvent?) {
 			callback()
 		}

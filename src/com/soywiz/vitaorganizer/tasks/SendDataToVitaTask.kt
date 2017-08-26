@@ -4,7 +4,7 @@ import com.soywiz.vitaorganizer.*
 import java.util.zip.ZipFile
 
 class SendDataToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : VitaTask(vitaOrganizer) {
-	fun performBase() : Boolean {
+	fun performBase(): Boolean {
 
 		status(Texts.format("STEP_SENDING_GAME", "id" to vpkFile.id))
 		//val zip = ZipFile(entry.vpkFile)
@@ -25,7 +25,7 @@ class SendDataToVitaTask(vitaOrganizer: VitaOrganizer, val vpkFile: VpkFile) : V
 	}
 
 	override fun perform() {
-		if(performBase())
+		if (performBase())
 			status(Texts.format("GAME_SENT_SUCCESSFULLY", "id" to vpkFile.id))
 		else
 			status("Failed to send ${vpkFile.id}")

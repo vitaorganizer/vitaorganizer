@@ -1,6 +1,9 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.*
+import com.soywiz.vitaorganizer.CachedVpkEntry
+import com.soywiz.vitaorganizer.VitaOrganizer
+import com.soywiz.vitaorganizer.VitaOrganizerSettings
+import com.soywiz.vitaorganizer.ZipMgr
 import com.soywiz.vitaorganizer.ext.safe_delete
 import com.soywiz.vitaorganizer.ext.safe_exists
 import java.io.File
@@ -9,9 +12,9 @@ import java.io.File
  * Created by super on 14.01.2017.
  */
 
-class ExtractVpkToUMS(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry) :VitaTask(vitaOrganizer) {
+class ExtractVpkToUMS(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry) : VitaTask(vitaOrganizer) {
 	override fun perform() {
-		if(!extract())
+		if (!extract())
 			error("Could not extract VPK to directory!")
 		else {
 			status("Successfully extracted. Use VitaShell to install.")
@@ -20,27 +23,26 @@ class ExtractVpkToUMS(vitaOrganizer: VitaOrganizer, val entry: CachedVpkEntry) :
 		}
 	}
 
-	fun extract() : Boolean {
+	fun extract(): Boolean {
 		val dir = File(VitaOrganizerSettings.usbMassStoragePath)
 		val vpk = entry.vpkLocalFile!!
 
-		val extractDir = dir.canonicalPath + File.separator + "organizer" + File.separator +  entry.gameId + File.separator
+		val extractDir = dir.canonicalPath + File.separator + "organizer" + File.separator + entry.gameId + File.separator
 		val fileExtractDir = File(extractDir)
-		if(fileExtractDir.safe_exists()) {
+		if (fileExtractDir.safe_exists()) {
 			val choice = warn("Overwrite?", "The directory where it is going to be extracted already exists.\nDo you want to overwrite it?")
-			if(choice) {
-				if(!fileExtractDir.safe_delete()) {
+			if (choice) {
+				if (!fileExtractDir.safe_delete()) {
 					error("Could not delete the directory (completely). Aborting..")
 					return false
 				}
-            }
-			else {
+			} else {
 				return false
-            }
+			}
 		}
 
 		//leave 70MB
-		if((dir.freeSpace - 70*1000*1000) < entry.size) {
+		if ((dir.freeSpace - 70 * 1000 * 1000) < entry.size) {
 			error("Not enough available free space to extract the VPK file!")
 			return false
 		}

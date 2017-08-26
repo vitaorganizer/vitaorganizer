@@ -1,6 +1,7 @@
 package com.soywiz.vitaorganizer.tasks
 
-import com.soywiz.vitaorganizer.*
+import com.soywiz.vitaorganizer.VitaOrganizer
+import com.soywiz.vitaorganizer.VitaOrganizerCache
 import com.soywiz.vitaorganizer.ext.listAllFiles
 import com.soywiz.vitaorganizer.ext.safe_exists
 import java.io.File
@@ -8,11 +9,11 @@ import java.io.File
 class PreloadCache(vitaOrganizer: VitaOrganizer) : VitaTask(vitaOrganizer) {
 	override fun perform() {
 		//preload cached files
-		if(VitaOrganizerCache.cacheFolder.safe_exists()) {
+		if (VitaOrganizerCache.cacheFolder.safe_exists()) {
 			val cachedPaths = VitaOrganizerCache.cacheFolder.listAllFiles("path")
-			for(path in cachedPaths) {
+			for (path in cachedPaths) {
 				val file = File(path.readText())
-				if(!file.safe_exists())
+				if (!file.safe_exists())
 					continue
 
 				synchronized(vitaOrganizer.VPK_GAME_FILES) {

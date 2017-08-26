@@ -6,7 +6,6 @@ import com.soywiz.util.DumperNamesHelper
 import com.soywiz.util.open2
 import com.soywiz.vitaorganizer.ext.getBytes
 import com.soywiz.vitaorganizer.ext.getInputStream
-import com.soywiz.vitaorganizer.ext.getResourceBytes
 import com.soywiz.vitaorganizer.ext.safe_exists
 import java.io.File
 import java.util.zip.ZipException
@@ -49,7 +48,7 @@ class VpkFile(val vpkFile: File) {
 	}
 
 	fun cacheAndGetGameId(): String? {
-		var retGameId:String? = null
+		var retGameId: String? = null
 		try {
 			ZipFile(vpkFile).use { zip ->
 				val psf = psf
@@ -63,8 +62,8 @@ class VpkFile(val vpkFile: File) {
 				val paramsfo = zip.getEntry("sce_sys/param.sfo")
 				val compressionLevel = paramsfo?.method?.toString() ?: ""
 
-				var dumper = DumperNamesHelper().findDumperByShortName(if(psf["ATTRIBUTE"].toString().toInt() == 0x8000) "HB" else "UNKNOWN")
-				if(dumper == DumperNames.UNKNOWN) {
+				var dumper = DumperNamesHelper().findDumperByShortName(if (psf["ATTRIBUTE"].toString().toInt() == 0x8000) "HB" else "UNKNOWN")
+				if (dumper == DumperNames.UNKNOWN) {
 					for (file in DumperModules.values()) {
 						val suprx = zip.getEntry(file.file)
 						if (suprx != null) {
@@ -83,7 +82,7 @@ class VpkFile(val vpkFile: File) {
 				}
 
 				if (!entry.icon0File.safe_exists()) {
-					if(zip.getEntry("sce_sys/icon0.png") != null)
+					if (zip.getEntry("sce_sys/icon0.png") != null)
 						entry.icon0File.writeBytes(zip.getBytes("sce_sys/icon0.png"))
 					else
 						entry.icon0File.writeBytes(byteArrayOf())
@@ -102,16 +101,14 @@ class VpkFile(val vpkFile: File) {
 				}
 				//getGameEntryById(gameId).inPC = true
 			}
-		}
-		catch (e: ZipException) {
-			if(e.message!!.contains("error in opening zip file"))
+		} catch (e: ZipException) {
+			if (e.message!!.contains("error in opening zip file"))
 				println("Skipped: Could not open ${vpkFile.name}")
-			else if(e.message!!.contains("invalid LOC header (bad signature)"))
+			else if (e.message!!.contains("invalid LOC header (bad signature)"))
 				println("Skipped: Invalid LOC header in ${vpkFile.name}")
-			else if(e.message!!.contains("invalid CEN header (bad signature)"))
+			else if (e.message!!.contains("invalid CEN header (bad signature)"))
 				println("Skipped: Invalid CEN header in ${vpkFile.name}")
-		}
-		catch (e: Throwable) {
+		} catch (e: Throwable) {
 			println("Skipped: Error processing ${vpkFile.name}")
 			e.printStackTrace()
 		}
