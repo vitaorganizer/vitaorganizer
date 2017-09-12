@@ -568,7 +568,7 @@ class VitaOrganizer : JPanel(BorderLayout()), StatusUpdater {
 		add(scrollPane)
 		add(footer, SpringLayout.SOUTH)
 
-		if (VitaOrganizerCache.cacheFolder.safe_exists())
+		if (VitaOrganizerSettings.preloadCache > 0 && VitaOrganizerCache.cacheFolder.safe_exists() && VitaOrganizerCache.cacheFolder.listFiles().isNotEmpty())
 			preloadCache()
 		else
 			updateFileList()
